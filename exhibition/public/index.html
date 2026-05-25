@@ -1039,6 +1039,11 @@
             const zoomLevel = Math.max(0, 1100 - camDist) / 1100;
             const speedMult = 1.0 - zoomLevel * 0.85;
 
+            // Hide connection lines when heavily zoomed in
+            if (lineSegFamily) lineSegFamily.visible = zoomLevel < 0.6;
+            if (lineSegFriend) lineSegFriend.visible = zoomLevel < 0.6;
+            if (lineSegAcq) lineSegAcq.visible = zoomLevel < 0.6;
+
             for (let idx = 0; idx < particleCount; idx++) {
                 const data = pointData[idx];
                 const isPathNode = layoutMode === 'path' && currentPath.includes(data.strandId);
@@ -1079,6 +1084,13 @@
                 const rootPosIdx = data.strandId * pPerStrand;
                 const j = idx - rootPosIdx;
                 if (j === 9) { posArray[idx*3]=posArray[rootPosIdx*3]; posArray[idx*3+1]=posArray[rootPosIdx*3+1]; posArray[idx*3+2]=posArray[rootPosIdx*3+2]; continue; }
+
+                // Hide non-root particles when zoomed in
+                if (zoomLevel > 0.5) {
+                    sizes[idx] = 0;
+                    continue;
+                }
+
                 if (j > 0 && j < 9) {
                     const ot = elapsedTime*(1.5+j*0.4)+data.phase*j;
                     const or_ = 60+(j%3)*20+Math.sin(elapsedTime+j)*15;
