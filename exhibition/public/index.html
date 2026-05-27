@@ -110,6 +110,29 @@
             width: 100%;
         }
 
+        .controls-list {
+            font-size: 10px;
+            line-height: 1.6;
+            color: rgba(255,255,255,0.8);
+            font-family: 'Courier New', monospace;
+        }
+        .controls-list div {
+            margin-bottom: 8px;
+            padding-bottom: 6px;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+        }
+        .controls-list .label {
+            color: rgba(255,255,255,0.6);
+            font-size: 9px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 4px;
+        }
+        .controls-list .key {
+            color: rgba(100,200,255,1);
+            font-weight: bold;
+        }
+
         select, button {
             width: 100%;
             padding: 8px;
@@ -240,6 +263,41 @@
             </div>
         </div>
 
+        <div id="controls-panel" class="panel collapsed">
+            <div class="panel-header" id="controls-header">
+                <span>🎮 Controls</span>
+                <span class="panel-icon">+</span>
+            </div>
+            <div class="panel-body">
+                <div class="controls-list">
+                    <div>
+                        <div class="label">Rotate</div>
+                        Drag mouse
+                    </div>
+                    <div>
+                        <div class="label">Zoom</div>
+                        Scroll / <span class="key">+</span> <span class="key">-</span>
+                    </div>
+                    <div>
+                        <div class="label">Move Forward/Back</div>
+                        <span class="key">W</span> / <span class="key">S</span>
+                    </div>
+                    <div>
+                        <div class="label">Move Left/Right</div>
+                        <span class="key">A</span> / <span class="key">D</span>
+                    </div>
+                    <div>
+                        <div class="label">Move Up/Down</div>
+                        <span class="key">Q</span> / <span class="key">E</span>
+                    </div>
+                    <div>
+                        <div class="label">Click Node</div>
+                        View Details
+                    </div>
+                </div>
+            </div>
+        </div>
+
         <div id="search-container">
             <svg id="search-icon" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                 <circle cx="11" cy="11" r="8"></circle>
@@ -296,9 +354,13 @@
 
         const controls = new OrbitControls(camera, renderer.domElement);
         controls.enableDamping = true;
-        controls.dampingFactor = 0.05;
+        controls.dampingFactor = 0.08;
         controls.minDistance = 0.01;
         controls.maxDistance = 6000;
+        controls.zoomSpeed = 1.5;
+        controls.rotateSpeed = 0.8;
+        controls.panSpeed = 0.8;
+        controls.autoRotate = false;
 
         let masterGroup = new THREE.Group();
         scene.add(masterGroup);
@@ -316,6 +378,7 @@
         let shaderUniforms = null;
         let labelObjects = [];
         let graphAdjacency = [];
+        let sortedCenters = []; // Global so drawPathLines can access node positions
 
         const raycaster = new THREE.Raycaster();
         raycaster.params.Points.threshold = 30.0;
@@ -323,6 +386,8 @@
         let meshPoints = null;
         let lineSegments = null;
         let lineSegFamily = null, lineSegFriend = null, lineSegAcq = null;
+        let pathLineSegFamily = null, pathLineSegFriend = null;
+        let connectionMap = new Map(); // Maps "id1-id2" to connection type for fast lookup
         let lineUniforms = {}; // { family, friend, acquaintance } → shader uniform objects
         let connectionTubes = []; // Array of {mesh, a, b} for tracking tube visibility
 
@@ -444,6 +509,11 @@
             globalGeometry.attributes.color.needsUpdate = true;
         }
 
+        function getConnectionType(nodeIdA, nodeIdB) {
+            const key = nodeIdA + '-' + nodeIdB;
+            return connectionMap.get(key) || 'acquaintance';
+        }
+
         const pPerStrand = 50;
 
         // --- Build Structure from real connection data ---
@@ -471,7 +541,7 @@
             const colors          = new Float32Array(particleCount * 3);
             const lineIndices = [], familyIndices = [], friendIndices = [], acqIndices = [];
             const connectionsData = [];
-            const sortedCenters = [];
+            sortedCenters = []; // Use global sortedCenters so drawPathLines can access it
 
             // All nodes scattered randomly — no fixed center
             for (let i = 0; i < numStrands; i++) {
@@ -559,6 +629,14 @@
                 if (idxA !== undefined && idxB !== undefined) {
                     addEdge(idxA, idxB, familyIndices, friendIndices, acqIndices, conn.type, connectionsData);
                 }
+            }
+
+            // Build connection lookup map for fast retrieval
+            for (const conn of connectionsData) {
+                const key1 = conn.a + '-' + conn.b;
+                const key2 = conn.b + '-' + conn.a;
+                connectionMap.set(key1, conn.type);
+                connectionMap.set(key2, conn.type);
             }
 
             globalGeometry = new THREE.BufferGeometry();
@@ -705,6 +783,9 @@
             document.getElementById('path-header').addEventListener('click', () => {
                 document.getElementById('path-panel').classList.toggle('collapsed');
             });
+            document.getElementById('controls-header').addEventListener('click', () => {
+                document.getElementById('controls-panel').classList.toggle('collapsed');
+            });
 
             // Search — queries API
             let searchDebounce = null;
@@ -838,7 +919,7 @@
             layoutMode = 'sphere';
             isCameraAnimating = true;
             messiColored = false;
-            controls.enabled = false;
+            // Keep controls enabled so user can always interact (removed: controls.enabled = false;)
             const colors = globalGeometry.attributes.color.array;
             for (let i = 0; i < colors.length; i++) colors[i] = 0.15;
             globalGeometry.attributes.color.needsUpdate = true;
@@ -849,6 +930,7 @@
                 labelObjects[currentPath[0]].element.style.fontWeight = 'bold';
             }
             renderPathChain(path);
+            drawPathLines(path);
         }
 
         function renderPathChain(path) {
@@ -870,6 +952,94 @@
                 }
             });
             container.appendChild(chainDiv);
+        }
+
+        function drawPathLines(path) {
+            // Clean up existing path lines
+            if (pathLineSegFamily) { masterGroup.remove(pathLineSegFamily); pathLineSegFamily = null; }
+            if (pathLineSegFriend) { masterGroup.remove(pathLineSegFriend); pathLineSegFriend = null; }
+
+            if (path.length < 2) return;
+
+            // Collect family and friend path segments
+            const familyPoints = [], friendPoints = [];
+
+            for (let i = 0; i < path.length - 1; i++) {
+                const nodeA = path[i];
+                const nodeB = path[i + 1];
+                const connType = getConnectionType(nodeA, nodeB);
+
+                const posA = sortedCenters[nodeA];
+                const posB = sortedCenters[nodeB];
+
+                if (connType === 'family') {
+                    familyPoints.push(posA.clone());
+                    familyPoints.push(posB.clone());
+                } else {
+                    // Friend or acquaintance
+                    friendPoints.push(posA.clone());
+                    friendPoints.push(posB.clone());
+                }
+            }
+
+            // Create family path line (solid white)
+            if (familyPoints.length > 0) {
+                const familyGeo = new THREE.BufferGeometry().setFromPoints(familyPoints);
+                const familyMat = new THREE.LineBasicMaterial({
+                    color: 0xFFFFFF,
+                    linewidth: 4,
+                    transparent: true,
+                    opacity: 0.95,
+                    depthTest: true,
+                    depthWrite: false
+                });
+                pathLineSegFamily = new THREE.LineSegments(familyGeo, familyMat);
+                pathLineSegFamily.frustumCulled = false;
+                masterGroup.add(pathLineSegFamily);
+            }
+
+            // Create friend/acquaintance path lines with dashed pattern
+            if (friendPoints.length > 0) {
+                // Create dashed line segments manually
+                const dashedSegments = [];
+                const dashLength = 20;
+                const gapLength = 15;
+
+                for (let i = 0; i < friendPoints.length; i += 2) {
+                    if (i + 1 < friendPoints.length) {
+                        const start = friendPoints[i];
+                        const end = friendPoints[i + 1];
+                        const direction = new THREE.Vector3().subVectors(end, start);
+                        const totalLength = direction.length();
+                        direction.normalize();
+
+                        let currentPos = 0;
+                        while (currentPos < totalLength) {
+                            const segStart = start.clone().addScaledVector(direction, currentPos);
+                            const nextPos = Math.min(currentPos + dashLength, totalLength);
+                            const segEnd = start.clone().addScaledVector(direction, nextPos);
+                            dashedSegments.push(segStart);
+                            dashedSegments.push(segEnd);
+                            currentPos = nextPos + gapLength;
+                        }
+                    }
+                }
+
+                if (dashedSegments.length > 0) {
+                    const friendGeo = new THREE.BufferGeometry().setFromPoints(dashedSegments);
+                    const friendMat = new THREE.LineBasicMaterial({
+                        color: 0xFFFF00,
+                        linewidth: 3,
+                        transparent: true,
+                        opacity: 0.8,
+                        depthTest: true,
+                        depthWrite: false
+                    });
+                    pathLineSegFriend = new THREE.LineSegments(friendGeo, friendMat);
+                    pathLineSegFriend.frustumCulled = false;
+                    masterGroup.add(pathLineSegFriend);
+                }
+            }
         }
 
         function selectNode(id) {
@@ -916,6 +1086,9 @@
             document.getElementById('info-card').classList.remove('visible');
             selectedNodeId = null;
             disablePathTargetMode();
+            // Clean up path lines
+            if (pathLineSegFamily) { masterGroup.remove(pathLineSegFamily); pathLineSegFamily = null; }
+            if (pathLineSegFriend) { masterGroup.remove(pathLineSegFriend); pathLineSegFriend = null; }
         }
 
         function getNodeWorldPos(nodeId) {
@@ -1120,6 +1293,17 @@
             }
 
             posAttr.needsUpdate = true;
+
+            // --- Handle keyboard camera movement ---
+            if (keyState['w']) { camera.position.addScaledVector(camera.getWorldDirection(new THREE.Vector3()), keyboardCameraSpeed); }
+            if (keyState['s']) { camera.position.addScaledVector(camera.getWorldDirection(new THREE.Vector3()), -keyboardCameraSpeed); }
+            if (keyState['a']) { camera.position.addScaledVector(camera.getWorldDirection(new THREE.Vector3()).cross(camera.up), keyboardCameraSpeed); }
+            if (keyState['d']) { camera.position.addScaledVector(camera.getWorldDirection(new THREE.Vector3()).cross(camera.up), -keyboardCameraSpeed); }
+            if (keyState['q']) { camera.position.y -= keyboardCameraSpeed; }
+            if (keyState['e']) { camera.position.y += keyboardCameraSpeed; }
+            if (keyState['+']) { camera.position.multiplyScalar(0.95); }
+            if (keyState['-']) { camera.position.multiplyScalar(1.05); }
+
             controls.update();
 
             // Update line shader uniforms with real camera distance
@@ -1139,6 +1323,58 @@
             renderer.setSize(window.innerWidth, window.innerHeight);
             labelRenderer.setSize(window.innerWidth, window.innerHeight);
         });
+
+        // --- Keyboard Navigation (WASD + Q/E + +/- zoom) ---
+        const keyState = {};
+        let userTakingControl = false; // Flag to prevent animation from taking over
+
+        window.addEventListener('keydown', (e) => {
+            keyState[e.key.toLowerCase()] = true;
+            if (['w', 'a', 's', 'd', 'q', 'e', '+', '-'].includes(e.key.toLowerCase())) {
+                e.preventDefault();
+                // Interrupt camera animation when user uses keyboard camera controls
+                isCameraAnimating = false;
+                controls.enabled = true;  // CRITICAL: Enable OrbitControls
+                userTakingControl = true;
+            }
+        });
+        window.addEventListener('keyup', (e) => {
+            keyState[e.key.toLowerCase()] = false;
+        });
+
+        // Interrupt camera animation on mouse movement (from OrbitControls)
+        let isMouseDown = false;
+        renderer.domElement.addEventListener('mousedown', (e) => {
+            isMouseDown = true;
+            // Enable OrbitControls immediately on any mouse interaction
+            controls.enabled = true;
+            // Don't interrupt on right-click (context menu)
+            if (e.button === 0 || e.button === 2) {
+                userTakingControl = true;
+                isCameraAnimating = false;
+            }
+        });
+        renderer.domElement.addEventListener('mouseup', () => {
+            isMouseDown = false;
+        });
+        renderer.domElement.addEventListener('mousemove', (e) => {
+            // Interrupt camera animation when user is dragging
+            if (isMouseDown && (Math.abs(e.movementX) > 2 || Math.abs(e.movementY) > 2)) {
+                isCameraAnimating = false;
+                controls.enabled = true;  // CRITICAL: Enable OrbitControls
+                userTakingControl = true;
+            }
+        });
+
+        // Enable mouse wheel zoom immediately
+        renderer.domElement.addEventListener('wheel', (e) => {
+            controls.enabled = true;
+            isCameraAnimating = false;
+        }, { passive: false });
+
+        // Keyboard camera movement in animate loop
+        const keyboardCameraSpeed = 25;
+        const keyboardZoomSpeed = 40;
 
         // Click detection for labels using raycaster
         renderer.domElement.addEventListener('click', (event) => {
