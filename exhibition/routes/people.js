@@ -46,8 +46,12 @@ router.get('/:id', (req, res) => {
         SELECT p.id, p.name, p.role, c.type, c.strength
         FROM connections c JOIN people p ON p.id = c.person_b_id
         WHERE c.person_a_id = ?
-        ORDER BY c.type, p.name
-    `).all(req.params.id);
+        UNION
+        SELECT p.id, p.name, p.role, c.type, c.strength
+        FROM connections c JOIN people p ON p.id = c.person_a_id
+        WHERE c.person_b_id = ?
+        ORDER BY type, name
+    `).all(req.params.id, req.params.id);
 
     res.json({ ...person, connections });
 });
@@ -75,7 +79,7 @@ router.post('/', (req, res) => {
         db.exec('BEGIN');
         for (const c of conns) {
             if (!c.id) continue;
-            const t = ['family','friend','acquaintance'].includes(c.type) ? c.type : 'acquaintance';
+            const t = ['family_core','family_extended','friend','acquaintance'].includes(c.type) ? c.type : 'acquaintance';
             const s = parseInt(c.strength) || 3;
             stmt.run(newId, c.id, t, s);
             stmt.run(c.id, newId, t, s);
@@ -89,7 +93,7 @@ router.post('/', (req, res) => {
 // PUT /api/people/:id
 router.put('/:id', (req, res) => {
     const db = getDb();
-    const { age, city, country, role, description, tags } = req.body;
+    const { age, city, country, role, description, tags, connections: conns } = req.body;
 
     const person = db.prepare('SELECT id FROM people WHERE id = ?').get(req.params.id);
     if (!person) return res.status(404).json({ error: 'Person not found' });
@@ -99,7 +103,32 @@ router.put('/:id', (req, res) => {
         WHERE id = ?
     `).run(age||null, city||null, country||null, role||null, description||null, tags||null, req.params.id);
 
+    if (Array.isArray(conns) && conns.length) {
+        const stmt = db.prepare(
+            'INSERT OR IGNORE INTO connections (person_a_id, person_b_id, type, strength) VALUES (?,?,?,?)'
+        );
+        db.exec('BEGIN');
+        for (const c of conns) {
+            if (!c.id) continue;
+            const t = ['family_core','family_extended','friend','acquaintance'].includes(c.type) ? c.type : 'acquaintance';
+            const s = parseInt(c.strength) || 3;
+            stmt.run(req.params.id, c.id, t, s);
+            stmt.run(c.id, req.params.id, t, s);
+        }
+        db.exec('COMMIT');
+    }
+
     res.json({ id: req.params.id, updated: true });
+});
+
+// DELETE /api/people/:id
+router.delete('/:id', (req, res) => {
+    const db = getDb();
+    const person = db.prepare('SELECT id FROM people WHERE id = ?').get(req.params.id);
+    if (!person) return res.status(404).json({ error: 'Person not found' });
+
+    db.prepare('DELETE FROM people WHERE id = ?').run(req.params.id);
+    res.json({ id: req.params.id, deleted: true });
 });
 
 module.exports = router;

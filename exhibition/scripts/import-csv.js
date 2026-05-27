@@ -2,8 +2,8 @@ const { getDb } = require('../db/schema');
 const fs = require('fs');
 const path = require('path');
 
-const PEOPLE_CSV      = path.join(__dirname, '../../six-degrees/Omer_Network_People.csv');
-const CONNECTIONS_CSV = path.join(__dirname, '../../six-degrees/Connections.csv');
+const PEOPLE_CSV      = path.join(__dirname, '../../אקסלים data/Omer_Network_People.csv');
+const CONNECTIONS_CSV = path.join(__dirname, '../../אקסלים data/just connect.csv');
 
 function parseCSV(text) {
     const lines = text.split('\n').filter(l => l.trim());
@@ -33,6 +33,9 @@ function run() {
     const db = getDb();
 
     db.exec('DELETE FROM connections; DELETE FROM people; DELETE FROM sqlite_sequence;');
+
+    // Core family members (immediate family of Omer)
+    const coreFamilyNames = new Set(['Omer Barak', 'Noa Barak', 'Eti Barak', 'Eli Barak']);
 
     // Import people
     const peopleRaw = parseCSV(fs.readFileSync(PEOPLE_CSV, 'utf8'));
@@ -75,7 +78,19 @@ function run() {
             if (row.Source) console.warn(`  ⚠ Unknown: "${row.Source}" → "${row.Target}"`);
             continue;
         }
-        const type = ['family','friend','acquaintance'].includes(row.Type) ? row.Type : 'acquaintance';
+
+        // Split family into family_core and family_extended
+        let type = row.Type;
+        if (row.Type === 'family') {
+            const bothCore = coreFamilyNames.has(row.Source) && coreFamilyNames.has(row.Target);
+            type = bothCore ? 'family_core' : 'family_extended';
+        }
+
+        // Validate type
+        if (!['family_core','family_extended','friend','acquaintance'].includes(type)) {
+            type = 'acquaintance';
+        }
+
         const strength = parseInt(row.Strength) || 3;
         insertConn.run(a, b, type, strength);
         insertConn.run(b, a, type, strength);

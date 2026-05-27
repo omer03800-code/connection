@@ -33,7 +33,7 @@ function initSchema() {
             id          INTEGER PRIMARY KEY AUTOINCREMENT,
             person_a_id INTEGER NOT NULL REFERENCES people(id) ON DELETE CASCADE,
             person_b_id INTEGER NOT NULL REFERENCES people(id) ON DELETE CASCADE,
-            type        TEXT NOT NULL CHECK(type IN ('family','friend','acquaintance')),
+            type        TEXT NOT NULL CHECK(type IN ('family_core','family_extended','friend','acquaintance')),
             strength    INTEGER DEFAULT 3,
             created_at  TEXT DEFAULT (datetime('now')),
             UNIQUE(person_a_id, person_b_id)

@@ -1,7 +1,7 @@
 {
   "name": "six-degrees-exhibition",
   "version": "1.0.0",
-  "description": "Six Degrees of Separation — exhibition installation",
+  "description": "Feed the Beast — exhibition installation",
   "main": "server.js",
   "scripts": {
     "start": "node --experimental-sqlite server.js",

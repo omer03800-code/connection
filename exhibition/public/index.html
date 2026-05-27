@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Six Degrees of Separation</title>
+    <title>Feed the Beast</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body { overflow: hidden; background: #000; font-family: 'Inter', sans-serif; }
@@ -12,7 +12,7 @@
         .node-label {
             color: rgba(255, 255, 255, 0.95);
             font-size: 11px;
-            pointer-events: none;
+            pointer-events: none; /* Revert to none so hover only triggers on the circle */
             cursor: pointer;
             text-align: center;
             width: 120px;
@@ -23,26 +23,18 @@
             padding-bottom: 5px;
             text-shadow: 0 0 4px rgba(0,0,0,1);
             letter-spacing: 0.5px;
-            transition: color 0.3s;
+            transition: color 0.3s, transform 0.2s;
             user-select: none;
+            transform: translateY(60px); /* Position label strictly underneath node */
+            position: relative;
         }
+
         .node-label:hover {
             color: rgba(255, 255, 255, 1);
             text-shadow: 0 0 8px rgba(255,255,255,0.4);
         }
 
-        .node-label.searched::before {
-            content: '';
-            position: absolute;
-            top: 30px;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            width: 38px;
-            height: 38px;
-            border: 2px solid white;
-            border-radius: 50%;
-            pointer-events: none;
-        }
+
 
         #top-bar {
             position: absolute;
@@ -170,7 +162,7 @@
             border-radius: 8px;
             color: white;
             z-index: 100;
-            width: 260px;
+            width: 450px; /* Made even larger per user request */
             opacity: 0;
             pointer-events: none;
             transform: translateX(10px);
@@ -241,13 +233,108 @@
             70% { box-shadow: 0 0 0 6px rgba(255,255,255,0); }
             100% { box-shadow: 0 0 0 0 rgba(255,255,255,0); }
         }
+
+        /* Add Connection Button */
+        #btn-add-connection {
+            position: absolute;
+            bottom: 30px;
+            left: 30px;
+            background: rgba(0, 0, 0, 0.85);
+            backdrop-filter: blur(8px);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            color: white;
+            padding: 12px 24px;
+            border-radius: 30px;
+            font-size: 11px;
+            letter-spacing: 1px;
+            cursor: pointer;
+            z-index: 100;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.3s;
+            width: auto;
+        }
+        #btn-add-connection:hover { background: white; color: black; }
+
+        /* Modal Styles */
+        #add-modal {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%) scale(0.95);
+            background: rgba(10, 10, 10, 0.95);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            border-radius: 12px;
+            padding: 30px;
+            width: 400px;
+            max-height: 85vh;
+            overflow-y: auto;
+            color: white;
+            z-index: 1000;
+            opacity: 0;
+            pointer-events: none;
+            transition: all 0.3s ease;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.5);
+        }
+        #add-modal.visible { opacity: 1; pointer-events: auto; transform: translate(-50%, -50%) scale(1); }
+        .modal-header { font-size: 18px; margin-bottom: 20px; font-weight: 300; display: flex; justify-content: space-between; align-items: center; }
+        .modal-close { cursor: pointer; opacity: 0.6; transition: 0.2s; font-size: 20px; }
+        .modal-close:hover { opacity: 1; }
+        .form-group { margin-bottom: 15px; }
+        .form-group label { display: block; font-size: 10px; color: rgba(255,255,255,0.6); margin-bottom: 5px; text-transform: uppercase; letter-spacing: 0.5px; }
+        .form-group input, .form-group textarea, .form-group select {
+            width: 100%;
+            background: rgba(255,255,255,0.05);
+            border: 1px solid rgba(255,255,255,0.2);
+            padding: 10px;
+            color: white;
+            border-radius: 4px;
+            font-family: inherit;
+            font-size: 12px;
+            outline: none;
+        }
+        .form-group input:focus, .form-group textarea:focus, .form-group select:focus { border-color: rgba(255,255,255,0.5); }
+        
+        .connection-entry {
+            background: rgba(255,255,255,0.03);
+            border: 1px solid rgba(255,255,255,0.1);
+            padding: 10px;
+            border-radius: 4px;
+            margin-bottom: 10px;
+            position: relative;
+        }
+        .connection-entry select { margin-bottom: 8px; }
+        .btn-remove-conn {
+            position: absolute; top: 5px; right: 5px; background: transparent; border: none; color: #ff5555; cursor: pointer; padding: 2px 5px; width: auto; font-size: 10px; box-shadow: none;
+        }
+        .btn-remove-conn:hover { background: rgba(255,50,50,0.1); color: #ff5555; }
+        .btn-add-more-conn {
+            background: rgba(255,255,255,0.1); border: 1px dashed rgba(255,255,255,0.3); padding: 8px; font-size: 10px; margin-bottom: 20px; color: white;
+        }
+        .btn-add-more-conn:hover { background: rgba(255,255,255,0.2); color: white; }
+        .btn-submit { background: white; color: black; border: none; font-weight: bold; font-size: 12px; padding: 12px; }
+        .btn-submit:hover { background: #ddd; }
+        #modal-overlay {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.6); z-index: 999; opacity: 0; pointer-events: none; transition: 0.3s;
+        }
+        #modal-overlay.visible { opacity: 1; pointer-events: auto; }
+
+        /* Action buttons in info card */
+        .info-actions { display: flex; gap: 8px; margin-top: 15px; }
+        .info-actions button { flex: 1; padding: 8px 0; margin-bottom: 0; }
+        #btn-edit-node { background: rgba(255,255,255,0.1); border-color: rgba(255,255,255,0.3); }
+        #btn-delete-node { background: rgba(255,50,50,0.1); border-color: rgba(255,50,50,0.3); color: #ff8888; }
+        #btn-delete-node:hover { background: rgba(255,50,50,0.3); color: white; }
     </style>
 </head>
 
 <body>
     <div id="loading">טוען...</div>
 
-    <div id="top-bar" style="display:none">
+    <div id="top-bar">
         <div id="path-panel" class="panel collapsed">
             <div class="panel-header" id="path-header">
                 <span>Path Finder</span>
@@ -258,45 +345,12 @@
                 <select id="end-node"></select>
                 <button id="btn-find">Find Path</button>
                 <button id="btn-reset">Reset View</button>
-                <hr style="border: none; border-top: 1px solid rgba(255,255,255,0.1); margin: 12px 0;">
-                <button id="btn-pause" style="background: rgba(255,255,255,0.05);">Pause Animation</button>
             </div>
         </div>
 
-        <div id="controls-panel" class="panel collapsed">
-            <div class="panel-header" id="controls-header">
-                <span>🎮 Controls</span>
-                <span class="panel-icon">+</span>
-            </div>
-            <div class="panel-body">
-                <div class="controls-list">
-                    <div>
-                        <div class="label">Rotate</div>
-                        Drag mouse
-                    </div>
-                    <div>
-                        <div class="label">Zoom</div>
-                        Scroll / <span class="key">+</span> <span class="key">-</span>
-                    </div>
-                    <div>
-                        <div class="label">Move Forward/Back</div>
-                        <span class="key">W</span> / <span class="key">S</span>
-                    </div>
-                    <div>
-                        <div class="label">Move Left/Right</div>
-                        <span class="key">A</span> / <span class="key">D</span>
-                    </div>
-                    <div>
-                        <div class="label">Move Up/Down</div>
-                        <span class="key">Q</span> / <span class="key">E</span>
-                    </div>
-                    <div>
-                        <div class="label">Click Node</div>
-                        View Details
-                    </div>
-                </div>
-            </div>
-        </div>
+        <button id="btn-pause" style="background: rgba(0,0,0,0.85); backdrop-filter: blur(8px); border: 1px solid rgba(255,255,255,0.15); border-radius: 12px; color: white; padding: 0 10px; height: 26px; cursor: pointer; transition: 0.2s; font-size: 10px; letter-spacing: 0.5px;">Pause</button>
+
+        <!-- Controls panel removed per user request -->
 
         <div id="search-container">
             <svg id="search-icon" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -314,9 +368,72 @@
         <div id="info-city" style="font-size: 11px; color: rgba(255,255,255,0.6); margin-bottom: 10px;"></div>
         <div id="info-description" style="font-size: 10px; color: rgba(255,255,255,0.5); line-height: 1.4; margin-bottom: 10px;"></div>
         <div id="info-tags" style="font-size: 10px; color: rgba(255,255,255,0.5); margin-bottom: 10px;"></div>
+        <button id="btn-show-network" style="margin-bottom: 8px; background: rgba(255,255,255,0.15); font-weight: bold; font-size: 11px;">SHOW NETWORK</button>
         <button id="btn-path-dest">Show Path To Another Person</button>
         <div id="info-path"></div>
+        <div class="info-actions">
+            <button id="btn-edit-node">EDIT</button>
+            <button id="btn-delete-node">DELETE</button>
+        </div>
+        <button id="btn-add-from-here" style="margin-top: 8px; border: 1px dashed rgba(255,255,255,0.3); background: transparent;">+ Add Connection From Here</button>
         <button id="btn-close-card" style="margin-top: 10px; font-size: 9px; background: rgba(255,255,255,0.05);">Close</button>
+    </div>
+
+    <!-- New UI Elements -->
+    <button id="btn-add-connection">
+        <span style="font-size: 14px; font-weight: lighter;">+</span> ADD CONNECTION
+    </button>
+
+    <div id="modal-overlay"></div>
+    <div id="add-modal">
+        <div class="modal-header">
+            <span id="modal-title">Add Person</span>
+            <span class="modal-close" id="btn-close-modal">&times;</span>
+        </div>
+        <form id="add-form">
+            <input type="hidden" id="form-mode" value="add">
+            <input type="hidden" id="form-person-id" value="">
+            <div class="form-group">
+                <label>Name</label>
+                <input type="text" id="f-name" required>
+            </div>
+            <div style="display:flex; gap:10px;">
+                <div class="form-group" style="flex:1;">
+                    <label>Age</label>
+                    <input type="number" id="f-age">
+                </div>
+                <div class="form-group" style="flex:2;">
+                    <label>Role / Profession</label>
+                    <input type="text" id="f-role">
+                </div>
+            </div>
+            <div style="display:flex; gap:10px;">
+                <div class="form-group" style="flex:1;">
+                    <label>City</label>
+                    <input type="text" id="f-city">
+                </div>
+                <div class="form-group" style="flex:1;">
+                    <label>Country</label>
+                    <input type="text" id="f-country">
+                </div>
+            </div>
+            <div class="form-group">
+                <label>Description</label>
+                <textarea id="f-desc" rows="2"></textarea>
+            </div>
+            <div class="form-group">
+                <label>Tags (comma separated)</label>
+                <input type="text" id="f-tags" placeholder="#Designer, #TelAviv">
+            </div>
+
+            <div id="connections-section">
+                <div style="font-size: 12px; margin-bottom: 10px; font-weight: bold; padding-top: 10px; border-top: 1px solid rgba(255,255,255,0.1);">Connections</div>
+                <div id="connections-list"></div>
+                <button type="button" class="btn-add-more-conn" id="btn-add-conn-entry">+ Add a connection</button>
+            </div>
+
+            <button type="submit" class="btn-submit" id="btn-submit-form">SAVE TO NETWORK</button>
+        </form>
     </div>
 
     <script type="importmap">
@@ -349,18 +466,22 @@
         labelRenderer.setSize(window.innerWidth, window.innerHeight);
         labelRenderer.domElement.style.position = 'absolute';
         labelRenderer.domElement.style.top = '0px';
-        labelRenderer.domElement.style.pointerEvents = 'none';
+        labelRenderer.domElement.style.pointerEvents = 'none'; // Keep container none so it doesn't block 3D
         document.body.appendChild(labelRenderer.domElement);
 
         const controls = new OrbitControls(camera, renderer.domElement);
         controls.enableDamping = true;
         controls.dampingFactor = 0.08;
-        controls.minDistance = 0.01;
+        controls.minDistance = 0.001;
         controls.maxDistance = 6000;
-        controls.zoomSpeed = 1.5;
-        controls.rotateSpeed = 0.8;
-        controls.panSpeed = 0.8;
-        controls.autoRotate = false;
+        controls.zoomSpeed = 2.5; // Make zooming in/out very fast
+        controls.rotateSpeed = 1.2; // Make roaming faster
+        controls.panSpeed = 1.2;
+        controls.autoRotate = true;
+        controls.autoRotateSpeed = 0.5;
+        controls.enableKeys = false; // Disable keyboard controls
+        controls.enablePan = true;   // Enable panning so users can navigate to off-center nodes
+        // Removed listenToKeyEvents(null) because it causes a TypeError in older three.js versions
 
         let masterGroup = new THREE.Group();
         scene.add(masterGroup);
@@ -386,6 +507,11 @@
         let meshPoints = null;
         let lineSegments = null;
         let lineSegFamily = null, lineSegFriend = null, lineSegAcq = null;
+        let globalFamilyIndices = [], globalFriendIndices = [], globalAcqIndices = [];
+        let connectionCurves = [];
+        let strandSegs = null;
+        const viewFrustum = new THREE.Frustum();
+        const projScreenMatrix = new THREE.Matrix4();
         let pathLineSegFamily = null, pathLineSegFriend = null;
         let connectionMap = new Map(); // Maps "id1-id2" to connection type for fast lookup
         let lineUniforms = {}; // { family, friend, acquaintance } → shader uniform objects
@@ -409,8 +535,10 @@
             varying float vRadiusNormal;
             varying float vDepthDist;
             varying float vIsRing;
+            varying float vPointRand;
             uniform float uFreq;
             void main() {
+                vPointRand = pointRand;
                 vColor = color; vStrandIndex = strandIndex; vRadiusNormal = strandRadius; vIsRing = isRing;
                 vec4 mvPosition = modelViewMatrix * vec4(position, 1.0);
                 float distScale = (80.0 / -mvPosition.z);
@@ -418,28 +546,50 @@
                 float freqThresh = (uFreq - 1.0) / 4.0;
                 if (pointRand > freqThresh && pointRand > 0.01) finalSize = 0.0;
                 vDepthDist = -mvPosition.z;
-                gl_PointSize = finalSize > 0.0 ? clamp(finalSize * distScale * 1.5, 4.0, 450.0) : 0.0;
+                gl_PointSize = finalSize > 0.0 ? clamp(finalSize * distScale * 1.5, 4.0, 70.0) : 0.0;
                 gl_Position = projectionMatrix * mvPosition;
             }
         `;
         const fragmentShaderPoints = `
             varying vec3 vColor; varying float vStrandIndex; varying float vRadiusNormal;
-            varying float vIsRing; uniform float uDepth; varying float vDepthDist;
+            varying float vIsRing; varying float vPointRand; uniform float uDepth; varying float vDepthDist;
+            uniform float uZoomLevel;
+            uniform float uIsSearching;
             void main() {
+                if (uIsSearching > 0.5 && vPointRand > 0.0) discard; // Hide all tail particles during search for a perfectly clean view!
+                
                 float alphaDrop = mix(0.5, 1.0, clamp(uDepth / 40.0, 0.0, 1.0));
+                float fogFactor = clamp(1400.0 / vDepthDist, 0.1, 1.0);
+
+                if (vPointRand == 0.0) {
+                    alphaDrop = 1.0; // Force nucleus to be fully opaque
+                    fogFactor = clamp(1400.0 / vDepthDist, 0.4, 1.0); // Less fog for nucleus so it stays bright
+                } else {
+                    alphaDrop *= (1.0 - smoothstep(0.0, 0.3, uZoomLevel));
+                    if (alphaDrop < 0.02) discard;
+                }
+                
                 vec2 cy = gl_PointCoord - vec2(0.5);
                 float ll = dot(cy, cy);
                 if (ll > 0.25) discard;
                 float alpha = smoothstep(0.25, 0.23, ll);
                 if (vIsRing > 0.5) { float inner = smoothstep(0.18, 0.16, ll); alpha = alpha - inner; if (alpha < 0.05) discard; }
-                float fogFactor = clamp(1400.0 / vDepthDist, 0.1, 1.0);
-                gl_FragColor = vec4(vColor, alpha * fogFactor * alphaDrop);
+                
+                // If the color is very dark (set by search highlight or focus), make the particle faint or invisible
+                float finalAlpha = alpha * fogFactor * alphaDrop;
+                if (vColor.r < 0.5) {
+                    finalAlpha *= (uIsSearching > 0.5 ? 0.0 : 0.4); // Invisible in search, faint but visible in focus
+                }
+                
+                gl_FragColor = vec4(vColor, finalAlpha);
             }
         `;
         const vertexShaderLines = `
             attribute float strandIndex; attribute float strandRadius; varying float vDepthDist;
+            attribute vec3 color; varying vec3 vColor;
             varying vec2 vScreenPos;
             void main() {
+                vColor = color;
                 vec4 mvPosition = modelViewMatrix * vec4(position, 1.0);
                 vDepthDist = -mvPosition.z;
                 gl_Position = projectionMatrix * mvPosition;
@@ -451,41 +601,34 @@
         const fragmentShaderFamily = `
             varying float vDepthDist; varying vec2 vScreenPos;
             uniform float uCamDist;
+            uniform float uOpacity;
             void main() {
-                float proximity = clamp(1.0 - (uCamDist - 200.0) / 700.0, 0.0, 1.0);
-                if (proximity < 0.01) discard;
                 float fogFactor = clamp(1400.0 / vDepthDist, 0.05, 1.0);
-                gl_FragColor = vec4(1.0, 1.0, 1.0, 0.9 * fogFactor * proximity);
+                gl_FragColor = vec4(1.0, 1.0, 1.0, 0.9 * fogFactor * uOpacity);
             }
         `;
 
-        // Friend: dashed (screen-space)
+        // Friend: dashed (screen-space) white
         const fragmentShaderFriend = `
             varying float vDepthDist; varying vec2 vScreenPos;
             uniform float uCamDist;
+            uniform float uOpacity;
             void main() {
-                float proximity = clamp(1.0 - (uCamDist - 150.0) / 600.0, 0.0, 1.0);
-                if (proximity < 0.01) discard;
-                // Screen-space dash: coarse stripes
                 float dash = fract((gl_FragCoord.x + gl_FragCoord.y) * 0.045);
                 if (dash > 0.55) discard;
                 float fogFactor = clamp(1400.0 / vDepthDist, 0.05, 1.0);
-                gl_FragColor = vec4(0.85, 0.92, 1.0, 0.7 * fogFactor * proximity);
+                gl_FragColor = vec4(1.0, 1.0, 1.0, 0.6 * fogFactor * uOpacity);
             }
         `;
 
-        // Acquaintance: fine dots, dimmer
+        // Acquaintance: double thin solid line (second line generated in createConnections)
         const fragmentShaderAcq = `
             varying float vDepthDist; varying vec2 vScreenPos;
             uniform float uCamDist;
+            uniform float uOpacity;
             void main() {
-                float proximity = clamp(1.0 - (uCamDist - 100.0) / 500.0, 0.0, 1.0);
-                if (proximity < 0.01) discard;
-                // Fine dot pattern
-                float dash = fract((gl_FragCoord.x + gl_FragCoord.y) * 0.09);
-                if (dash > 0.4) discard;
                 float fogFactor = clamp(1400.0 / vDepthDist, 0.05, 1.0);
-                gl_FragColor = vec4(0.7, 0.7, 0.8, 0.45 * fogFactor * proximity);
+                gl_FragColor = vec4(1.0, 1.0, 1.0, 0.4 * fogFactor * uOpacity);
             }
         `;
 
@@ -528,7 +671,7 @@
             pointData = [];
             graphAdjacency = Array.from({ length: numStrands }, () => []);
 
-            const maxSpread = 420.0;
+            const maxSpread = 300.0 + (numStrands * 3.5); // Grows dynamically with people count
             masterGroup.scale.set(1, 1, 1);
 
             particleCount = numStrands * pPerStrand;
@@ -571,11 +714,12 @@
                 const curlFreqZ  = Math.random() * 3 + 1;
                 const nucIdxStart = pIdx;
                 const progressT  = i / numStrands;
-                const nucleusSize = 90.0;
+                const nucleusSize = 100.0; // 10% larger
 
                 const div = document.createElement('div');
                 div.className = 'node-label';
                 div.textContent = userNames[i];
+                // Removed pointerEvents and onclick from here so CSS pointer-events: none works properly!
                 const labelObj = new CSS2DObject(div);
                 labelObj.position.copy(centerTarget);
                 masterGroup.add(labelObj);
@@ -602,16 +746,16 @@
 
                     if (j === 0) {
                         sizes[pIdx] = nucleusSize * 2.2; pointRandArr[pIdx] = 0; isRingArr[pIdx] = 0;
-                    } else if (j === 9) {
-                        sizes[pIdx] = 0; pointRandArr[pIdx] = 0; isRingArr[pIdx] = 1;
-                    } else if (j > 0 && j < 9) {
-                        sizes[pIdx] = nucleusSize * (0.4 + Math.random() * 0.6); pointRandArr[pIdx] = 0; isRingArr[pIdx] = 0;
-                    } else if (j === pPerStrand - 1 || Math.random() > 0.7) {
-                        sizes[pIdx] = 15 + Math.random() * 10;
-                        pointRandArr[pIdx] = (j === pPerStrand - 1) ? 0 : Math.random();
-                        isRingArr[pIdx] = 0;
                     } else {
-                        sizes[pIdx] = 0; pointRandArr[pIdx] = 1; isRingArr[pIdx] = 0;
+                        // Only ~10% of strands (tails) get particles, so it looks clean but retains shape
+                        if (i % 10 === 0) {
+                            sizes[pIdx] = Math.random() * 4.0 + 1.0; 
+                            pointRandArr[pIdx] = Math.random() + 0.01; 
+                        } else {
+                            sizes[pIdx] = 0.0;
+                            pointRandArr[pIdx] = 0.0;
+                        }
+                        isRingArr[pIdx] = 0;
                     }
 
                     if (j > 9) {
@@ -650,12 +794,19 @@
             globalGeometry.setAttribute('isRing',      new THREE.BufferAttribute(isRingArr, 1));
             globalGeometry.boundingSphere = new THREE.Sphere(new THREE.Vector3(), 10000);
 
-            shaderUniforms = { uDepth: { value: connParams.depth }, uFreq: { value: connParams.freq }, uResil: { value: connParams.resil } };
+            shaderUniforms = { 
+                uDepth: { value: connParams.depth }, 
+                uFreq: { value: connParams.freq }, 
+                uResil: { value: connParams.resil },
+                uZoomLevel: { value: 0.0 },
+                uIsSearching: { value: 0.0 }
+            };
 
             // Three separate line geometries sharing the same position buffer
             function makeLineGeo(indices) {
                 const g = new THREE.BufferGeometry();
                 g.setAttribute('position', sharedPos);
+                g.setAttribute('color', globalGeometry.attributes.color);
                 g.setAttribute('strandIndex', globalGeometry.attributes.strandIndex);
                 g.setAttribute('strandRadius', globalGeometry.attributes.strandRadius);
                 g.setIndex(indices);
@@ -669,29 +820,48 @@
                 acq:     { uCamDist: { value: 9999 } },
             };
 
-            if (familyIndices.length) {
-                lineSegFamily = new THREE.LineSegments(makeLineGeo(familyIndices), new THREE.ShaderMaterial({
-                    uniforms: lineUniforms.family, vertexShader: vertexShaderLines, fragmentShader: fragmentShaderFamily,
-                    transparent: true, depthWrite: false, blending: THREE.AdditiveBlending
-                }));
-                lineSegFamily.frustumCulled = false;
-                masterGroup.add(lineSegFamily);
-            }
-            if (friendIndices.length) {
-                lineSegFriend = new THREE.LineSegments(makeLineGeo(friendIndices), new THREE.ShaderMaterial({
-                    uniforms: lineUniforms.friend, vertexShader: vertexShaderLines, fragmentShader: fragmentShaderFriend,
-                    transparent: true, depthWrite: false, blending: THREE.AdditiveBlending
-                }));
-                lineSegFriend.frustumCulled = false;
-                masterGroup.add(lineSegFriend);
-            }
-            if (acqIndices.length) {
-                lineSegAcq = new THREE.LineSegments(makeLineGeo(acqIndices), new THREE.ShaderMaterial({
-                    uniforms: lineUniforms.acq, vertexShader: vertexShaderLines, fragmentShader: fragmentShaderAcq,
-                    transparent: true, depthWrite: false, blending: THREE.AdditiveBlending
-                }));
-                lineSegAcq.frustumCulled = false;
-                masterGroup.add(lineSegAcq);
+            globalFamilyIndices = familyIndices;
+            globalFriendIndices = friendIndices;
+            globalAcqIndices = acqIndices;
+
+            connectionCurves = [];
+            for (const conn of connectionsData) {
+                const aIdx = conn.a * pPerStrand;
+                const bIdx = conn.b * pPerStrand;
+                const curveGeo = new THREE.BufferGeometry();
+                let curveMat;
+                if (conn.type === 'family' || conn.type === 'family_core' || conn.type === 'family_extended') {
+                    curveMat = new THREE.ShaderMaterial({
+                        uniforms: { uCamDist: { value: 9999 }, uOpacity: { value: 1.0 } },
+                        vertexShader: vertexShaderLines, fragmentShader: fragmentShaderFamily,
+                        transparent: true, depthWrite: false, blending: THREE.AdditiveBlending
+                    });
+                } else if (conn.type === 'friend') {
+                    curveMat = new THREE.ShaderMaterial({
+                        uniforms: { uCamDist: { value: 9999 }, uOpacity: { value: 1.0 } },
+                        vertexShader: vertexShaderLines, fragmentShader: fragmentShaderFriend,
+                        transparent: true, depthWrite: false, blending: THREE.AdditiveBlending
+                    });
+                } else {
+                    curveMat = new THREE.ShaderMaterial({
+                        uniforms: { uCamDist: { value: 9999 }, uOpacity: { value: 1.0 } },
+                        vertexShader: vertexShaderLines, fragmentShader: fragmentShaderAcq,
+                        transparent: true, depthWrite: false, blending: THREE.AdditiveBlending
+                    });
+                }
+                const lineMesh = new THREE.Line(curveGeo, curveMat);
+                lineMesh.frustumCulled = false;
+                masterGroup.add(lineMesh);
+                connectionCurves.push({ mesh: lineMesh, aIdx, bIdx, type: conn.type });
+
+                // Add a second parallel line for acquaintances/professionals (double thin line)
+                if (conn.type === 'acquaintance') {
+                    const secondGeo = new THREE.BufferGeometry();
+                    const secondMesh = new THREE.Line(secondGeo, curveMat);
+                    secondMesh.frustumCulled = false;
+                    masterGroup.add(secondMesh);
+                    connectionCurves.push({ mesh: secondMesh, aIdx, bIdx, type: conn.type, isDouble: true });
+                }
             }
 
             // Create organic curved connections using TubeGeometry
@@ -747,9 +917,11 @@
                     uniforms: {}, vertexShader: vertexShaderLines,
                     fragmentShader: `
                         varying float vDepthDist;
+                        varying vec3 vColor;
                         void main() {
                             float fog = clamp(1400.0 / vDepthDist, 0.05, 1.0);
-                            gl_FragColor = vec4(1.0, 1.0, 1.0, 0.65 * fog);
+                            float alpha = vColor.r < 0.1 ? 0.02 : 0.65; // Hide lines of non-searched nodes
+                            gl_FragColor = vec4(vColor, alpha * fog);
                         }
                     `,
                     transparent: true, depthWrite: false, blending: THREE.AdditiveBlending
@@ -783,9 +955,7 @@
             document.getElementById('path-header').addEventListener('click', () => {
                 document.getElementById('path-panel').classList.toggle('collapsed');
             });
-            document.getElementById('controls-header').addEventListener('click', () => {
-                document.getElementById('controls-panel').classList.toggle('collapsed');
-            });
+            // (Controls panel removed)
 
             // Search — queries API
             let searchDebounce = null;
@@ -794,23 +964,25 @@
                 clearTimeout(searchDebounce);
                 if (!term) { resetSearch(); return; }
                 searchDebounce = setTimeout(async () => {
-                    const res = await fetch(`/api/people/search/query?q=${encodeURIComponent(term)}`);
-                    const matches = await res.json();
-                    const matchNames = new Set(matches.map(m => m.name));
-                    applySearchHighlight(matchNames);
+                    try {
+                        const res = await fetch(`http://127.0.0.1:1337/api/people/search/query?q=${encodeURIComponent(term)}`);
+                        const matches = await res.json();
+                        const matchNames = new Set(matches.map(m => m.name));
+                        applySearchHighlight(matchNames);
+                    } catch (err) { console.error(err); }
                 }, 200);
             });
 
             document.getElementById('btn-pause').addEventListener('click', () => {
                 isPaused = !isPaused;
-                document.getElementById('btn-pause').textContent = isPaused ? "Play Animation" : "Pause Animation";
+                document.getElementById('btn-pause').textContent = isPaused ? "Play" : "Pause";
                 document.getElementById('btn-pause').style.background = isPaused ? "rgba(255,255,255,0.8)" : "rgba(255,255,255,0.05)";
                 document.getElementById('btn-pause').style.color = isPaused ? "black" : "white";
             });
 
             document.getElementById('btn-find').onclick = () => {
                 const path = findPath(parseInt(sStart.value), parseInt(sEnd.value));
-                if (path) { initiatePathReveal(path); selectNode(parseInt(sEnd.value)); }
+                if (path) { initiatePathReveal(path); selectNode(parseInt(sEnd.value), false); }
             };
 
             document.getElementById('btn-reset').onclick = resetView;
@@ -824,21 +996,47 @@
                 }
             };
 
+            document.getElementById('btn-show-network').onclick = () => {
+                if (selectedNodeId !== null) {
+                    selectNode(selectedNodeId, true);
+                }
+            };
+
             window.addEventListener('click', (event) => {
-                if (event.target.closest('#top-bar') || event.target.closest('#info-card')) return;
+                if (event.target.closest('#top-bar') || event.target.closest('#info-card') || event.target.closest('#modal-overlay') || event.target.closest('#connection-modal')) return;
                 mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
                 mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
                 raycaster.setFromCamera(mouse, camera);
+                raycaster.params.Points.threshold = 8.0; // Increase hit area significantly!
                 if (meshPoints) {
                     const intersects = raycaster.intersectObject(meshPoints);
-                    if (intersects.length > 0) {
-                        const strandId = Math.floor(intersects[0].index / pPerStrand);
-                        selectNode(strandId);
+                    // Filter hits: only select if user clicked a nucleus particle (index % pPerStrand === 0)
+                    const validHits = intersects.filter(hit => hit.index % pPerStrand === 0);
+                    if (validHits.length > 0) {
+                        const strandId = Math.floor(validHits[0].index / pPerStrand);
+                        selectNode(strandId, false);
                     } else if (!pathTargetMode) {
-                        document.getElementById('info-card').classList.remove('visible');
-                        selectedNodeId = null;
+                        resetView();
                     }
                 }
+            });
+
+            // Hover state for points
+            window.addEventListener('mousemove', (event) => {
+                if (!meshPoints || event.target.closest('#top-bar') || event.target.closest('#info-card') || event.target.closest('#modal-overlay')) {
+                    document.body.style.cursor = 'default';
+                    return;
+                }
+                mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
+                mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
+                raycaster.setFromCamera(mouse, camera);
+                // Dynamic threshold: smaller when zoomed out, slightly larger when zoomed in
+                const camDist = camera.position.length();
+                raycaster.params.Points.threshold = camDist > 800 ? 1.0 : (camDist < 300 ? 4.0 : 2.0);
+                
+                const intersects = raycaster.intersectObject(meshPoints);
+                const validHits = intersects.filter(hit => hit.index % pPerStrand === 0);
+                document.body.style.cursor = validHits.length > 0 ? 'pointer' : 'default';
             });
 
             document.getElementById('loading').style.display = 'none';
@@ -846,24 +1044,31 @@
         }
 
         // --- Search helpers ---
+        let currentSearchNodes = new Set();
+        
         function applySearchHighlight(matchNames) {
             if (!globalGeometry) return;
+            currentSearchNodes.clear();
             const colors = globalGeometry.attributes.color.array;
-            for (let i = 0; i < colors.length; i++) colors[i] = 0.15;
+            for (let i = 0; i < colors.length; i++) colors[i] = 0.05; // Make non-matches extremely dark (transparent)
+            
+            // Hide all labels initially
             labelObjects.forEach(l => {
-                l.element.style.color = 'rgba(255,255,255,0.15)';
+                l.element.style.color = 'rgba(255,255,255,0.0)';
                 l.element.style.fontWeight = 'normal';
                 l.element.style.textShadow = 'none';
+                l.element.style.border = 'none';
                 l.element.classList.remove('searched');
             });
+            
             userNames.forEach((name, idx) => {
                 if (matchNames.has(name)) {
+                    currentSearchNodes.add(idx);
                     colorNode(idx, 1, 1, 1);
                     if (labelObjects[idx]) {
                         labelObjects[idx].element.style.color = 'rgba(255,255,255,1.0)';
                         labelObjects[idx].element.style.fontWeight = 'bold';
-                        labelObjects[idx].element.style.textShadow = '0 0 4px rgba(0,0,0,1)';
-                        labelObjects[idx].element.classList.add('searched');
+                        // Removed glowing text-shadow
                     }
                 }
             });
@@ -884,8 +1089,11 @@
         }
 
         // --- Interaction state ---
+        let swallowAnimation = null;
         let isPaused = false;
-        let layoutMode = 'sphere';
+        let layoutMode = 'sphere'; // 'sphere', 'path', 'focus'
+        let focusedNodeId = null;
+        let focusedNeighbors = new Set();
         let currentPath = [];
         let pathRevealState = 0;
         let pathRevealTimer = 0;
@@ -911,26 +1119,77 @@
             return null;
         }
 
-        function initiatePathReveal(path) {
+        let isTouringPath = false;
+
+        async function initiatePathReveal(path) {
             if (!path) return;
             currentPath = path;
-            pathRevealState = 1;
-            pathRevealTimer = customTime;
-            layoutMode = 'sphere';
+            layoutMode = 'path'; // Triggers linear layout in animate()
+            isTouringPath = true;
             isCameraAnimating = true;
             messiColored = false;
-            // Keep controls enabled so user can always interact (removed: controls.enabled = false;)
+            
+            // Clean up old visuals
             const colors = globalGeometry.attributes.color.array;
-            for (let i = 0; i < colors.length; i++) colors[i] = 0.15;
-            globalGeometry.attributes.color.needsUpdate = true;
-            labelObjects.forEach(l => { l.element.style.color = 'rgba(255,255,255,0.15)'; l.element.style.fontWeight = 'normal'; });
-            colorNode(currentPath[0], 1.0, 0.0, 1.0);
-            if (labelObjects[currentPath[0]]) {
-                labelObjects[currentPath[0]].element.style.color = 'rgba(255,255,255,1.0)';
-                labelObjects[currentPath[0]].element.style.fontWeight = 'bold';
+            for (let i = 0; i < colors.length; i += 3) {
+                colors[i] = 0.4; colors[i+1] = 0.4; colors[i+2] = 0.4;
             }
+            for (const pathNodeId of path) {
+                for (let j = 0; j < pPerStrand; j++) {
+                    const idx = (pathNodeId * pPerStrand + j) * 3;
+                    colors[idx] = 1.0; colors[idx+1] = 1.0; colors[idx+2] = 1.0;
+                }
+            }
+            globalGeometry.attributes.color.needsUpdate = true;
+            labelObjects.forEach((l, idx) => { 
+                if (!path.includes(idx)) {
+                    l.element.style.color = 'rgba(255,255,255,0.4)'; 
+                    l.element.style.fontWeight = 'normal';
+                    l.element.style.opacity = '0.4';
+                } else {
+                    l.element.style.color = 'rgba(255,255,255,1.0)';
+                    l.element.style.fontWeight = 'bold';
+                }
+            });
+            
             renderPathChain(path);
-            drawPathLines(path);
+
+            // Lay them out linearly
+            const pathSpacing = 500;
+            const offsetX = -((path.length - 1) * pathSpacing) / 2;
+            for (let i = 0; i < numStrands; i++) {
+                const p = pointData[i * pPerStrand];
+                const pathIdx = path.indexOf(i);
+                p.vx = 0; p.vy = 0; p.vz = 0;
+                if (pathIdx !== -1) {
+                    p.targetCx = offsetX + pathIdx * pathSpacing; p.targetCy = 0; p.targetCz = 0;
+                } else {
+                    // Push all non-path points outward like a magnet, forming a background shell
+                    const d = Math.hypot(p.baseCx, p.baseCy, p.baseCz);
+                    const pushR = Math.max(d, 2000); // Push to at least radius 2000 to clear the long path
+                    const scale = (d > 0.1) ? (pushR / d) : 1.0;
+                    p.targetCx = p.baseCx * scale;
+                    p.targetCy = p.baseCy * scale;
+                    p.targetCz = p.baseCz * scale;
+                }
+            }
+
+            // Background connections will be dimmed in animate(), no need to hide them completely
+
+            // Lock camera to view the path correctly from the front
+            const flatAngle = Math.PI / 2;
+            controls.maxPolarAngle = flatAngle;
+            controls.minPolarAngle = flatAngle;
+            controls.autoRotate = false;
+
+            // Fly camera to see the whole path perfectly from the front (2D view), much closer
+            camTargetLookAt.set(0, 0, 0);
+            camTargetPos.set(0, 0, Math.max(800, path.length * 280));
+            
+            // Let the points fly to their new positions
+            setTimeout(() => {
+                isCameraAnimating = false;
+            }, 3000);
         }
 
         function renderPathChain(path) {
@@ -1042,16 +1301,106 @@
             }
         }
 
-        function selectNode(id) {
+        function selectNode(id, triggerFocus = true) {
             if (pathTargetMode && selectedNodeId !== null && selectedNodeId !== id) {
                 const path = findPath(selectedNodeId, id);
-                if (path) { initiatePathReveal(path); selectNode(id); }
+                if (path) { initiatePathReveal(path); selectNode(id, false); }
                 disablePathTargetMode();
                 return;
             }
             selectedNodeId = id;
-            document.getElementById('info-card').classList.add('visible');
-            document.getElementById('info-name').textContent = userNames[id];
+            
+            if (triggerFocus) {
+                // Enter Focus Mode
+                layoutMode = 'focus';
+                focusedNodeId = id;
+                focusedNeighbors = new Set(graphAdjacency[id] || []);
+            
+                // Reposition nodes: Center the chosen node, put neighbors in a ring
+                const r = 400; // Ring radius
+                const neighborsArr = Array.from(focusedNeighbors);
+                const numNeighbors = neighborsArr.length;
+                
+                // Calculate the camera's current viewing plane so the ring perfectly faces the user
+                const camDir = new THREE.Vector3();
+                camera.getWorldDirection(camDir);
+                const camUp = camera.up.clone().normalize();
+                let camRight = new THREE.Vector3().crossVectors(camDir, camUp).normalize();
+                if (camRight.lengthSq() < 0.1) {
+                    camRight = new THREE.Vector3().crossVectors(camDir, new THREE.Vector3(1,0,0)).normalize();
+                }
+                const trueUp = new THREE.Vector3().crossVectors(camRight, camDir).normalize();
+                
+                for (let i = 0; i < numStrands; i++) {
+                    const p = pointData[i * pPerStrand];
+                    p.vx = 0; p.vy = 0; p.vz = 0;
+                    
+                    if (i === id) {
+                        p.targetCx = 0; p.targetCy = 0; p.targetCz = 0;
+                    } else if (focusedNeighbors.has(i)) {
+                        const nIdx = neighborsArr.indexOf(i);
+                        const angle = (nIdx / Math.max(1, numNeighbors)) * Math.PI * 2;
+                        const c = Math.cos(angle) * r;
+                        const s = Math.sin(angle) * r;
+                        p.targetCx = camRight.x * c + trueUp.x * s;
+                        p.targetCy = camRight.y * c + trueUp.y * s;
+                        p.targetCz = camRight.z * c + trueUp.z * s;
+                    } else {
+                        // Flatten rest of network into a second outer circle/disc facing the camera
+                        const angle = Math.atan2(p.baseCy, p.baseCx);
+                        const d = Math.hypot(p.baseCx, p.baseCy, p.baseCz);
+                        const outerR = 900 + (d * 0.4); // Push to outer belt starting at R=900
+                        const c = Math.cos(angle) * outerR;
+                        const s = Math.sin(angle) * outerR;
+                        p.targetCx = camRight.x * c + trueUp.x * s;
+                        p.targetCy = camRight.y * c + trueUp.y * s;
+                        p.targetCz = camRight.z * c + trueUp.z * s;
+                    }
+                }
+                
+                // Dim everyone, brighten focused node and its neighbors
+                const colors = globalGeometry.attributes.color.array;
+                for (let i = 0; i < colors.length; i += 3) {
+                    colors[i] = 0.4; colors[i+1] = 0.4; colors[i+2] = 0.4;
+                }
+                for (let j = 0; j < pPerStrand; j++) {
+                    const idx = (id * pPerStrand + j) * 3;
+                    colors[idx] = 1.0; colors[idx+1] = 1.0; colors[idx+2] = 1.0;
+                }
+                for (const neighborId of focusedNeighbors) {
+                    for (let j = 0; j < pPerStrand; j++) {
+                        const idx = (neighborId * pPerStrand + j) * 3;
+                        colors[idx] = 1.0; colors[idx+1] = 1.0; colors[idx+2] = 1.0;
+                    }
+                }
+                globalGeometry.attributes.color.needsUpdate = true;
+                
+                labelObjects.forEach((l, idx) => {
+                    if (idx === id || focusedNeighbors.has(idx)) {
+                        l.element.style.color = 'rgba(255,255,255,1.0)';
+                        l.element.style.fontWeight = 'bold';
+                        l.element.style.opacity = '1.0';
+                    } else {
+                        l.element.style.color = 'rgba(255,255,255,0.4)';
+                        l.element.style.fontWeight = 'normal';
+                        l.element.style.opacity = '0.4';
+                    }
+                });
+                
+                // Move camera to view the circle but don't lock rotation so user can explore
+                controls.autoRotate = false;
+                camTargetLookAt.set(0, 0, 0);
+                camTargetPos.copy(camDir).multiplyScalar(-800); // Zoom in on the circle from current angle!
+                isCameraAnimating = true;
+            }
+
+            // Always update the UI card when a node is selected
+            if (people && people[id]) {
+                showPersonCard(id, people[id]);
+            } else {
+                document.getElementById('info-card').classList.add('visible');
+                document.getElementById('info-name').textContent = userNames[id] || "Unknown Person";
+            }
             if (rootIdx !== -1 && rootIdx !== id) {
                 const degPath = findPath(rootIdx, id);
                 document.getElementById('info-badge').textContent = degPath ? (degPath.length - 1) + " Degrees from Omer" : "Disconnected";
@@ -1070,11 +1419,17 @@
             btn.classList.remove('active');
         }
 
-        function resetView() {
+        function resetView(preserveCamera = false) {
             layoutMode = 'sphere';
             pathRevealState = 0;
+            focusedNodeId = null;
+            focusedNeighbors.clear();
             controls.enabled = true;
-            isCameraAnimating = false;
+            controls.maxPolarAngle = Math.PI; // Remove path lock
+            controls.minPolarAngle = 0;
+            if (!preserveCamera) {
+                isCameraAnimating = false;
+            }
             for (let i = 0; i < numStrands; i++) {
                 const p = pointData[i * pPerStrand];
                 p.targetCx = p.baseCx; p.targetCy = p.baseCy; p.targetCz = p.baseCz;
@@ -1132,125 +1487,261 @@
             const posAttr = globalGeometry.attributes.position;
             const posArray = posAttr.array;
 
-            if (layoutMode === 'sphere') {
-                scene.rotation.y += 0.002 * speedFactor;
-                scene.rotation.x += 0.0008 * speedFactor;
-            } else {
-                scene.rotation.y += (0 - scene.rotation.y) * 0.05;
-                scene.rotation.x += (0 - scene.rotation.x) * 0.05;
+            if (!isPaused) {
+                const camDist = camera.position.distanceTo(controls.target);
+                const zoomLevel = Math.max(0, 1100 - camDist) / 1100;
+                const deepZoom = Math.max(0, (zoomLevel - 0.6) * 2.5); // Reaches 1.0 only at extreme zoom
+                const effectiveRotSpeed = speedFactor * Math.max(0.0, 1.0 - deepZoom); // Drops to 0!
+                
+                if (layoutMode === 'sphere') {
+                    scene.rotation.y += 0.002 * effectiveRotSpeed;
+                    scene.rotation.x += 0.0008 * effectiveRotSpeed;
+                } else {
+                    scene.rotation.y += (0 - scene.rotation.y) * 0.05;
+                    scene.rotation.x += (0 - scene.rotation.x) * 0.05;
+                }
             }
             scene.updateMatrixWorld();
 
-            if (pathRevealState > 0) {
-                const elapsedSeq = customTime - pathRevealTimer;
-                let lerpSpeed = 0.05;
-                if (pathRevealState === 1) {
-                    const wp = getNodeWorldPos(currentPath[0]);
-                    camTargetLookAt.copy(wp);
-                    camTargetPos.copy(wp).normalize().multiplyScalar(wp.length() + 450);
-                    if (elapsedSeq > 2.8) { pathRevealState = 2; pathRevealTimer = customTime; }
-                } else if (pathRevealState === 2) {
-                    camTargetLookAt.set(0, 0, 0);
-                    camTargetPos.set(0, 0, 3200);
-                    lerpSpeed = 0.02;
-                    if (elapsedSeq > 2.0) { pathRevealState = 3; pathRevealTimer = customTime; }
-                } else if (pathRevealState === 3) {
-                    const wp = getNodeWorldPos(currentPath[currentPath.length - 1]);
-                    camTargetLookAt.copy(wp);
-                    camTargetPos.copy(wp).normalize().multiplyScalar(wp.length() + 450);
-                    if (elapsedSeq > 0.8 && !messiColored) {
-                        colorNode(currentPath[currentPath.length - 1], 1.0, 0.71, 0.75);
-                        if (labelObjects[currentPath[currentPath.length - 1]]) {
-                            labelObjects[currentPath[currentPath.length - 1]].element.style.color = 'rgba(255,255,255,1.0)';
-                            labelObjects[currentPath[currentPath.length - 1]].element.style.fontWeight = 'bold';
-                        }
-                        messiColored = true;
-                    }
-                    if (elapsedSeq > 3.2) {
-                        pathRevealState = 4; pathRevealTimer = customTime; layoutMode = 'path';
-                        const pathSpacing = 350;
-                        const offsetX = -((currentPath.length - 1) * pathSpacing) / 2;
-                        for (let i = 0; i < numStrands; i++) {
-                            const p = pointData[i * pPerStrand];
-                            const pathIdx = currentPath.indexOf(i);
-                            p.vx = (Math.random()-0.5)*1600; p.vy = (Math.random()-0.5)*1600; p.vz = (Math.random()-0.5)*1600;
-                            if (pathIdx !== -1) {
-                                p.targetCx = offsetX + pathIdx * pathSpacing; p.targetCy = 0; p.targetCz = 0;
-                            } else {
-                                const d = Math.sqrt(p.baseCx**2 + p.baseCy**2 + p.baseCz**2);
-                                const push = 4000 / Math.max(d, 1);
-                                p.targetCx = p.baseCx * push; p.targetCy = p.baseCy * push; p.targetCz = p.baseCz * push;
-                            }
-                        }
-                    }
-                } else if (pathRevealState === 4) {
-                    camTargetLookAt.set(0,0,0); camTargetPos.set(0, 0, 1800);
-                    if (elapsedSeq > 2.5) { isCameraAnimating = false; controls.enabled = true; }
-                    const cosA = Math.cos(0.002 * speedFactor), sinA = Math.sin(0.002 * speedFactor);
-                    for (let i = 0; i < numStrands; i++) {
-                        if (!currentPath.includes(i)) {
-                            const p = pointData[i * pPerStrand];
-                            const oldX = p.targetCx, oldZ = p.targetCz;
-                            p.targetCx = oldX * cosA - oldZ * sinA; p.targetCz = oldX * sinA + oldZ * cosA;
-                        }
-                    }
-                    const colorStart = new THREE.Color(1.0, 0.0, 1.0), colorEnd = new THREE.Color(1.0, 0.71, 0.75);
-                    for (let i = 0; i < currentPath.length; i++) {
-                        const nodeId = currentPath[i];
-                        const baseFrac = i / (currentPath.length - 1);
-                        const wave = Math.sin(customTime * 3.0 - baseFrac * 5.0) * 0.4;
-                        const animFrac = Math.max(0, Math.min(1, baseFrac + wave));
-                        const c = colorStart.clone().lerp(colorEnd, animFrac);
-                        colorNode(nodeId, c.r, c.g, c.b);
-                        if (labelObjects[nodeId]) { labelObjects[nodeId].element.style.color = 'rgba(255,255,255,1.0)'; labelObjects[nodeId].element.style.fontWeight = 'bold'; }
-                    }
-                }
-                if (isCameraAnimating) { camera.position.lerp(camTargetPos, lerpSpeed); controls.target.lerp(camTargetLookAt, lerpSpeed); }
+            let lerpSpeed = 0.05;
+            if (isCameraAnimating) {
+                camera.position.lerp(camTargetPos, lerpSpeed);
+                controls.target.lerp(camTargetLookAt, lerpSpeed);
             }
 
-            const camDist = camera.position.length();
+            const camDist = camera.position.distanceTo(controls.target);
             const zoomLevel = Math.max(0, 1100 - camDist) / 1100;
-            const speedMult = 1.0 - zoomLevel * 0.85;
+            let speedMult = 1.0 - zoomLevel * 0.9; // Slow down drastically as we zoom in
+            if (currentSearchNodes.size > 0) speedMult = 0.0; // Completely freeze movement during search
+            
+            // SLOW DOWN MOVEMENT WHEN ZOOMED IN
+            controls.autoRotate = !isPaused && !isCameraAnimating; 
+            controls.autoRotateSpeed = 0.5 * speedMult;
+            
+            // "Super slow" movement when zoomed in
+            const interactionSpeed = zoomLevel > 0.5 ? 0.05 : 1.0; 
+            controls.rotateSpeed = interactionSpeed; 
+            controls.panSpeed = interactionSpeed;
 
-            // Hide connection lines when heavily zoomed in
-            if (lineSegFamily) lineSegFamily.visible = zoomLevel < 0.6;
-            if (lineSegFriend) lineSegFriend.visible = zoomLevel < 0.6;
-            if (lineSegAcq) lineSegAcq.visible = zoomLevel < 0.6;
+            // REMOVED FORCED LOCKING - Camera can roam freely!
+            // const flatAngle = Math.PI / 2;
+            // const flatness = Math.min(1.0, Math.max(0, (zoomLevel - 0.2) * 1.5)); // Ramps to 1.0 quickly
+            // controls.maxPolarAngle = THREE.MathUtils.lerp(Math.PI, flatAngle, flatness);
+            // controls.minPolarAngle = THREE.MathUtils.lerp(0, flatAngle, flatness);
+
+            if (shaderUniforms) {
+                shaderUniforms.uZoomLevel.value = zoomLevel; // Fade out tail dots
+                shaderUniforms.uIsSearching.value = currentSearchNodes.size > 0 ? 1.0 : 0.0;
+            }
+
+            const cullThreshold = 0.1; // Hide hairs almost immediately when starting to zoom in!
+            if (strandSegs) strandSegs.visible = (layoutMode !== 'path') && (zoomLevel <= cullThreshold) && (currentSearchNodes.size === 0); // Hide structural tail lines on zoom and in path mode AND during search!
+            
+            // Hide the straight solid lines during search or path mode, relying purely on the curved connection lines!
+            const showSolidLines = (layoutMode !== 'path') && (currentSearchNodes.size === 0);
+            if (lineSegFamily) lineSegFamily.visible = showSolidLines;
+            if (lineSegFriend) lineSegFriend.visible = showSolidLines;
+            if (lineSegAcq) lineSegAcq.visible = showSolidLines;
+
+            const pA = new THREE.Vector3();
+            const pB = new THREE.Vector3();
+            const camDir = new THREE.Vector3();
+            camera.getWorldDirection(camDir);
+            const controlsTarget = controls.target.clone();
+
+            let visibleNodes = null;
+            if (zoomLevel > cullThreshold) {
+                projScreenMatrix.multiplyMatrices(camera.projectionMatrix, camera.matrixWorldInverse);
+                viewFrustum.setFromProjectionMatrix(projScreenMatrix);
+                
+                visibleNodes = new Set();
+                const tempVec = new THREE.Vector3();
+                for (let i = 0; i < numStrands; i++) {
+                    const pIdx = i * pPerStrand;
+                    tempVec.set(posArray[pIdx*3], posArray[pIdx*3+1], posArray[pIdx*3+2]);
+                    tempVec.applyMatrix4(masterGroup.matrixWorld);
+                    if (viewFrustum.containsPoint(tempVec)) {
+                        visibleNodes.add(pIdx);
+                    }
+                }
+            }
+
+            for (const curve of connectionCurves) {
+                const aNode = curve.aIdx/pPerStrand;
+                const bNode = curve.bIdx/pPerStrand;
+
+                // Base visibility from zoom frustum culling
+                if (visibleNodes) {
+                    curve.mesh.visible = visibleNodes.has(curve.aIdx) && visibleNodes.has(curve.bIdx);
+                } else {
+                    curve.mesh.visible = true;
+                }
+                
+                // Mode-specific overrides (hiding)
+                if (currentSearchNodes.size > 0 && !currentSearchNodes.has(aNode) && !currentSearchNodes.has(bNode)) {
+                    curve.mesh.visible = false;
+                }
+                
+                // Emphasize path connections
+                const inPath = layoutMode === 'path' && currentPath.includes(curve.aIdx/pPerStrand) && currentPath.includes(curve.bIdx/pPerStrand);
+                
+                let targetOpacity = 1.0; // Base opacity
+                if (layoutMode === 'path') {
+                    targetOpacity = inPath ? 1.0 : 0.15; // Background network is faint
+                } else if (layoutMode === 'focus') {
+                    if (aNode === focusedNodeId || bNode === focusedNodeId) {
+                        targetOpacity = 1.0; // Connections to center are fully visible
+                    } else if (focusedNeighbors.has(aNode) && focusedNeighbors.has(bNode)) {
+                        targetOpacity = 0.3; // Connections between neighbors are semi-visible
+                    } else {
+                        targetOpacity = 0.25; // Rest of network is dimmed to faint visibility
+                    }
+                } else if (currentSearchNodes.size > 0) {
+                    targetOpacity = 0.0; // User requested: NO lines should be visible during search
+                }
+                if (curve.mesh.material.uniforms && curve.mesh.material.uniforms.uOpacity) {
+                    curve.mesh.material.uniforms.uOpacity.value = targetOpacity;
+                }
+                
+                pA.set(posArray[curve.aIdx*3], posArray[curve.aIdx*3+1], posArray[curve.aIdx*3+2]);
+                pB.set(posArray[curve.bIdx*3], posArray[curve.bIdx*3+1], posArray[curve.bIdx*3+2]);
+                
+                const midpoint = new THREE.Vector3().addVectors(pA, pB).multiplyScalar(0.5);
+                const dist = pA.distanceTo(pB);
+                
+                // Curve slightly outward from origin for organic bend
+                const towardOrigin = new THREE.Vector3(0, 0, 0).sub(midpoint).normalize();
+                
+                if (curve.isDouble) {
+                    // Offset the second line slightly sideways
+                    const right = new THREE.Vector3().crossVectors(towardOrigin, new THREE.Vector3(0,1,0)).normalize();
+                    pA.add(right.clone().multiplyScalar(4.0));
+                    pB.add(right.clone().multiplyScalar(4.0));
+                }
+
+                const cp = midpoint.clone().add(towardOrigin.multiplyScalar(dist * 0.25));
+                const bCurve = new THREE.QuadraticBezierCurve3(pA, cp, pB);
+                
+                curve.mesh.geometry.setFromPoints(bCurve.getPoints(12));
+            }
 
             for (let idx = 0; idx < particleCount; idx++) {
                 const data = pointData[idx];
                 const isPathNode = layoutMode === 'path' && currentPath.includes(data.strandId);
                 if (data.t === 0) {
-                    const forceX = (data.targetCx - data.cx) * 0.02;
-                    const forceY = (data.targetCy - data.cy) * 0.02;
-                    const forceZ = (data.targetCz - data.cz) * 0.02;
-                    data.vx = (data.vx + forceX) * 0.85; data.vy = (data.vy + forceY) * 0.85; data.vz = (data.vz + forceZ) * 0.85;
-                    data.cx += data.vx; data.cy += data.vy; data.cz += data.vz;
-                    const macroDeform = !isPathNode ? 1.0 + Math.sin(data.cx*0.01+elapsedTime*speedMult*0.6)*0.25 + Math.cos(data.cy*0.015+elapsedTime*speedMult*0.5)*0.25 : 1.0;
-                    const driftScale = !isPathNode ? (layoutMode==='path' ? 250 : 25) * data.amplitude : 2.0;
+                    if (swallowAnimation && swallowAnimation.idx === (idx / pPerStrand)) {
+                        const timeSinceStart = customTime - swallowAnimation.startTime;
+                        const flyDuration = 2.0;
+                        const holdDuration = 1.5; // Increased to give time for the deep zoom
+                        const zoomOutDuration = 2.0;
+                        
+                        const progress = Math.min(1.0, timeSinceStart / flyDuration);
+                        const ease = progress < 0.5 ? 2 * progress * progress : -1 + (4 - 2 * progress) * progress; 
+                        
+                        data.cx = THREE.MathUtils.lerp(swallowAnimation.startPos.x, data.targetCx, ease);
+                        data.cy = THREE.MathUtils.lerp(swallowAnimation.startPos.y, data.targetCy, ease);
+                        data.cz = THREE.MathUtils.lerp(swallowAnimation.startPos.z, data.targetCz, ease);
+                        data.vx = 0; data.vy = 0; data.vz = 0;
+                        
+                        const nodePosWorld = new THREE.Vector3(data.cx, data.cy, data.cz).applyMatrix4(masterGroup.matrixWorld);
+                        
+                        const flightDir = new THREE.Vector3(data.targetCx - swallowAnimation.startPos.x, data.targetCy - swallowAnimation.startPos.y, data.targetCz - swallowAnimation.startPos.z).normalize();
+                        if (flightDir.lengthSq() < 0.1) flightDir.set(0,0,1);
+                            
+                        if (progress < 1.0) {
+                            // Phase 1: Flying in. Camera chases the node.
+                            camTargetLookAt.copy(nodePosWorld);
+                            camTargetPos.copy(nodePosWorld.clone().sub(flightDir.multiplyScalar(150)));
+                        } else if (timeSinceStart < flyDuration + holdDuration) {
+                            // Phase 2: Arrived. Deep zoom IN towards the node (distance 35)
+                            camTargetLookAt.copy(nodePosWorld);
+                            camTargetPos.copy(nodePosWorld.clone().sub(flightDir.multiplyScalar(35)));
+                        } else {
+                            // Phase 3: Zoom out and Swallow Wave!
+                            if (!swallowAnimation.waveTriggered) {
+                                swallowAnimation.waveTriggered = true;
+                                const centerDir = nodePosWorld.clone().normalize();
+                                if (centerDir.lengthSq() < 0.1) centerDir.set(0,0,1);
+                                camTargetPos.copy(nodePosWorld.clone().add(centerDir.multiplyScalar(1000))); // Zoom out
+                            }
+                            
+                            const waveProgress = Math.min(1.0, (timeSinceStart - flyDuration - holdDuration) / zoomOutDuration);
+                            const waveRadius = waveProgress * 1500; 
+                            const waveThickness = 250;
+                            
+                            for (let r = 0; r < numStrands; r++) {
+                                if (r === swallowAnimation.idx) continue;
+                                const rp = pointData[r * pPerStrand];
+                                const d = Math.hypot(rp.cx - data.cx, rp.cy - data.cy, rp.cz - data.cz);
+                                
+                                if (Math.abs(d - waveRadius) < waveThickness) {
+                                    const x = (d - waveRadius) / waveThickness; 
+                                    const waveForce = -Math.sin(x * Math.PI) * (1.0 - waveProgress);
+                                    rp.vx += (rp.cx - data.cx) / d * waveForce * 35.0;
+                                    rp.vy += (rp.cy - data.cy) / d * waveForce * 35.0;
+                                    rp.vz += (rp.cz - data.cz) / d * waveForce * 35.0;
+                                }
+                            }
+                            
+                            if (waveProgress >= 1.0) {
+                                const finalIdx = swallowAnimation.idx;
+                                swallowAnimation = null; // Done!
+                                setTimeout(() => { selectNode(finalIdx); }, 100);
+                            }
+                        }
+                        
+                        const forceX = (data.targetCx - data.cx) * 0.02;
+                        const forceY = (data.targetCy - data.cy) * 0.02;
+                        const forceZ = (data.targetCz - data.cz) * 0.02;
+                        data.vx = (data.vx + forceX) * 0.85; data.vy = (data.vy + forceY) * 0.85; data.vz = (data.vz + forceZ) * 0.85;
+                        data.cx += data.vx; data.cy += data.vy; data.cz += data.vz;
+                    } else {
+                        const forceX = (data.targetCx - data.cx) * 0.02;
+                        const forceY = (data.targetCy - data.cy) * 0.02;
+                        const forceZ = (data.targetCz - data.cz) * 0.02;
+                        data.vx = (data.vx + forceX) * 0.85; data.vy = (data.vy + forceY) * 0.85; data.vz = (data.vz + forceZ) * 0.85;
+                        data.cx += data.vx; data.cy += data.vy; data.cz += data.vz;
+                    }
+
+                    const deepZoom = Math.max(0, (zoomLevel - 0.6) * 2.5);
+                    const squashFactor = Math.min(1.0, deepZoom);
+                    
+                    let finalCx = data.cx;
+                    let finalCy = data.cy;
+                    let finalCz = data.cz;
+
+                    // SQUASH ONTO CAMERA FOCAL PLANE FOR TRUE 2D
+                    if (layoutMode === 'sphere' && squashFactor > 0) {
+                        const vecToNode = new THREE.Vector3(data.cx, data.cy, data.cz).sub(controlsTarget);
+                        const distToPlane = vecToNode.dot(camDir);
+                        const squashedPos = new THREE.Vector3(data.cx, data.cy, data.cz).sub(camDir.clone().multiplyScalar(distToPlane));
+                        finalCx = THREE.MathUtils.lerp(data.cx, squashedPos.x, squashFactor);
+                        finalCy = THREE.MathUtils.lerp(data.cy, squashedPos.y, squashFactor);
+                        finalCz = THREE.MathUtils.lerp(data.cz, squashedPos.z, squashFactor);
+                    }
+                    
+                    // As we zoom in deeply, completely freeze the chaotic macro deformation so they organize into a static "2D" read state
+                    const orgFactor = Math.max(0.0, 1.0 - deepZoom);
+                    const macroDeform = !isPathNode ? 1.0 + (Math.sin(data.cx*0.01+elapsedTime*speedMult*0.6)*0.25 + Math.cos(data.cy*0.015+elapsedTime*speedMult*0.5)*0.25) * orgFactor : 1.0;
+                    
+                    // Reduce drift amplitude to absolutely 0 when zoomed in so they stop wiggling entirely
+                    const driftScale = ((!isPathNode ? (layoutMode==='path' ? 250 : 25) : 2.0) * data.amplitude) * orgFactor;
                     const rfX = Math.sin(elapsedTime*data.speed*speedMult*1.5+data.phase)*driftScale;
                     const rfY = Math.cos(elapsedTime*data.speed*speedMult*1.3+data.phase)*driftScale;
                     const rfZ = Math.sin(elapsedTime*data.speed*speedMult*1.7+data.phase)*driftScale;
-                    posArray[idx*3]   = data.cx*macroDeform + rfX;
-                    posArray[idx*3+1] = data.cy*macroDeform + rfY;
-                    posArray[idx*3+2] = data.cz*macroDeform + rfZ;
+                    posArray[idx*3]   = finalCx*macroDeform + rfX;
+                    posArray[idx*3+1] = finalCy*macroDeform + rfY;
+                    posArray[idx*3+2] = finalCz*macroDeform + rfZ;
                     if (labelObjects[data.strandId]) {
                         const lbl = labelObjects[data.strandId];
                         lbl.position.set(posArray[idx*3], posArray[idx*3+1], posArray[idx*3+2]);
                         _worldPos.copy(lbl.position); masterGroup.localToWorld(_worldPos);
                         const dCam = _worldPos.distanceTo(camera.position);
-                        let op = Math.max(0, Math.min(1.0, 1.0 - ((dCam - 400) / 500)));
-                        if (layoutMode === 'path') op = 1.0;
+                        let op = Math.max(0, Math.min(1.0, 1.0 - ((dCam - 700) / 300)));
+                        if (layoutMode === 'path' || currentSearchNodes.has(data.strandId)) op = 1.0;
                         lbl.element.style.opacity = op.toFixed(3);
 
-                        // Hide particles when node label is not visible
-                        if (zoomLevel > 0.3 && op < 0.1) {
-                            const startIdx = data.strandId * pPerStrand;
-                            const endIdx = startIdx + pPerStrand;
-                            for (let i = startIdx; i < endIdx; i++) {
-                                sizes[i] = 0;
-                            }
-                        }
+                        // Nodes always visible
                     }
                     continue;
                 }
@@ -1258,11 +1749,7 @@
                 const j = idx - rootPosIdx;
                 if (j === 9) { posArray[idx*3]=posArray[rootPosIdx*3]; posArray[idx*3+1]=posArray[rootPosIdx*3+1]; posArray[idx*3+2]=posArray[rootPosIdx*3+2]; continue; }
 
-                // Hide non-root particles when zoomed in
-                if (zoomLevel > 0.5) {
-                    sizes[idx] = 0;
-                    continue;
-                }
+                // Non-root particles always visible
 
                 if (j > 0 && j < 9) {
                     const ot = elapsedTime*(1.5+j*0.4)+data.phase*j;
@@ -1294,16 +1781,6 @@
 
             posAttr.needsUpdate = true;
 
-            // --- Handle keyboard camera movement ---
-            if (keyState['w']) { camera.position.addScaledVector(camera.getWorldDirection(new THREE.Vector3()), keyboardCameraSpeed); }
-            if (keyState['s']) { camera.position.addScaledVector(camera.getWorldDirection(new THREE.Vector3()), -keyboardCameraSpeed); }
-            if (keyState['a']) { camera.position.addScaledVector(camera.getWorldDirection(new THREE.Vector3()).cross(camera.up), keyboardCameraSpeed); }
-            if (keyState['d']) { camera.position.addScaledVector(camera.getWorldDirection(new THREE.Vector3()).cross(camera.up), -keyboardCameraSpeed); }
-            if (keyState['q']) { camera.position.y -= keyboardCameraSpeed; }
-            if (keyState['e']) { camera.position.y += keyboardCameraSpeed; }
-            if (keyState['+']) { camera.position.multiplyScalar(0.95); }
-            if (keyState['-']) { camera.position.multiplyScalar(1.05); }
-
             controls.update();
 
             // Update line shader uniforms with real camera distance
@@ -1324,60 +1801,27 @@
             labelRenderer.setSize(window.innerWidth, window.innerHeight);
         });
 
-        // --- Keyboard Navigation (WASD + Q/E + +/- zoom) ---
-        const keyState = {};
-        let userTakingControl = false; // Flag to prevent animation from taking over
+        // Interrupt camera animation on mouse interaction
+        let userTakingControl = false;
 
-        window.addEventListener('keydown', (e) => {
-            keyState[e.key.toLowerCase()] = true;
-            if (['w', 'a', 's', 'd', 'q', 'e', '+', '-'].includes(e.key.toLowerCase())) {
-                e.preventDefault();
-                // Interrupt camera animation when user uses keyboard camera controls
-                isCameraAnimating = false;
-                controls.enabled = true;  // CRITICAL: Enable OrbitControls
-                userTakingControl = true;
-            }
-        });
-        window.addEventListener('keyup', (e) => {
-            keyState[e.key.toLowerCase()] = false;
-        });
-
-        // Interrupt camera animation on mouse movement (from OrbitControls)
-        let isMouseDown = false;
-        renderer.domElement.addEventListener('mousedown', (e) => {
-            isMouseDown = true;
-            // Enable OrbitControls immediately on any mouse interaction
+        let pointerDownPos = { x: 0, y: 0 };
+        renderer.domElement.addEventListener('pointerdown', (e) => {
+            pointerDownPos.x = e.clientX;
+            pointerDownPos.y = e.clientY;
+            isCameraAnimating = false; // Instantly unlock camera on touch/click
             controls.enabled = true;
-            // Don't interrupt on right-click (context menu)
-            if (e.button === 0 || e.button === 2) {
-                userTakingControl = true;
-                isCameraAnimating = false;
-            }
-        });
-        renderer.domElement.addEventListener('mouseup', () => {
-            isMouseDown = false;
-        });
-        renderer.domElement.addEventListener('mousemove', (e) => {
-            // Interrupt camera animation when user is dragging
-            if (isMouseDown && (Math.abs(e.movementX) > 2 || Math.abs(e.movementY) > 2)) {
-                isCameraAnimating = false;
-                controls.enabled = true;  // CRITICAL: Enable OrbitControls
-                userTakingControl = true;
-            }
         });
 
-        // Enable mouse wheel zoom immediately
         renderer.domElement.addEventListener('wheel', (e) => {
             controls.enabled = true;
             isCameraAnimating = false;
         }, { passive: false });
 
-        // Keyboard camera movement in animate loop
-        const keyboardCameraSpeed = 25;
-        const keyboardZoomSpeed = 40;
-
         // Click detection for labels using raycaster
         renderer.domElement.addEventListener('click', (event) => {
+            const dx = Math.abs(event.clientX - pointerDownPos.x);
+            const dy = Math.abs(event.clientY - pointerDownPos.y);
+            if (dx > 5 || dy > 5) return; // Ignore click if it was a drag (pan/rotate)
             mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
             mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
             raycaster.setFromCamera(mouse, camera);
@@ -1402,8 +1846,8 @@
         async function init() {
             try {
                 const [pRes, cRes] = await Promise.all([
-                    fetch('/api/people'),
-                    fetch('/api/connections')
+                    fetch('http://127.0.0.1:1337/api/people'),
+                    fetch('http://127.0.0.1:1337/api/connections')
                 ]);
                 people = await pRes.json();
                 const apiConnections = await cRes.json();
@@ -1421,6 +1865,237 @@
         }
 
         init();
+
+        // --- New UI Logic: Add Connection & Edit/Delete ---
+        const modal = document.getElementById('add-modal');
+        const overlay = document.getElementById('modal-overlay');
+        const form = document.getElementById('add-form');
+        const connectionsList = document.getElementById('connections-list');
+        
+        function openModal(mode, personData = null, defaultConnectionNodeId = null) {
+            modal.classList.add('visible');
+            overlay.classList.add('visible');
+            document.getElementById('form-mode').value = mode;
+            document.getElementById('connections-list').innerHTML = '';
+            
+            if (mode === 'add') {
+                document.getElementById('modal-title').textContent = 'Add Person';
+                document.getElementById('btn-submit-form').textContent = 'SAVE TO NETWORK';
+                document.getElementById('form-person-id').value = '';
+                form.reset();
+                document.getElementById('connections-section').style.display = 'block';
+                if (defaultConnectionNodeId !== null && people[defaultConnectionNodeId]) {
+                    addConnectionEntry(people[defaultConnectionNodeId].id);
+                } else {
+                    addConnectionEntry();
+                }
+            } else if (mode === 'edit') {
+                document.getElementById('modal-title').textContent = 'Edit Person';
+                document.getElementById('btn-submit-form').textContent = 'UPDATE NETWORK';
+                document.getElementById('form-person-id').value = personData.id;
+                document.getElementById('f-name').value = personData.name || '';
+                document.getElementById('f-age').value = personData.age || '';
+                document.getElementById('f-role').value = personData.role || '';
+                document.getElementById('f-city').value = personData.city || '';
+                document.getElementById('f-country').value = personData.country || '';
+                document.getElementById('f-desc').value = personData.description || '';
+                document.getElementById('f-tags').value = personData.tags || '';
+                document.getElementById('connections-section').style.display = 'block';
+                
+                // Prepopulate connections if any exist
+                if (personData.connections && personData.connections.length > 0) {
+                    personData.connections.forEach(c => addConnectionEntry(c.id, c.type, c.strength));
+                } else {
+                    addConnectionEntry();
+                }
+            }
+        }
+
+        function closeModal() {
+            modal.classList.remove('visible');
+            overlay.classList.remove('visible');
+        }
+
+        document.getElementById('btn-add-connection').addEventListener('click', () => openModal('add'));
+        document.getElementById('btn-close-modal').addEventListener('click', closeModal);
+        overlay.addEventListener('click', closeModal);
+
+        function addConnectionEntry(defaultTargetId = null, defaultType = 'friend', defaultStrength = 3) {
+            const div = document.createElement('div');
+            div.className = 'connection-entry';
+            
+            let options = '<option value="">Select a person...</option>';
+            people.forEach(p => {
+                options += `<option value="${p.id}" ${p.id === defaultTargetId ? 'selected' : ''}>${p.name}</option>`;
+            });
+
+            div.innerHTML = `
+                <button type="button" class="btn-remove-conn">&times;</button>
+                <select class="conn-target" required>${options}</select>
+                <select class="conn-type" required>
+                    <option value="friend" ${defaultType === 'friend' ? 'selected' : ''}>Friend</option>
+                    <option value="family_core" ${defaultType === 'family_core' ? 'selected' : ''}>Family (Close)</option>
+                    <option value="family_extended" ${defaultType === 'family_extended' ? 'selected' : ''}>Family (Extended)</option>
+                    <option value="acquaintance" ${defaultType === 'acquaintance' ? 'selected' : ''}>Acquaintance / Colleague</option>
+                </select>
+                <select class="conn-strength">
+                    <option value="5" ${defaultStrength == 5 ? 'selected' : ''}>Strength: 5/5</option>
+                    <option value="4" ${defaultStrength == 4 ? 'selected' : ''}>Strength: 4/5</option>
+                    <option value="3" ${defaultStrength == 3 ? 'selected' : ''}>Strength: 3/5</option>
+                    <option value="2" ${defaultStrength == 2 ? 'selected' : ''}>Strength: 2/5</option>
+                    <option value="1" ${defaultStrength == 1 ? 'selected' : ''}>Strength: 1/5</option>
+                </select>
+            `;
+            div.querySelector('.btn-remove-conn').onclick = () => div.remove();
+            connectionsList.appendChild(div);
+        }
+
+        document.getElementById('btn-add-conn-entry').addEventListener('click', () => addConnectionEntry());
+
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const mode = document.getElementById('form-mode').value;
+            const data = {
+                name: document.getElementById('f-name').value,
+                age: document.getElementById('f-age').value,
+                role: document.getElementById('f-role').value,
+                city: document.getElementById('f-city').value,
+                country: document.getElementById('f-country').value,
+                description: document.getElementById('f-desc').value,
+                tags: document.getElementById('f-tags').value,
+            };
+
+            // Auto-tagging logic
+            if (!data.tags && data.description) {
+                const words = data.description.split(/[\s,.-]+/);
+                const ignoreWords = ['this','that','with','from','they','the','and','for','was','not','are','but','you','all','any','can','her','him','out'];
+                const keywords = words.filter(w => w.length > 3 && !ignoreWords.includes(w.toLowerCase())).slice(0, 4);
+                data.tags = keywords.map(w => '#' + w.replace(/[^a-zA-Zא-ת]/g, '')).join(', ');
+                document.getElementById('f-tags').value = data.tags;
+            }
+
+            const submitBtn = document.getElementById('btn-submit-form');
+            submitBtn.textContent = 'SAVING...';
+            submitBtn.disabled = true;
+
+            try {
+                // Collect connections for BOTH add and edit modes
+                const conns = [];
+                const entries = document.querySelectorAll('.connection-entry');
+                entries.forEach(entry => {
+                    const targetId = entry.querySelector('.conn-target').value;
+                    if (targetId) {
+                        conns.push({
+                            id: parseInt(targetId),
+                            type: entry.querySelector('.conn-type').value,
+                            strength: parseInt(entry.querySelector('.conn-strength').value)
+                        });
+                    }
+                });
+                data.connections = conns;
+
+                if (mode === 'add') {
+                    const res = await fetch('http://127.0.0.1:1337/api/people', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(data)
+                    });
+                    if (res.status === 409) {
+                        alert('Error: This person is already in the network! Please find them and add a connection directly.');
+                        throw new Error('409 Conflict');
+                    }
+                    if (!res.ok) throw new Error('Failed to add person');
+                } else if (mode === 'edit') {
+                    const personId = document.getElementById('form-person-id').value;
+                    const res = await fetch(`http://127.0.0.1:1337/api/people/${personId}`, {
+                        method: 'PUT',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(data)
+                    });
+                    if (!res.ok) throw new Error('Failed to edit person');
+                }
+                
+                closeModal();
+                
+                document.getElementById('loading').style.display = 'block';
+                await init();
+                
+                if ((mode === 'add' || mode === 'edit') && numStrands > 0) {
+                    let targetIdx = numStrands - 1;
+                    if (mode === 'edit') {
+                        const personId = parseInt(document.getElementById('form-person-id').value);
+                        const idx = people.findIndex(p => p.id === personId);
+                        if (idx !== -1) targetIdx = idx;
+                    }
+                    
+                    const pIdx = targetIdx * pPerStrand;
+                    
+                    setTimeout(() => {
+                        const pData = pointData[targetIdx * pPerStrand];
+                        if (!pData) return;
+                        
+                        // Start point: flying in from behind the camera
+                        const startPos = camera.position.clone().add(camera.getWorldDirection(new THREE.Vector3()).multiplyScalar(300));
+                        masterGroup.worldToLocal(startPos);
+                        
+                        swallowAnimation = {
+                            idx: targetIdx,
+                            startTime: customTime,
+                            startPos: startPos,
+                            waveTriggered: false
+                        };
+                        
+                        isCameraAnimating = true;
+                        
+                        // Highlight the new node and label
+                        if (labelObjects[targetIdx]) {
+                            labelObjects[targetIdx].element.style.opacity = '1.0';
+                            labelObjects[targetIdx].element.style.color = 'white';
+                            labelObjects[targetIdx].element.style.fontWeight = 'bold';
+                        }
+                        colorNode(targetIdx, 1, 1, 1);
+                        
+                    }, 500); // Give Three.js time to compile the new geometry
+                }
+                
+            } catch (err) {
+                console.error(err);
+                alert('Error saving data');
+            } finally {
+                submitBtn.textContent = 'SAVE TO NETWORK';
+                submitBtn.disabled = false;
+            }
+        });
+
+        document.getElementById('btn-edit-node').addEventListener('click', () => {
+            if (selectedNodeId !== null && people[selectedNodeId]) {
+                openModal('edit', people[selectedNodeId]);
+            }
+        });
+
+        document.getElementById('btn-delete-node').addEventListener('click', async () => {
+            if (selectedNodeId !== null && people[selectedNodeId]) {
+                const person = people[selectedNodeId];
+                document.getElementById('loading').style.display = 'block';
+                try {
+                    if (confirm(`Are you sure you want to delete ${person.name}?`)) {
+                        await fetch(`http://127.0.0.1:1337/api/people/${person.id}`, { method: 'DELETE' });
+                        location.reload();
+                    } else {
+                        document.getElementById('loading').style.display = 'none';
+                    }
+                } catch (e) {
+                    console.error('Delete error', e);
+                    document.getElementById('loading').style.display = 'none';
+                }
+            }
+        });
+
+        document.getElementById('btn-add-from-here').addEventListener('click', () => {
+            if (selectedNodeId !== null) {
+                openModal('add', null, selectedNodeId);
+            }
+        });
     </script>
 </body>
 </html>
