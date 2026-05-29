@@ -11,9 +11,9 @@ router.get('/search/query', (req, res) => {
         SELECT id, name, city, role, tags
         FROM people
         WHERE lower(name) LIKE ? OR lower(city) LIKE ? OR lower(role) LIKE ?
-           OR lower(tags) LIKE ? OR lower(coalesce(description,'')) LIKE ?
+           OR lower(tags) LIKE ?
         LIMIT 30
-    `).all(q, q, q, q, q);
+    `).all(q, q, q, q);
     res.json(people);
 });
 
@@ -103,11 +103,16 @@ router.put('/:id', (req, res) => {
         WHERE id = ?
     `).run(age||null, city||null, country||null, role||null, description||null, tags||null, req.params.id);
 
+    db.exec('BEGIN');
+    
+    // First, completely delete all existing connections for this person
+    db.prepare('DELETE FROM connections WHERE person_a_id = ? OR person_b_id = ?').run(req.params.id, req.params.id);
+
+    // Then re-insert the updated connections
     if (Array.isArray(conns) && conns.length) {
         const stmt = db.prepare(
             'INSERT OR IGNORE INTO connections (person_a_id, person_b_id, type, strength) VALUES (?,?,?,?)'
         );
-        db.exec('BEGIN');
         for (const c of conns) {
             if (!c.id) continue;
             const t = ['family_core','family_extended','friend','acquaintance'].includes(c.type) ? c.type : 'acquaintance';
@@ -115,8 +120,9 @@ router.put('/:id', (req, res) => {
             stmt.run(req.params.id, c.id, t, s);
             stmt.run(c.id, req.params.id, t, s);
         }
-        db.exec('COMMIT');
     }
+    
+    db.exec('COMMIT');
 
     res.json({ id: req.params.id, updated: true });
 });
