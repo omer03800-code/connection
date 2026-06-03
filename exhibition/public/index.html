@@ -85,14 +85,17 @@
             backdrop-filter: blur(8px);
             border: 1px solid rgba(255, 255, 255, 0.15);
             border-radius: 20px;
-            padding: 0 12px;
             height: 34px;
-            width: 180px;
-            transition: width 0.3s, border-color 0.3s;
+            width: 250px;
+            transition: border-color 0.3s;
             overflow: hidden;
+            padding: 0 16px;
         }
-        #search-container:focus-within { border-color: rgba(255,255,255,0.5); }
+        #search-container:focus-within { 
+            border-color: rgba(255,255,255,0.5); 
+        }
         #search-icon { width: 14px; height: 14px; opacity: 0.6; flex-shrink: 0; }
+        
         #search-input {
             background: transparent;
             border: none;
@@ -257,7 +260,29 @@
             width: auto;
         }
         #btn-add-connection:hover { background: white; color: black; }
-
+        
+        /* Discover Connections Button */
+        #btn-discover-connections {
+            position: absolute;
+            bottom: 80px;
+            left: 30px;
+            background: rgba(0, 0, 0, 0.85);
+            backdrop-filter: blur(8px);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            color: white;
+            padding: 12px 24px;
+            border-radius: 30px;
+            font-size: 11px;
+            letter-spacing: 1px;
+            cursor: pointer;
+            z-index: 100;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.3s;
+            width: auto;
+        }
+        #btn-discover-connections:hover { background: white; color: black; }
         /* Theme Toggle Button */
         #btn-theme {
             position: absolute;
@@ -397,7 +422,7 @@
             </div>
         </div>
 
-        <button id="btn-pause" style="background: rgba(0,0,0,0.85); backdrop-filter: blur(8px); border: 1px solid rgba(255,255,255,0.15); border-radius: 12px; color: white; padding: 0 10px; height: 26px; cursor: pointer; transition: 0.2s; font-size: 10px; letter-spacing: 0.5px;">Pause</button>
+        <button id="btn-pause" style="background: rgba(0,0,0,0.85); backdrop-filter: blur(8px); border: 1px solid rgba(255,255,255,0.15); border-radius: 20px; color: white; padding: 0 16px; height: 34px; cursor: pointer; transition: 0.2s; font-size: 10px; font-weight: bold; letter-spacing: 1px;">PAUSE</button>
 
         <!-- Controls panel removed per user request -->
 
@@ -406,8 +431,10 @@
                 <circle cx="11" cy="11" r="8"></circle>
                 <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
             </svg>
-            <input type="text" id="search-input" list="people-list" placeholder="" autocomplete="off">
+            <input type="text" id="search-input" list="people-list" placeholder="Search connections..." autocomplete="off">
         </div>
+        
+        <a href="about.html" id="btn-info" style="text-decoration: none; background: rgba(0,0,0,0.85); backdrop-filter: blur(8px); border: 1px solid rgba(255,255,255,0.15); border-radius: 50%; color: white; width: 34px; height: 34px; cursor: pointer; transition: 0.2s; font-size: 16px; display: flex; align-items: center; justify-content: center; font-family: serif; font-style: italic;">i</a>
     </div>
 
     <div id="info-card">
@@ -422,6 +449,11 @@
         <div id="info-description" style="font-size: 10px; color: rgba(255,255,255,0.5); line-height: 1.4; margin-bottom: 10px;"></div>
         <div id="info-tags" style="font-size: 10px; color: rgba(255,255,255,0.5); margin-bottom: 10px;"></div>
         
+        <div id="info-suggestions" style="margin-top: 15px; margin-bottom: 15px; border-top: 1px dashed rgba(255,255,255,0.2); padding-top: 10px; display: none;">
+            <div style="font-size: 11px; font-weight: bold; margin-bottom: 8px; color: #aaa;">SUGGESTED CONNECTIONS</div>
+            <div id="info-suggestions-list"></div>
+        </div>
+        
         <div id="info-connections-list" style="margin-top: 15px; margin-bottom: 15px; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 10px; font-size: 10px; color: rgba(255,255,255,0.8); max-height: 120px; overflow-y: auto;"></div>
 
         <button id="btn-show-network" style="margin-bottom: 8px; background: rgba(255,255,255,0.15); font-weight: bold; font-size: 11px;">SHOW NETWORK</button>
@@ -433,15 +465,42 @@
         </div>
         <button id="btn-add-from-here" style="margin-top: 8px; border: 1px dashed rgba(255,255,255,0.3); background: transparent;">+ Add Connection From Here</button>
         <button id="btn-close-card" style="margin-top: 10px; font-size: 9px; background: rgba(255,255,255,0.05);">Close</button>
+        
+        <div id="info-secondary-card" style="display: none; border-top: 1px dashed rgba(255,255,255,0.3); padding-top: 15px; margin-top: 15px;">
+            <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 5px;">
+                <div>
+                    <h3 id="sec-info-name" style="margin: 0; font-size: 14px; font-weight: bold;"></h3>
+                    <div id="sec-info-role" style="font-size: 10px; color: #aaa;"></div>
+                </div>
+                <button id="btn-close-sec" style="background: transparent; color: #aaa; border: none; font-size: 16px; cursor: pointer; padding: 0;">&times;</button>
+            </div>
+            <div id="sec-info-details" style="font-size: 10px; color: rgba(255,255,255,0.6); margin-bottom: 10px;"></div>
+            <div style="display: flex; gap: 5px;">
+                <button id="btn-sec-ignore" style="flex: 1; background: transparent; color: #aaa; border: 1px solid rgba(255,255,255,0.2); border-radius: 4px; padding: 6px; font-size: 10px; cursor: pointer;">Not Related</button>
+                <button id="btn-sec-connect" style="flex: 1; background: white; color: black; border: none; border-radius: 4px; padding: 6px; font-weight: bold; font-size: 10px; cursor: pointer;">Connect</button>
+            </div>
+        </div>
     </div>
 
     <!-- New UI Elements -->
+    
+    <button id="btn-discover-connections">
+        <span style="font-size: 16px;">✨</span> DISCOVER CONNECTIONS
+    </button>
     <button id="btn-add-connection">
         <span style="font-size: 14px; font-weight: lighter;">+</span> ADD CONNECTION
     </button>
     <button id="btn-theme" title="Toggle Light/Dark Mode">Light Mode</button>
 
     <div id="modal-overlay" class="modal-overlay"></div>
+    
+    <div id="discover-modal" class="modal" style="display: none; padding-top: 40px; padding-bottom: 20px; max-width: 95vw; width: 95vw; height: 90vh; box-sizing: border-box; flex-direction: column;">
+        <span class="close-btn" id="btn-close-discover" style="position: absolute; font-size: 32px; right: 25px; top: 15px; cursor: pointer; color: white;">&times;</span>
+        <h2 style="margin-bottom: 5px; font-weight: 300; font-size: 28px; text-align: center;">Discover Connections</h2>
+        <p style="font-size: 14px; color: rgba(255,255,255,0.6); margin-bottom: 30px; text-align: center;">Help us map the network by approving suggested matches.</p>
+        <div id="discover-list" style="flex: 1; overflow-y: auto; padding-right: 15px; display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 25px; align-content: start;"></div>
+    </div>
+
     <div id="add-modal" class="modal">
         <span class="back-btn" id="btn-wizard-back" style="position: absolute; top: 20px; left: 20px; font-size: 24px; cursor: pointer; color: rgba(255,255,255,0.5); display: none;">&larr;</span>
         <span class="close-btn" id="btn-close-modal">&times;</span>
@@ -492,6 +551,13 @@
 
                 <!-- STEP 4: ADD DETAILS -->
                 <div id="wizard-step-4" class="wizard-step">
+                    <div id="add-person-instructions" style="background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; padding: 12px; margin-bottom: 20px; text-align: center;">
+                        <p style="font-size: 11px; color: rgba(255,255,255,0.8); margin: 0; line-height: 1.5;">
+                            <strong style="color: white; font-size: 13px;">Help the system find your matches!</strong><br>
+                            Please fill in as many details as possible: high school, mechina, army unit/base, university, role, city, work...<br>
+                            The more accurate the details, the better the system will discover your connections.
+                        </p>
+                    </div>
                     <div class="form-group">
                         <label>Name</label>
                         <input type="text" id="f-name" required>
@@ -1136,7 +1202,7 @@
                 if (!term) { resetSearch(); return; }
                 searchDebounce = setTimeout(async () => {
                     try {
-                        const res = await fetch(`http://127.0.0.1:1337/api/people/search/query?q=${encodeURIComponent(term)}`);
+                        const res = await fetch(`/api/people/search/query?q=${encodeURIComponent(term)}`);
                         const matches = await res.json();
                         const matchNames = new Set(matches.map(m => m.name));
                         applySearchHighlight(matchNames);
@@ -1146,7 +1212,7 @@
 
             document.getElementById('btn-pause').addEventListener('click', () => {
                 isPaused = !isPaused;
-                document.getElementById('btn-pause').textContent = isPaused ? "Play" : "Pause";
+                document.getElementById('btn-pause').textContent = isPaused ? "PLAY" : "PAUSE";
                 document.getElementById('btn-pause').style.background = isPaused ? "rgba(255,255,255,0.8)" : "rgba(255,255,255,0.05)";
                 document.getElementById('btn-pause').style.color = isPaused ? "black" : "white";
             });
@@ -1850,6 +1916,97 @@
                 connListDiv.innerHTML = '<div style="opacity: 0.5; font-style: italic;">No connections recorded.</div>';
                 connListDiv.style.display = 'block';
             }
+            
+            const suggDiv = document.getElementById('info-suggestions');
+            const suggList = document.getElementById('info-suggestions-list');
+            const secCard = document.getElementById('info-secondary-card');
+            suggList.innerHTML = '';
+            secCard.style.display = 'none'; // reset secondary card
+            
+            let ignoredMatches = JSON.parse(localStorage.getItem('ignoredMatches') || '[]');
+            
+            let matchScores = [];
+            people.forEach(other => {
+                if (other.id === person.id) return;
+                if (person.connections && person.connections.some(c => c.id === other.id)) return;
+                if (ignoredMatches.includes(person.id + '-' + other.id) || ignoredMatches.includes(other.id + '-' + person.id)) return;
+                
+                const result = calculateMatchScore(person, other);
+                if (result.score >= 25) {
+                    matchScores.push({ person: other, score: result.score, shared: result.sharedConcepts });
+                }
+            });
+            
+            matchScores.sort((a, b) => b.score - a.score);
+            const topScores = matchScores.slice(0, 3);
+            
+            if (topScores.length > 0) {
+                suggDiv.style.display = 'block';
+                topScores.forEach(match => {
+                    const d = document.createElement('div');
+                    d.style.cssText = 'display: flex; align-items: center; background: transparent; padding: 2px 0; margin-bottom: 2px; cursor: pointer; transition: 0.2s;';
+                    let sharedText = match.shared.length > 0 ? match.shared.join(', ') : 'Similar background';
+                    d.innerHTML = `
+                        <div style="width: 6px; height: 6px; border-radius: 50%; background: #4CAF50; margin-right: 8px;"></div>
+                        <div style="flex: 1; display: flex; justify-content: space-between; align-items: center;">
+                            <span style="font-size: 11px; font-weight: bold; color: white;">${match.person.name}</span>
+                            <span style="font-size: 9px; color: #aaa;">${sharedText}</span>
+                        </div>
+                    `;
+                    
+                    d.addEventListener('mouseenter', () => d.style.background = 'rgba(255,255,255,0.05)');
+                    d.addEventListener('mouseleave', () => d.style.background = 'transparent');
+                    
+                    suggList.appendChild(d);
+                    
+                    d.addEventListener('click', () => {
+                        // Show secondary card
+                        secCard.style.display = 'block';
+                        document.getElementById('sec-info-name').textContent = match.person.name;
+                        document.getElementById('sec-info-role').textContent = match.person.role || '';
+                        
+                        let details = [];
+                        if (match.person.age) details.push(`Age: ${match.person.age}`);
+                        if (match.person.city) details.push(match.person.city);
+                        document.getElementById('sec-info-details').textContent = details.join(' | ');
+                        
+                        const btnConnect = document.getElementById('btn-sec-connect');
+                        btnConnect.textContent = 'Connect with ' + match.person.name;
+                        btnConnect.onclick = async () => {
+                            try {
+                                const res = await fetch('/api/connections', {
+                                    method: 'POST',
+                                    headers: { 'Content-Type': 'application/json' },
+                                    body: JSON.stringify({ person_a_id: person.id, person_b_id: match.person.id, type: 'acquaintance', strength: 3 })
+                                });
+                                if (res.ok) {
+                                    btnConnect.textContent = 'Connected!';
+                                    btnConnect.style.background = '#333';
+                                    btnConnect.style.color = 'white';
+                                    btnConnect.disabled = true;
+                                    setTimeout(() => window.location.reload(), 800);
+                                }
+                            } catch (err) {
+                                console.error(err);
+                            }
+                        };
+                        
+                        document.getElementById('btn-sec-ignore').onclick = () => {
+                            let ignored = JSON.parse(localStorage.getItem('ignoredMatches') || '[]');
+                            ignored.push(person.id + '-' + match.person.id);
+                            localStorage.setItem('ignoredMatches', JSON.stringify(ignored));
+                            secCard.style.display = 'none';
+                            d.style.display = 'none';
+                        };
+                    });
+                });
+                
+                document.getElementById('btn-close-sec').onclick = () => {
+                    secCard.style.display = 'none';
+                };
+            } else {
+                suggDiv.style.display = 'none';
+            }
 
             document.getElementById('info-card').classList.add('visible');
             selectedNodeId = index;
@@ -2233,8 +2390,8 @@
         async function init() {
             try {
                 const [pRes, cRes] = await Promise.all([
-                    fetch('http://127.0.0.1:1337/api/people'),
-                    fetch('http://127.0.0.1:1337/api/connections')
+                    fetch('/api/people'),
+                    fetch('/api/connections')
                 ]);
                 people = await pRes.json();
                 const apiConnections = await cRes.json();
@@ -2292,6 +2449,116 @@
             }
         }
         
+        
+        const discoverModal = document.getElementById('discover-modal');
+        const discoverList = document.getElementById('discover-list');
+        
+        document.getElementById('btn-discover-connections').addEventListener('click', () => {
+            overlay.style.display = 'block';
+            discoverModal.style.display = 'flex';
+            
+            discoverList.innerHTML = '<div style="text-align: center; color: #aaa; margin-top: 20px;">Scanning network for potential matches...</div>';
+            
+            // Run scanning async so UI doesn't freeze
+            setTimeout(() => {
+                let allScores = [];
+                let ignoredGlobal = JSON.parse(localStorage.getItem('ignoredMatches') || '[]');
+                
+                // Only scan first N people or take a random sample to avoid O(N^2) lag if N > 1000
+                // For exhibition sizes (e.g. 500), N^2 is 250,000, which takes ~50ms
+                for (let i = 0; i < people.length; i++) {
+                    for (let j = i + 1; j < people.length; j++) {
+                        const p1 = people[i];
+                        const p2 = people[j];
+                        
+                        // Skip if already connected or ignored
+                        if (p1.connections && p1.connections.some(c => c.id === p2.id)) continue;
+                        if (ignoredGlobal.includes(p1.id + '-' + p2.id) || ignoredGlobal.includes(p2.id + '-' + p1.id)) continue;
+                        
+                        const result = calculateMatchScore(p1, p2);
+                        if (result.score >= 25) { // Higher threshold for global suggestions
+                            allScores.push({ p1, p2, score: result.score, shared: result.sharedConcepts });
+                        }
+                    }
+                }
+                
+                allScores.sort((a, b) => b.score - a.score);
+                const topMatches = allScores.slice(0, 20); // Top 20 network-wide
+                
+                discoverList.innerHTML = '';
+                if (topMatches.length === 0) {
+                    discoverList.innerHTML = '<div style="text-align: center; color: #aaa; margin-top: 20px;">No high-probability matches found.</div>';
+                    return;
+                }
+                
+                topMatches.forEach((match, idx) => {
+                    const d = document.createElement('div');
+                    d.style.cssText = 'background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; padding: 20px; display: flex; flex-direction: column; align-items: center; justify-content: space-between; gap: 15px; box-sizing: border-box; box-shadow: 0 4px 15px rgba(0,0,0,0.2);';
+                    let sharedText = match.shared.length > 0 ? `Shared: ${match.shared.join(', ')}` : 'Similar background';
+                    
+                    const role1 = match.p1.role ? match.p1.role : '';
+                    const role2 = match.p2.role ? match.p2.role : '';
+                    
+                    d.innerHTML = `
+                        <div style="display: flex; justify-content: space-between; width: 100%; align-items: flex-start;">
+                            <div style="text-align: center; flex: 1;">
+                                <div style="font-size: 16px; font-weight: bold; color: white; margin-bottom: 4px;">${match.p1.name}</div>
+                                <div style="font-size: 11px; color: #aaa; line-height: 1.3;">${role1}</div>
+                            </div>
+                            
+                            <div style="width: 30px; text-align: center; color: rgba(255,255,255,0.2); font-size: 20px; font-weight: 300;">&</div>
+                            
+                            <div style="text-align: center; flex: 1;">
+                                <div style="font-size: 16px; font-weight: bold; color: white; margin-bottom: 4px;">${match.p2.name}</div>
+                                <div style="font-size: 11px; color: #aaa; line-height: 1.3;">${role2}</div>
+                            </div>
+                        </div>
+                        
+                        <div style="font-size: 12px; color: #4CAF50; background: rgba(76, 175, 80, 0.1); padding: 6px 12px; border-radius: 12px; border: 1px solid rgba(76, 175, 80, 0.2); text-align: center; width: 90%;">
+                            ${sharedText}
+                        </div>
+                        
+                        <div style="display: flex; gap: 12px; width: 100%; margin-top: 10px;">
+                            <button class="btn-discover-ignore" style="flex: 1; background: transparent; color: #aaa; border: 1px solid rgba(255,255,255,0.2); border-radius: 20px; padding: 12px; font-size: 12px; cursor: pointer; transition: 0.2s;">Not Related</button>
+                            <button class="btn-discover-add" data-idx="${idx}" style="flex: 1; background: white; color: black; border: none; border-radius: 20px; padding: 12px; font-weight: bold; font-size: 12px; cursor: pointer; transition: 0.2s;">CONNECT</button>
+                        </div>
+                    `;
+                    discoverList.appendChild(d);
+                    
+                    d.querySelector('.btn-discover-ignore').addEventListener('click', () => {
+                        let ignored = JSON.parse(localStorage.getItem('ignoredMatches') || '[]');
+                        ignored.push(match.p1.id + '-' + match.p2.id);
+                        localStorage.setItem('ignoredMatches', JSON.stringify(ignored));
+                        d.style.display = 'none';
+                    });
+                    
+                    d.querySelector('.btn-discover-add').addEventListener('click', async (e) => {
+                        try {
+                            const res = await fetch('/api/connections', {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify({ person_a_id: match.p1.id, person_b_id: match.p2.id, type: 'acquaintance', strength: 3 })
+                            });
+                            if (res.ok) {
+                                e.target.textContent = 'Connected!';
+                                e.target.style.background = '#333';
+                                e.target.style.color = 'white';
+                                e.target.disabled = true;
+                                setTimeout(() => window.location.reload(), 1000);
+                            }
+                        } catch (err) {
+                            console.error(err);
+                        }
+                    });
+                });
+            }, 100);
+        });
+        
+        document.getElementById('btn-close-discover').addEventListener('click', () => {
+            discoverModal.style.display = 'none';
+            overlay.style.display = 'none';
+        });
+
         document.getElementById('btn-wizard-back').addEventListener('click', () => {
             if (currentWizardStep === 4) goToWizardStep(1);
             else if (currentWizardStep === 5) goToWizardStep(4);
@@ -2340,7 +2607,12 @@
                     'computer science', 'מדעי המחשב', 'cs', 'software engineering', 'הנדסת תוכנה', 'electrical engineering', 'הנדסת חשמל', 'ee', 'industrial engineering', 'הנדסת תעשייה וניהול', 'תעשייה וניהול', 'business administration', 'מנהל עסקים', 'economics', 'כלכלה', 'psychology', 'פסיכולוגיה', 'law', 'משפטים', 'עריכת דין', 'medicine', 'רפואה', 'nursing', 'סיעוד', 'education', 'חינוך', 'הוראה', 'accounting', 'ראיית חשבון', 'חשבונאות', 'architecture', 'אדריכלות', 'ארכיטקטורה', 'marketing', 'שיווק', 'communications', 'תקשורת', 'data science', 'מדע הנתונים', 'דאטה סיינס', 'political science', 'מדעי המדינה', 'social work', 'עבודה סוציאלית', 'biology', 'ביולוגיה', 'mechanical engineering', 'הנדסת מכונות',
                     'tel aviv university', 'tau', 'אוניברסיטת תל אביב', 'hebrew university', 'huji', 'האוניברסיטה העברית', 'technion', 'הטכניון', 'weizmann institute of science', 'מכון ויצמן', 'weizmann', 'ben gurion university', 'bgu', 'אוניברסיטת בן גוריון', 'בן גוריון', 'bar ilan university', 'biu', 'בר אילן', 'bar ilan', 'reichman university', 'idc', 'רייכמן', 'הבינתחומי', 'shenkar', 'שנקר', 'bezalel', 'בצלאל', 'colman', 'המכללה למינהל', 'מכללה למנהל', 'the college of management', 'open university', 'האוניברסיטה הפתוחה', 'holon institute of technology', 'hit', 'מכון טכנולוגי חולון',
                     'software engineer', 'full stack developer', 'frontend developer', 'backend developer', 'mobile developer', 'ios developer', 'android developer', 'web developer', 'game developer', 'devops engineer', 'site reliability engineer', 'sre', 'cloud engineer', 'cloud architect', 'solutions architect', 'data engineer', 'data analyst', 'data scientist', 'machine learning engineer', 'ai engineer', 'ai researcher', 'prompt engineer', 'cybersecurity analyst', 'cybersecurity engineer', 'information security manager', 'penetration tester', 'soc analyst', 'qa engineer', 'automation engineer', 'test engineer', 'product manager', 'technical product manager', 'project manager', 'program manager', 'scrum master', 'business analyst', 'systems analyst', 'ux designer', 'ui designer', 'ux researcher', 'product designer', 'service designer', 'interaction designer', 'technical writer', 'solutions consultant', 'customer success manager', 'technical support engineer', 'sales engineer', 'presales engineer', 'it manager', 'it administrator', 'database administrator', 'dba', 'network engineer', 'embedded systems engineer', 'hardware engineer', 'electronics engineer', 'robotics engineer', 'computer vision engineer', 'blockchain developer', 'ar/vr developer', 'marketing manager', 'digital marketing manager', 'brand manager', 'marketing director', 'chief marketing officer', 'cmo', 'performance marketing manager', 'growth marketing manager', 'product marketing manager', 'content marketing manager', 'social media manager', 'community manager', 'influencer marketing manager', 'email marketing specialist', 'seo specialist', 'sem specialist', 'ppc specialist', 'marketing specialist', 'marketing coordinator', 'marketing analyst', 'market research analyst', 'brand strategist', 'creative strategist', 'communications manager', 'public relations manager', 'pr manager', 'pr specialist', 'media planner', 'media buyer', 'campaign manager', 'advertising manager', 'copywriter', 'content creator', 'content manager', 'content strategist', 'creative director', 'art director', 'graphic designer', 'ux writer', 'crm manager', 'partnership manager', 'business development manager', 'event manager', 'event producer', 'e-commerce manager', 'affiliate marketing manager', 'influencer relations manager', 'marketing consultant', 'freelancer',
-                    'google', 'microsoft', 'apple', 'amazon', 'nvidia', 'intel', 'meta', 'facebook', 'ibm', 'salesforce', 'monday.com', 'monday', 'wix', 'fiverr', 'check point', 'checkpoint', 'cyberark', 'nice', 'amdocs', 'playtika', 'etoro', 'taboola', 'outbrain'
+                    'google', 'microsoft', 'apple', 'amazon', 'nvidia', 'intel', 'meta', 'facebook', 'ibm', 'salesforce', 'monday.com', 'monday', 'wix', 'fiverr', 'check point', 'checkpoint', 'cyberark', 'nice', 'amdocs', 'playtika', 'etoro', 'taboola', 'outbrain',
+                    'golani', 'givati', 'nahal', 'paratroopers', 'tzanhanim', 'kfir', 'armored corps', 'shiryon', 'artillery', 'totchanim', 'combat engineering', 'handasa kravit', 'air force', 'heil haavir', 'navy', 'heil hayam', 'home front command', 'pikud haoref', 'border police', 'magav', 'intelligence', 'aman', 'general staff reconnaissance', 'sayeret matkal', 'naval commandos', 'shayetet 13', 'air force commandos', 'shaldag', 'special forces', 'maglan', 'undercover unit', 'duvdevan', 'reconnaissance unit', 'egoz', 'combat engineering special forces', 'yahalom', 'k9 unit', 'oketz', 'combat search and rescue', 'unit 669', 'signals intelligence', 'unit 8200', '8200', 'counter-terror', 'lotar',
+                    'welfare nco', 'mashakit tash', 'combat soldier', 'lochem', 'lochemet', 'education nco', 'mashakit chinuch', 'operations room controller', 'sambatzit', 'commander', 'mefaked', 'mefakedet', 'intelligence analyst', 'modiin', 'infantry instructor', 'madrichat chir', 'combat instructor', 'madrichat krav', 'training instructor', 'madricha', 'operations nco', 'mashak mivtzaim', 'human resources nco', 'mashakit koach adam',
+                    'bahad 1', 'bahad 7', 'bahad 12', 'glilot', 'kirya', 'tel hashomer', 'ir habahadim', 'tzrifin', 'nevatim', 'hatzerim', 'ramat david', 'palmachim', 'ramon', 'ovda', 'ze\'elim', 'zeelim', 're\'im', 'reim', 'urim', 'nafah', 'saar 474', 'barak 188', 'golani 1', 'givati 84', 'nahal 933', 'tzanhanim 35', 'kfir 900', 'harel 10', 'alexandroni 3', 'carmeli 2',
+                    'reali', 'alliance', 'gymnasia herzliya', 'gymnasia', 'leo baeck', 'thelma yellin', 'kfar hayarok', 'mosinson', 'hadassim', 'ben shemen', 'kadoorie', 'wizo nahalal', 'shevach mofet', 'boyar', 'leyada', 'harel', 'ort', 'ort singalovski', 'ort bialik', 'ort motzkin', 'ort ginzburg', 'amal', 'atid', 'darca', 'branco weiss', 'ironi alef', 'ironi bet', 'ironi gimel', 'ironi dalet', 'ironi hey', 'ironi vav', 'makif alef', 'makif bet', 'makif gimel', 'makif dalet', 'makif hey', 'makif vav', 'makif zayin', 'makif het', 'rabin', 'begin', 'blich', 'בליך', 'misgav', 'משגב', 'yifat', 'יפעת',
+                    'derech eretz', 'nitzana', 'kmehin', 'ein yahav', 'ashalim', 'bnei david', 'ein prat', 'nachshon', 'gal', 'maayan baruch', 'tavor', 'lachish', 'arava', 'yachad', 'hanegev', 'aderet', 'keshet yehuda', 'haruach haisraelit', 'meitar', 'kol ami', 'mechinat rabin'
                 ];
                 synonymWords.forEach(w => allKnownTags.add(w));
                 
@@ -2413,22 +2685,17 @@
             goToWizardStep(6);
         });
 
-        function generateRecommendations() {
-            const fCity = document.getElementById('f-city').value.trim().toLowerCase();
-            const fRole = document.getElementById('f-role').value.trim().toLowerCase();
-            const fTags = document.getElementById('f-tags').value.split(',').map(t => t.trim().toLowerCase()).filter(Boolean);
+
+        function calculateMatchScore(p1, p2) {
             const ignoreCities = ['tel aviv', 'jerusalem', 'haifa', 'תל אביב', 'ירושלים', 'חיפה'];
-            
-            // Semantic Synonym Groups
-            const fText = [fCity, fRole, ...fTags].join(' ');
             const synonymGroups = [
-                { type: 'degree', words: ['עיצוב', 'תקשורת חזותית', 'visual communication', 'designer', 'מעצבת', 'מעצב', 'design', 'ux', 'ui'] },
-                { type: 'uni', words: ['אוניברסיטת חיפה', 'haifa university', 'university of haifa', 'ויצו חיפה', 'wizo'] },
-                { type: 'city', words: ['אילניה', 'ilaniya', 'ilania', 'מושב אילניה'] },
-                { type: 'city', words: ['עכו', 'akko', 'acre'] },
-                { type: 'city', words: ['צפת', 'tzfat', 'safed'] },
-                { type: 'city', words: ['פרדס חנה', 'פרדס חנה כרכור', 'pardes hanna', 'pardes hanna karkur', 'pardes hanna-karkur'] },
-                { type: 'city', words: ['זכרון יעקב', 'zikhron ya\'akov', 'zikhron yaakov'] },
+                { type: 'degree', words: ['design', 'visual communication', 'designer', 'ux', 'ui', 'עיצוב', 'תקשורת חזותית', 'מעצבת', 'מעצב'] },
+                { type: 'uni', words: ['haifa university', 'university of haifa', 'wizo', 'אוניברסיטת חיפה', 'ויצו חיפה'] },
+                { type: 'city', words: ['ilaniya', 'ilania', 'אילניה', 'מושב אילניה'] },
+                { type: 'city', words: ['akko', 'acre', 'עכו'] },
+                { type: 'city', words: ['tzfat', 'safed', 'צפת'] },
+                { type: 'city', words: ['pardes hanna', 'pardes hanna karkur', 'pardes hanna-karkur', 'פרדס חנה', 'פרדס חנה כרכור'] },
+                { type: 'city', words: ['zikhron yaakov', 'zikhron ya\'akov', 'זכרון יעקב'] },
                 { type: 'degree', words: ['computer science', 'מדעי המחשב', 'cs', 'software engineering', 'הנדסת תוכנה'] },
                 { type: 'degree', words: ['electrical engineering', 'הנדסת חשמל', 'ee'] },
                 { type: 'degree', words: ['industrial engineering', 'הנדסת תעשייה וניהול', 'תעשייה וניהול'] },
@@ -2459,96 +2726,128 @@
                 { type: 'uni', words: ['colman', 'המכללה למינהל', 'מכללה למנהל', 'the college of management'] },
                 { type: 'uni', words: ['open university', 'האוניברסיטה הפתוחה'] },
                 { type: 'uni', words: ['hit', 'holon institute of technology', 'מכון טכנולוגי חולון'] },
-                { type: 'company', words: ['google'] }, { type: 'company', words: ['microsoft'] }, { type: 'company', words: ['apple'] }, { type: 'company', words: ['amazon'] }, { type: 'company', words: ['nvidia'] }, { type: 'company', words: ['intel'] }, { type: 'company', words: ['meta', 'facebook'] }, { type: 'company', words: ['ibm'] }, { type: 'company', words: ['salesforce'] }, { type: 'company', words: ['monday.com', 'monday'] }, { type: 'company', words: ['wix'] }, { type: 'company', words: ['fiverr'] }, { type: 'company', words: ['check point', 'checkpoint'] }, { type: 'company', words: ['cyberark'] }, { type: 'company', words: ['nice'] }, { type: 'company', words: ['amdocs'] }, { type: 'company', words: ['playtika'] }, { type: 'company', words: ['etoro'] }, { type: 'company', words: ['taboola'] }, { type: 'company', words: ['outbrain'] }
+                { type: 'company', words: ['google'] }, { type: 'company', words: ['microsoft'] }, { type: 'company', words: ['apple'] }, { type: 'company', words: ['amazon'] }, { type: 'company', words: ['nvidia'] }, { type: 'company', words: ['intel'] }, { type: 'company', words: ['meta', 'facebook'] }, { type: 'company', words: ['ibm'] }, { type: 'company', words: ['salesforce'] }, { type: 'company', words: ['monday.com', 'monday'] }, { type: 'company', words: ['wix'] }, { type: 'company', words: ['fiverr'] }, { type: 'company', words: ['check point', 'checkpoint'] }, { type: 'company', words: ['cyberark'] }, { type: 'company', words: ['nice'] }, { type: 'company', words: ['amdocs'] }, { type: 'company', words: ['playtika'] }, { type: 'company', words: ['etoro'] }, { type: 'company', words: ['taboola'] }, { type: 'company', words: ['outbrain'] },
+                { type: 'army_unit', words: ['golani'] }, { type: 'army_unit', words: ['givati'] }, { type: 'army_unit', words: ['nahal'] }, { type: 'army_unit', words: ['paratroopers', 'tzanhanim'] }, { type: 'army_unit', words: ['kfir'] }, { type: 'army_unit', words: ['armored corps', 'shiryon'] }, { type: 'army_unit', words: ['artillery', 'totchanim'] }, { type: 'army_unit', words: ['combat engineering', 'handasa kravit'] }, { type: 'army_unit', words: ['air force', 'heil haavir'] }, { type: 'army_unit', words: ['navy', 'heil hayam'] }, { type: 'army_unit', words: ['home front command', 'pikud haoref'] }, { type: 'army_unit', words: ['border police', 'magav'] }, { type: 'army_unit', words: ['intelligence', 'aman'] }, { type: 'army_unit', words: ['sayeret matkal', 'general staff reconnaissance'] }, { type: 'army_unit', words: ['shayetet 13', 'naval commandos'] }, { type: 'army_unit', words: ['shaldag', 'air force commandos'] }, { type: 'army_unit', words: ['maglan', 'special forces'] }, { type: 'army_unit', words: ['duvdevan', 'undercover unit'] }, { type: 'army_unit', words: ['egoz', 'reconnaissance unit'] }, { type: 'army_unit', words: ['yahalom', 'combat engineering special forces'] }, { type: 'army_unit', words: ['oketz', 'k9 unit'] }, { type: 'army_unit', words: ['unit 669', 'combat search and rescue'] }, { type: 'army_unit', words: ['unit 8200', '8200', 'signals intelligence'] }, { type: 'army_unit', words: ['lotar', 'counter-terror'] },
+                { type: 'army_base', words: ['bahad 1'] }, { type: 'army_base', words: ['bahad 7'] }, { type: 'army_base', words: ['bahad 12'] }, { type: 'army_base', words: ['glilot'] }, { type: 'army_base', words: ['kirya'] }, { type: 'army_base', words: ['tel hashomer'] }, { type: 'army_base', words: ['ir habahadim'] }, { type: 'army_base', words: ['tzrifin'] }, { type: 'army_base', words: ['nevatim'] }, { type: 'army_base', words: ['hatzerim'] }, { type: 'army_base', words: ['ramat david'] }, { type: 'army_base', words: ['palmachim'] }, { type: 'army_base', words: ['ramon'] }, { type: 'army_base', words: ['ovda'] }, { type: 'army_base', words: ['ze\'elim', 'zeelim'] }, { type: 'army_base', words: ['re\'im', 'reim'] }, { type: 'army_base', words: ['urim'] }, { type: 'army_base', words: ['nafah'] }, { type: 'army_base', words: ['saar 474'] }, { type: 'army_base', words: ['barak 188'] }, { type: 'army_base', words: ['golani 1'] }, { type: 'army_base', words: ['givati 84'] }, { type: 'army_base', words: ['nahal 933'] }, { type: 'army_base', words: ['tzanhanim 35'] }, { type: 'army_base', words: ['kfir 900'] }, { type: 'army_base', words: ['harel 10'] }, { type: 'army_base', words: ['alexandroni 3'] }, { type: 'army_base', words: ['carmeli 2'] },
+                { type: 'high_school', words: ['reali'] }, { type: 'high_school', words: ['alliance'] }, { type: 'high_school', words: ['gymnasia herzliya', 'gymnasia'] }, { type: 'high_school', words: ['leo baeck'] }, { type: 'high_school', words: ['thelma yellin'] }, { type: 'high_school', words: ['kfar hayarok'] }, { type: 'high_school', words: ['mosinson'] }, { type: 'high_school', words: ['hadassim'] }, { type: 'high_school', words: ['ben shemen'] }, { type: 'high_school', words: ['kadoorie'] }, { type: 'high_school', words: ['wizo nahalal'] }, { type: 'high_school', words: ['shevach mofet'] }, { type: 'high_school', words: ['boyar'] }, { type: 'high_school', words: ['leyada'] }, { type: 'high_school', words: ['harel'] }, { type: 'high_school', words: ['ort singalovski'] }, { type: 'high_school', words: ['ort bialik'] }, { type: 'high_school', words: ['ort motzkin'] }, { type: 'high_school', words: ['ort ginzburg'] }, { type: 'high_school', words: ['ort'] }, { type: 'high_school', words: ['amal'] }, { type: 'high_school', words: ['atid'] }, { type: 'high_school', words: ['darca'] }, { type: 'high_school', words: ['branco weiss'] }, { type: 'high_school', words: ['ironi alef'] }, { type: 'high_school', words: ['ironi bet'] }, { type: 'high_school', words: ['ironi gimel'] }, { type: 'high_school', words: ['ironi dalet'] }, { type: 'high_school', words: ['ironi hey'] }, { type: 'high_school', words: ['ironi vav'] }, { type: 'high_school', words: ['makif alef'] }, { type: 'high_school', words: ['makif bet'] }, { type: 'high_school', words: ['makif gimel'] }, { type: 'high_school', words: ['makif dalet'] }, { type: 'high_school', words: ['makif hey'] }, { type: 'high_school', words: ['makif vav'] }, { type: 'high_school', words: ['makif zayin'] }, { type: 'high_school', words: ['makif het'] }, { type: 'high_school', words: ['rabin'] }, { type: 'high_school', words: ['begin'] }, { type: 'high_school', words: ['blich', 'בליך'] }, { type: 'high_school', words: ['misgav', 'משגב'] }, { type: 'high_school', words: ['yifat', 'יפעת'] },
+                { type: 'mechina', words: ['derech eretz - nitzana', 'nitzana'] }, { type: 'mechina', words: ['derech eretz - kmehin', 'kmehin'] }, { type: 'mechina', words: ['derech eretz - ein yahav', 'ein yahav'] }, { type: 'mechina', words: ['derech eretz - ashalim', 'ashalim'] }, { type: 'mechina', words: ['bnei david'] }, { type: 'mechina', words: ['ein prat'] }, { type: 'mechina', words: ['nachshon'] }, { type: 'mechina', words: ['mechinat rabin', 'rabin'] }, { type: 'mechina', words: ['gal'] }, { type: 'mechina', words: ['maayan baruch'] }, { type: 'mechina', words: ['tavor'] }, { type: 'mechina', words: ['lachish'] }, { type: 'mechina', words: ['arava'] }, { type: 'mechina', words: ['yachad'] }, { type: 'mechina', words: ['hanegev'] }, { type: 'mechina', words: ['aderet'] }, { type: 'mechina', words: ['keshet yehuda'] }, { type: 'mechina', words: ['haruach haisraelit'] }, { type: 'mechina', words: ['meitar'] }, { type: 'mechina', words: ['kol ami'] }
             ];
+            const genericRoles = ['softwareengineer', 'fullstackdeveloper', 'frontenddeveloper', 'backenddeveloper', 'mobiledeveloper', 'iosdeveloper', 'androiddeveloper', 'webdeveloper', 'gamedeveloper', 'devopsengineer', 'sitelieliabilityengineer', 'sre', 'cloudengineer', 'cloudarchitect', 'solutionsarchitect', 'dataengineer', 'dataanalyst', 'datascientist', 'machinelearningengineer', 'aiengineer', 'airesearcher', 'promptengineer', 'cybersecurityanalyst', 'cybersecurityengineer', 'informationsecuritymanager', 'penetrationtester', 'socanalyst', 'qaengineer', 'automationengineer', 'testengineer', 'productmanager', 'technicalproductmanager', 'projectmanager', 'programmanager', 'scrummaster', 'businessanalyst', 'systemsanalyst', 'uxdesigner', 'uidesigner', 'uxresearcher', 'productdesigner', 'servicedesigner', 'interactiondesigner', 'technicalwriter', 'solutionsconsultant', 'customersuccessmanager', 'technicalsupportengineer', 'salesengineer', 'presalesengineer', 'itmanager', 'itadministrator', 'databaseadministrator', 'dba', 'networkengineer', 'embeddedsystemsengineer', 'hardwareengineer', 'electronicsengineer', 'roboticsengineer', 'computervisionengineer', 'blockchaindeveloper', 'arvrdeveloper', 'marketingmanager', 'digitalmarketingmanager', 'brandmanager', 'marketingdirector', 'chiefmarketingofficer', 'cmo', 'performancemarketingmanager', 'growthmarketingmanager', 'productmarketingmanager', 'contentmarketingmanager', 'socialmediamanager', 'communitymanager', 'influencermarketingmanager', 'emailmarketingspecialist', 'seospecialist', 'semspecialist', 'ppcspecialist', 'marketingspecialist', 'marketingcoordinator', 'marketinganalyst', 'marketresearchanalyst', 'brandstrategist', 'creativestrategist', 'communicationsmanager', 'publicrelationsmanager', 'prmanager', 'prspecialist', 'mediaplanner', 'mediabuyer', 'campaignmanager', 'advertisingmanager', 'copywriter', 'contentcreator', 'contentmanager', 'contentstrategist', 'creativedirector', 'artdirector', 'graphicdesigner', 'uxwriter', 'crmmanager', 'partnershipmanager', 'businessdevelopmentmanager', 'eventmanager', 'eventproducer', 'ecommercemanager', 'affiliatemarketingmanager', 'influencerrelationsmanager', 'marketingconsultant', 'freelancer', 'welfarenco', 'mashakittash', 'combatsoldier', 'lochem', 'lochemet', 'educationnco', 'mashakitchinuch', 'operationsroomcontroller', 'sambatzit', 'commander', 'mefaked', 'mefakedet', 'intelligenceanalyst', 'modiin', 'infantryinstructor', 'madrichatchir', 'combatinstructor', 'madrichatkrav', 'traininginstructor', 'madricha', 'operationsnco', 'mashakmivtzaim', 'humanresourcesnco', 'mashakitkoachadam', 'הייטק', 'hightech', 'hitech', 'high-tech', 'hi-tech', 'tech', 'טק', 'student', 'סטודנט', 'סטודנטית', 'manager', 'מנהל', 'מנהלת', 'friend', 'friends', 'חבר', 'חברה', 'חברים', 'family', 'משפחה', 'colleague', 'קולגה', 'partner', 'בן זוג', 'בת זוג', 'ex', 'אקס', 'אקסית'];
             
-            const genericRoles = ['softwareengineer', 'fullstackdeveloper', 'frontenddeveloper', 'backenddeveloper', 'mobiledeveloper', 'iosdeveloper', 'androiddeveloper', 'webdeveloper', 'gamedeveloper', 'devopsengineer', 'sitelieliabilityengineer', 'sre', 'cloudengineer', 'cloudarchitect', 'solutionsarchitect', 'dataengineer', 'dataanalyst', 'datascientist', 'machinelearningengineer', 'aiengineer', 'airesearcher', 'promptengineer', 'cybersecurityanalyst', 'cybersecurityengineer', 'informationsecuritymanager', 'penetrationtester', 'socanalyst', 'qaengineer', 'automationengineer', 'testengineer', 'productmanager', 'technicalproductmanager', 'projectmanager', 'programmanager', 'scrummaster', 'businessanalyst', 'systemsanalyst', 'uxdesigner', 'uidesigner', 'uxresearcher', 'productdesigner', 'servicedesigner', 'interactiondesigner', 'technicalwriter', 'solutionsconsultant', 'customersuccessmanager', 'technicalsupportengineer', 'salesengineer', 'presalesengineer', 'itmanager', 'itadministrator', 'databaseadministrator', 'dba', 'networkengineer', 'embeddedsystemsengineer', 'hardwareengineer', 'electronicsengineer', 'roboticsengineer', 'computervisionengineer', 'blockchaindeveloper', 'arvrdeveloper', 'marketingmanager', 'digitalmarketingmanager', 'brandmanager', 'marketingdirector', 'chiefmarketingofficer', 'cmo', 'performancemarketingmanager', 'growthmarketingmanager', 'productmarketingmanager', 'contentmarketingmanager', 'socialmediamanager', 'communitymanager', 'influencermarketingmanager', 'emailmarketingspecialist', 'seospecialist', 'semspecialist', 'ppcspecialist', 'marketingspecialist', 'marketingcoordinator', 'marketinganalyst', 'marketresearchanalyst', 'brandstrategist', 'creativestrategist', 'communicationsmanager', 'publicrelationsmanager', 'prmanager', 'prspecialist', 'mediaplanner', 'mediabuyer', 'campaignmanager', 'advertisingmanager', 'copywriter', 'contentcreator', 'contentmanager', 'contentstrategist', 'creativedirector', 'artdirector', 'graphicdesigner', 'uxwriter', 'crmmanager', 'partnershipmanager', 'businessdevelopmentmanager', 'eventmanager', 'eventproducer', 'ecommercemanager', 'affiliatemarketingmanager', 'influencerrelationsmanager', 'marketingconsultant', 'freelancer'];
+            const p1Tags = p1.tags ? (Array.isArray(p1.tags) ? p1.tags : p1.tags.split(',').map(t=>t.trim().toLowerCase()).filter(Boolean)) : [];
+            const p1Text = ' ' + [(p1.city||'').toLowerCase(), (p1.role||'').toLowerCase(), ...p1Tags].join(' ').replace(/[,.!]/g, ' ') + ' ';
+            const p1Years = p1Tags.map(t => t.replace(/^#/, '')).filter(t => /^(19|20)\d{2}$/.test(t));
+            const p1Age = p1.age ? parseInt(p1.age) : null;
+            const p1CityLower = p1.city ? p1.city.toLowerCase() : '';
+            const p1RoleLower = p1.role ? p1.role.toLowerCase() : '';
             
             let activeGroups = [];
             synonymGroups.forEach((group, idx) => {
-                if (group.words.some(word => fText.includes(word))) {
+                if (group.words.some(word => p1Text.includes(' ' + word + ' '))) {
                     activeGroups.push({ idx: idx, type: group.type });
                 }
             });
             
-            // Extract years from tags (e.g. 2024, 2021)
-            const fYears = fTags.map(t => t.replace(/^#/, '')).filter(t => /^(19|20)\d{2}$/.test(t));
+            let score = 0;
+            
+            const p2Tags = p2.tags ? (Array.isArray(p2.tags) ? p2.tags : p2.tags.split(',').map(t=>t.trim().toLowerCase()).filter(Boolean)) : [];
+            const p2Text = ' ' + [(p2.city||'').toLowerCase(), (p2.role||'').toLowerCase(), ...p2Tags].join(' ').replace(/[,.!]/g, ' ') + ' ';
+            const p2Years = p2Tags.map(t => t.replace(/^#/, '')).filter(t => /^(19|20)\d{2}$/.test(t));
+            const p2Age = p2.age ? parseInt(p2.age) : null;
+            const p2CityLower = p2.city ? p2.city.toLowerCase() : '';
+            const p2RoleLower = p2.role ? p2.role.toLowerCase() : '';
+            
+            let shared = { uni: 0, degree: 0, company: 0, city: 0, army_unit: 0, army_base: 0, high_school: 0, mechina: 0 };
+            let genericSchoolMatch = false;
+            let sharedStrings = [];
+            
+            activeGroups.forEach(ag => {
+                if (synonymGroups[ag.idx].words.some(word => p2Text.includes(' ' + word + ' '))) {
+                    shared[ag.type]++;
+                    sharedStrings.push(synonymGroups[ag.idx].words[0]);
+                    if (ag.type === 'high_school') {
+                        const schoolName = synonymGroups[ag.idx].words[0];
+                        if (schoolName.includes('ironi') || schoolName.includes('makif') || ['ort', 'amal', 'atid', 'darca', 'rabin', 'begin'].includes(schoolName)) {
+                            genericSchoolMatch = true;
+                        }
+                    }
+                }
+            });
+            
+            const sharedYear = p1Years.some(y => p2Years.includes(y));
+            const ageDiff = (p1Age !== null && p2Age !== null && !isNaN(p1Age) && !isNaN(p2Age)) ? Math.abs(p1Age - p2Age) : null;
+            const isSimilarAge = (ageDiff !== null && ageDiff <= 3);
+            const isSameCity = (p1CityLower && p2CityLower && (p2CityLower.includes(p1CityLower) || p1CityLower.includes(p2CityLower)));
+            
+            if (shared.company > 0) score += 35;
+            if (shared.city > 0) score += 35;
+            if (shared.high_school > 0) {
+                if (genericSchoolMatch && !isSameCity) score += 5;
+                else if (isSimilarAge) score += 45;
+                else score += 15;
+            }
+            if (shared.mechina > 0 && isSimilarAge) score += 45;
+            else if (shared.mechina > 0) score += 20;
+            if (shared.army_unit > 0 && isSimilarAge) score += 40;
+            else if (shared.army_unit > 0) score += 15;
+            if (shared.army_base > 0 && isSimilarAge) score += 30;
+            else if (shared.army_base > 0) score += 10;
+            if (shared.uni > 0 && shared.degree > 0 && sharedYear) score += 40;
+            else if (shared.uni > 0 && shared.degree > 0) score += 35;
+            else if (shared.uni > 0 && sharedYear) score += 25;
+            else if (shared.uni > 0) score += 10;
+            if (shared.degree > 0 && shared.uni === 0) score += 5;
+            
+            if (p1CityLower && p2CityLower) {
+                if ((p2CityLower.includes(p1CityLower) || p1CityLower.includes(p2CityLower)) && !ignoreCities.includes(p1CityLower) && !ignoreCities.includes(p2CityLower)) {
+                    score += 5; // Reduced from 15 to prevent generic city matches
+                }
+            }
+            if (p1RoleLower && p2RoleLower) {
+                if (p2RoleLower === p1RoleLower) score += 5;
+                else if (p2RoleLower.includes(p1RoleLower) || p1RoleLower.includes(p2RoleLower)) score += 2;
+                else {
+                    const fWords = p1RoleLower.split(/\s+/).filter(w => w.length > 2);
+                    const pWords = p2RoleLower.split(/\s+/).filter(w => w.length > 2);
+                    fWords.forEach(fw => {
+                        if (pWords.some(pw => pw.includes(fw) || fw.includes(pw))) score += 1;
+                    });
+                }
+            }
+            p2Tags.forEach(t => {
+                const cleanTag = t.replace(/^#/, '');
+                if (p1Tags.includes(t)) {
+                    if (genericRoles.includes(cleanTag)) {
+                        score += 5;
+                    } else {
+                        score += 30;
+                        sharedStrings.push(cleanTag);
+                    }
+                }
+            });
+            
+            const finalShared = [...new Set(sharedStrings)];
+            // If they reached score 25 but have NO explicit shared concepts, cap their score at 10
+            if (finalShared.length === 0 && score >= 25) {
+                score = 10;
+            }
+            
+            return { score, sharedConcepts: finalShared };
+        }
+
+        function generateRecommendations() {
+            const p1 = {
+                age: document.getElementById('f-age').value.trim(),
+                city: document.getElementById('f-city').value.trim(),
+                role: document.getElementById('f-role').value.trim(),
+                tags: document.getElementById('f-tags').value.split(',').map(t => t.trim()).filter(Boolean)
+            };
             
             let scores = [];
             people.forEach(p => {
-                let score = 0;
-                
-                // --- Semantic Boost ---
-                const pTags = p.tags ? (Array.isArray(p.tags) ? p.tags : p.tags.split(',').map(t=>t.trim().toLowerCase()).filter(Boolean)) : [];
-                const pText = [(p.city||'').toLowerCase(), (p.role||'').toLowerCase(), ...pTags].join(' ');
-                
-                let shared = { uni: 0, degree: 0, company: 0, city: 0 };
-                
-                activeGroups.forEach(ag => {
-                    if (synonymGroups[ag.idx].words.some(word => pText.includes(word))) {
-                        shared[ag.type]++;
-                    }
-                });
-                
-                // Check for shared years
-                const pYears = pTags.map(t => t.replace(/^#/, '')).filter(t => /^(19|20)\d{2}$/.test(t));
-                const sharedYear = fYears.some(y => pYears.includes(y));
-                
-                // Complex Relationship Scoring
-                if (shared.company > 0) score += 35;
-                if (shared.city > 0) score += 35;
-                
-                if (shared.uni > 0 && shared.degree > 0 && sharedYear) {
-                    score += 40; // Jackpot: Same Uni, Degree, AND Year!
-                } else if (shared.uni > 0 && shared.degree > 0) {
-                    score += 35; // Same Uni + Degree
-                } else if (shared.uni > 0 && sharedYear) {
-                    score += 25; // Same Uni + Year (maybe different degree)
-                } else if (shared.uni > 0) {
-                    score += 10; // Only same uni = low chance
-                }
-                
-                if (shared.degree > 0 && shared.uni === 0) {
-                    score += 5; // Only same degree (generic)
-                }
-                
-                // --- Standard Matches ---
-                if (fCity && p.city) {
-                    const pCity = p.city.toLowerCase();
-                    if ((pCity.includes(fCity) || fCity.includes(pCity)) && !ignoreCities.includes(fCity) && !ignoreCities.includes(pCity)) {
-                        score += 15;
-                    }
-                }
-                
-                if (fRole && p.role) {
-                    const pRole = p.role.toLowerCase();
-                    if (pRole === fRole) {
-                        score += 5; // Reduced from 20 because sharing a generic role doesn't mean they know each other
-                    } else if (pRole.includes(fRole) || fRole.includes(pRole)) {
-                        score += 2;
-                    } else {
-                        const fWords = fRole.split(/\s+/).filter(w => w.length > 2);
-                        const pWords = pRole.split(/\s+/).filter(w => w.length > 2);
-                        fWords.forEach(fw => {
-                            if (pWords.some(pw => pw.includes(fw) || fw.includes(pw))) score += 1;
-                        });
-                    }
-                }
-                
-                pTags.forEach(t => {
-                    const cleanTag = t.replace(/^#/, '');
-                    if (fTags.includes(t)) {
-                        // Generic roles shouldn't connect people
-                        if (genericRoles.includes(cleanTag)) {
-                            score += 5;
-                        } else {
-                            score += 30;
-                        }
-                    }
-                });
-                
-                if (score >= 15) { // Minimum threshold to prevent generic matches
-                    scores.push({ person: p, score: score });
+                const result = calculateMatchScore(p1, p);
+                if (result.score >= 25) { // Increased threshold to avoid weak generic matches
+                    scores.push({ person: p, score: result.score });
                 }
             });
             
@@ -2607,6 +2906,8 @@
             document.getElementById('connections-list').innerHTML = '';
             
             if (mode === 'add') {
+                const instr = document.getElementById('add-person-instructions');
+                if (instr) instr.style.display = 'block';
                 document.getElementById('modal-title').textContent = 'Add Person';
                 document.getElementById('btn-submit-form').textContent = 'SAVE TO NETWORK';
                 document.getElementById('form-person-id').value = '';
@@ -2624,6 +2925,8 @@
                 }
                 goToWizardStep(1);
             } else if (mode === 'edit') {
+                const instr = document.getElementById('add-person-instructions');
+                if (instr) instr.style.display = 'none';
                 document.getElementById('modal-title').textContent = 'Edit Person';
                 document.getElementById('btn-submit-form').textContent = 'UPDATE NETWORK';
                 document.getElementById('form-person-id').value = personData.id;
@@ -2805,7 +3108,7 @@
                 data.connections = conns;
 
                 if (mode === 'add') {
-                    const res = await fetch('http://127.0.0.1:1337/api/people', {
+                    const res = await fetch('/api/people', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify(data)
@@ -2817,7 +3120,7 @@
                     if (!res.ok) throw new Error('Failed to add person');
                 } else if (mode === 'edit') {
                     const personId = document.getElementById('form-person-id').value;
-                    const res = await fetch(`http://127.0.0.1:1337/api/people/${personId}`, {
+                    const res = await fetch(`/api/people/${personId}`, {
                         method: 'PUT',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify(data)
@@ -2941,7 +3244,7 @@
                 document.getElementById('loading').style.display = 'block';
                 try {
                     if (confirm(`Are you sure you want to delete ${person.name}?`)) {
-                        await fetch(`http://127.0.0.1:1337/api/people/${person.id}`, { method: 'DELETE' });
+                        await fetch(`/api/people/${person.id}`, { method: 'DELETE' });
                         location.reload();
                     } else {
                         document.getElementById('loading').style.display = 'none';

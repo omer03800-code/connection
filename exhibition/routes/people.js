@@ -6,15 +6,30 @@ const router = Router();
 // GET /api/people/search/query?q=term
 router.get('/search/query', (req, res) => {
     const db = getDb();
-    const q = `%${(req.query.q || '').toLowerCase()}%`;
-    const people = db.prepare(`
-        SELECT id, name, city, role, tags
-        FROM people
-        WHERE lower(name) LIKE ? OR lower(city) LIKE ? OR lower(role) LIKE ?
-           OR lower(tags) LIKE ?
-        LIMIT 30
-    `).all(q, q, q, q);
-    res.json(people);
+    const term = (req.query.q || '').toLowerCase();
+    
+    // Fetch all and filter in JS to allow proper word-boundary regex (so "ono" doesn't match "Economics")
+    const allPeople = db.prepare(`SELECT id, name, city, role, tags, description FROM people`).all();
+    
+    // \b means word boundary, so it only matches if the word STARTS with the term
+    const escapeRegExp = (string) => string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    const regex = new RegExp(`\\b${escapeRegExp(term)}`, 'i');
+    
+    const filtered = allPeople.filter(p => {
+        return regex.test(p.name) || 
+               regex.test(p.city) || 
+               regex.test(p.role) || 
+               regex.test(p.tags) || 
+               regex.test(p.description);
+    }).slice(0, 30);
+    
+    // Clean up description before sending to save bandwidth, since UI only needs tags/roles
+    const cleanFiltered = filtered.map(p => {
+        const { description, ...rest } = p;
+        return rest;
+    });
+    
+    res.json(cleanFiltered);
 });
 
 // GET /api/people/suggest/name?name=term
@@ -135,6 +150,30 @@ router.delete('/:id', (req, res) => {
 
     db.prepare('DELETE FROM people WHERE id = ?').run(req.params.id);
     res.json({ id: req.params.id, deleted: true });
+});
+
+// POST /api/connections/direct - add a single direct connection safely
+router.post('/connections/direct', (req, res) => {
+    const db = getDb();
+    const { person_a_id, person_b_id, type, strength } = req.body;
+    
+    if (!person_a_id || !person_b_id) {
+        return res.status(400).json({ error: 'Missing person IDs' });
+    }
+    
+    const t = ['family_core','family_extended','friend','acquaintance'].includes(type) ? type : 'acquaintance';
+    const s = parseInt(strength) || 3;
+    
+    const stmt = db.prepare(
+        'INSERT OR IGNORE INTO connections (person_a_id, person_b_id, type, strength) VALUES (?,?,?,?)'
+    );
+    
+    db.exec('BEGIN');
+    stmt.run(person_a_id, person_b_id, t, s);
+    stmt.run(person_b_id, person_a_id, t, s);
+    db.exec('COMMIT');
+    
+    res.status(201).json({ success: true, message: 'Connection added' });
 });
 
 module.exports = router;

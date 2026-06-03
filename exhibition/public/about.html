@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>About - Feed the Beast</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { 
+            background: #000; 
+            color: #fff; 
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; 
+            padding: 40px 20px; 
+            line-height: 1.7;
+            display: flex;
+            justify-content: center;
+        }
+        .container {
+            max-width: 650px;
+            width: 100%;
+            padding-bottom: 60px;
+        }
+        .back-btn {
+            display: inline-block;
+            color: rgba(255,255,255,0.6);
+            text-decoration: none;
+            font-size: 14px;
+            margin-bottom: 40px;
+            border: 1px solid rgba(255,255,255,0.2);
+            padding: 8px 16px;
+            border-radius: 20px;
+            transition: 0.3s;
+        }
+        .back-btn:hover {
+            color: #fff;
+            border-color: #fff;
+            background: rgba(255,255,255,0.1);
+        }
+        h1 { 
+            font-weight: 300; 
+            font-size: 38px; 
+            margin-bottom: 30px; 
+            letter-spacing: 2px;
+            text-transform: uppercase;
+        }
+        h2 { 
+            font-weight: 300; 
+            font-size: 22px; 
+            margin-top: 50px; 
+            margin-bottom: 25px; 
+            border-bottom: 1px solid rgba(255,255,255,0.2); 
+            padding-bottom: 10px; 
+            letter-spacing: 1px;
+            text-transform: uppercase;
+        }
+        p { 
+            margin-bottom: 15px; 
+            color: rgba(255,255,255,0.85); 
+            font-size: 15px; 
+        }
+        
+        .list-section {
+            margin-bottom: 30px;
+            color: rgba(255,255,255,0.85);
+            font-size: 15px;
+        }
+        .list-section li {
+            margin-bottom: 10px;
+            margin-left: 20px;
+        }
+        
+        .bold-label {
+            font-weight: 600;
+            color: #fff;
+            display: block;
+            margin-top: 20px;
+            margin-bottom: 4px;
+            letter-spacing: 0.5px;
+        }
+        
+        .connection-type {
+            display: flex;
+            align-items: center;
+            margin-bottom: 15px;
+            font-size: 15px;
+        }
+        .conn-label { font-weight: 600; width: 250px; flex-shrink: 0; }
+        .conn-desc { color: rgba(255,255,255,0.6); }
+        
+        @media (max-width: 600px) {
+            h1 { font-size: 28px; }
+            .conn-label { width: 100%; display: block; margin-bottom: 4px; }
+            .connection-type { flex-direction: column; align-items: flex-start; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <a href="index.html" class="back-btn">&larr; Back to Exhibition</a>
+        
+        <h1>FEED THE BEAST</h1>
+        
+        <p><strong>Feed the Beast</strong> is a living visualization of human connections.</p>
+        <p>Every point in this space represents a real person. Every line represents a real relationship. Together, they form a constantly evolving organism built from friendships, family ties, shared experiences, workplaces, schools, and chance encounters.</p>
+        <p>Most of these connections exist around us every day, but remain invisible. This project makes them visible.</p>
+        <p>As new people join and new relationships are added, the organism grows, shifts, and reorganizes itself. No one stands alone. Every person affects the structure of the whole network.</p>
+        
+        <p style="margin-top: 30px; font-weight: 600;">Explore the system to discover:</p>
+        <ul class="list-section">
+            <li>How people are connected to one another</li>
+            <li>Unexpected paths between strangers</li>
+            <li>Shared backgrounds, cities, workplaces, and schools</li>
+            <li>The role of weak ties in connecting distant parts of the network</li>
+            <li>How a single new connection can reshape the entire structure</li>
+        </ul>
+
+        <h2>HOW TO EXPLORE</h2>
+        
+        <div class="list-section">
+            <span class="bold-label">Rotate</span>
+            Drag to move around the network.
+            
+            <span class="bold-label">Zoom</span>
+            Pinch or scroll to move closer or further away.
+            
+            <span class="bold-label">Select a Person</span>
+            Tap any node to open their profile and reveal their direct connections.
+            
+            <span class="bold-label">Personal Network</span>
+            After selecting a person, tap <strong>SHOW NETWORK</strong> to hide the rest of the universe and focus entirely on their personal web of connections.
+            
+            <span class="bold-label">Search</span>
+            Find people by name, profession, city, school, workplace, or other shared attributes.
+            
+            <span class="bold-label">Path Finder</span>
+            Select two people to reveal the shortest chain of connections between them.
+            
+            <span class="bold-label">Add Connection</span>
+            Join the network yourself and watch the organism adapt to your presence.
+        </div>
+
+        <h2>CONNECTION TYPES</h2>
+        
+        <div class="connection-type">
+            <div class="conn-label">Family</div>
+            <div class="conn-desc">— Solid lines</div>
+        </div>
+        <div class="connection-type">
+            <div class="conn-label">Friend</div>
+            <div class="conn-desc">— Dashed lines</div>
+        </div>
+        <div class="connection-type">
+            <div class="conn-label">Acquaintance / Professional</div>
+            <div class="conn-desc">— Widely spaced dashed lines</div>
+        </div>
+
+        <h2>A LIVING NETWORK</h2>
+        <p>The network is never complete.</p>
+        <p>Every new participant adds new pathways, new opportunities, and new ways of connecting people who may have never met.</p>
+        <p>Feed the Beast grows with every connection.</p>
+        
+    </div>
+</body>
+</html>
