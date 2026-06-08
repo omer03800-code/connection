@@ -14,7 +14,9 @@
             line-height: 1.7;
             display: flex;
             justify-content: center;
+            transition: filter 0.5s;
         }
+        body.light-mode { filter: invert(1) hue-rotate(180deg); }
         .container {
             max-width: 650px;
             width: 100%;
@@ -94,7 +96,7 @@
         }
     </style>
 </head>
-<body>
+<body class="light-mode">
     <div class="container">
         <a href="index.html" class="back-btn">&larr; Back to Exhibition</a>
         
