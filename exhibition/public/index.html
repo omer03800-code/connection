@@ -4,6 +4,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Feed the Beast</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@100;200;300;400;600;700&display=swap" rel="stylesheet">
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body { overflow: hidden; background: #000; font-family: 'Inter', sans-serif; transition: filter 0.5s; }
@@ -24,6 +27,7 @@
             padding-bottom: 5px;
             text-shadow: 0 0 4px rgba(0,0,0,1);
             letter-spacing: 0.5px;
+            font-weight: 200;
             transition: color 0.3s, transform 0.2s;
             user-select: none;
             transform: translateY(60px); /* Position label strictly underneath node */
@@ -48,31 +52,30 @@
         }
 
         .panel {
-            background: rgba(0, 0, 0, 0.85);
-            backdrop-filter: blur(8px);
-            border: 1px solid rgba(255, 255, 255, 0.15);
-            border-radius: 8px;
+            background: transparent;
+            border: none;
             color: white;
-            width: 220px;
+            width: max-content;
             overflow: hidden;
             flex-shrink: 0;
         }
+        .panel:not(.collapsed) {
+            width: 220px;
+        }
 
         .panel-header {
-            padding: 10px 14px;
+            padding: 0;
             font-size: 10px;
             text-transform: uppercase;
             letter-spacing: 1px;
             color: rgba(255,255,255,0.8);
             cursor: pointer;
             display: flex;
-            justify-content: space-between;
+            justify-content: flex-start;
             align-items: center;
             background: transparent;
-            transition: background 0.2s;
             white-space: nowrap;
         }
-        .panel-header:hover { background: rgba(255,255,255,0.05); }
 
         .panel-body { padding: 14px; border-top: 1px solid rgba(255,255,255,0.1); }
         .panel.collapsed .panel-body { display: none; }
@@ -80,32 +83,38 @@
         .panel-icon { font-size: 12px; transition: transform 0.3s; }
         .panel:not(.collapsed) .panel-icon { transform: rotate(45deg); }
 
-        #search-container {
-            display: flex;
-            align-items: center;
-            background: rgba(0, 0, 0, 0.85);
-            backdrop-filter: blur(8px);
-            border: 1px solid rgba(255, 255, 255, 0.15);
-            border-radius: 20px;
-            height: 34px;
-            width: 350px;
-            transition: border-color 0.3s;
-            overflow: hidden;
-            padding: 0 16px;
+        #search-input:focus { 
+            opacity: 1; 
+            background: white;
+            color: black !important;
+            border-color: white;
         }
-        #search-container:focus-within { 
-            border-color: rgba(255,255,255,0.5); 
+        #search-input::placeholder {
+            color: inherit;
+            opacity: 1;
         }
-        #search-icon { width: 14px; height: 14px; opacity: 0.6; flex-shrink: 0; }
-        
-        #search-input {
-            background: transparent;
-            border: none;
+        .search-dropdown-item {
+            padding: 10px 16px;
+            cursor: pointer;
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+            transition: background 0.2s;
+        }
+        .search-dropdown-item:last-child {
+            border-bottom: none;
+        }
+        .search-dropdown-item:hover {
+            background: rgba(255,255,255,0.1);
+        }
+        .search-item-name {
+            font-size: 13px;
+            font-weight: 500;
             color: white;
-            outline: none;
-            padding: 0 0 0 10px;
-            font-size: 11px;
-            width: 100%;
+            margin-bottom: 4px;
+        }
+        .search-item-context {
+            font-size: 10px;
+            color: rgba(255,255,255,0.6);
+            line-height: 1.3;
         }
 
         .controls-list {
@@ -131,14 +140,15 @@
             font-weight: bold;
         }
 
-        select, button {
+        input[type="text"].conn-target, select, button {
+            box-sizing: border-box;
             width: 100%;
             padding: 8px;
             margin-bottom: 8px;
             background: rgba(255,255,255,0.05);
             border: 1px solid rgba(255,255,255,0.2);
             color: white;
-            border-radius: 4px;
+            border-radius: 12px;
             outline: none;
             font-size: 11px;
             font-family: inherit;
@@ -177,16 +187,52 @@
         }
 
         #info-card {
-            background: rgba(0, 0, 0, 0.85);
-            backdrop-filter: blur(8px);
-            border: 1px solid rgba(255, 255, 255, 0.15);
-            padding: 20px;
-            border-radius: 8px;
+            background: rgba(0, 0, 0, 0.6);
+            backdrop-filter: blur(15px);
+            -webkit-backdrop-filter: blur(15px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 25px;
+            border-radius: 12px;
             color: white;
             width: 100%;
             pointer-events: auto;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
         }
-        #info-name { font-size: 18px; margin-bottom: 6px; font-weight: 300; letter-spacing: 0.5px; }
+        #info-name { font-size: 28px; margin-bottom: 4px; font-weight: 400; letter-spacing: 1px; }
+        .info-action-btn {
+            background: transparent;
+            border: 1px solid transparent;
+            border-radius: 4px;
+            color: white;
+            opacity: 0.6;
+            cursor: pointer;
+            font-size: 12px;
+            letter-spacing: 1.5px;
+            text-transform: uppercase;
+            text-align: center;
+            padding: 6px 12px;
+            margin-bottom: 8px;
+            width: auto;
+            transition: all 0.2s ease;
+            outline: none;
+            font-weight: 200;
+        }
+        .info-action-btn:hover { 
+            opacity: 1;
+            background: white;
+            color: black !important;
+            border-color: white;
+        }
+        .tag-pill {
+            display: inline-block;
+            padding: 4px 10px;
+            background: rgba(255,255,255,0.05);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 20px;
+            font-size: 9px;
+            letter-spacing: 0.5px;
+            color: rgba(255,255,255,0.7);
+        }
         #info-badge {
             display: inline-block;
             padding: 3px 8px;
@@ -200,16 +246,9 @@
             letter-spacing: 0.5px;
             text-transform: uppercase;
         }
-        #btn-path-dest {
-            background: transparent;
-            border: 1px solid rgba(255,255,255,0.4);
-            color: white;
-            border-radius: 4px;
-        }
-        #btn-path-dest:hover { background: white; color: black; }
+
         #btn-path-dest.active {
-            background: white;
-            color: black;
+            color: white;
             animation: pulse-bw 1.5s infinite;
         }
 
@@ -251,29 +290,7 @@
             100% { box-shadow: 0 0 0 0 rgba(255,255,255,0); }
         }
 
-        /* Add Connection Button */
-        #btn-add-connection {
-            position: absolute;
-            bottom: 30px;
-            left: 30px;
-            background: rgba(0, 0, 0, 0.85);
-            backdrop-filter: blur(8px);
-            border: 1px solid rgba(255, 255, 255, 0.3);
-            color: white;
-            padding: 12px 24px;
-            border-radius: 30px;
-            font-size: 11px;
-            letter-spacing: 1px;
-            cursor: pointer;
-            z-index: 100;
-            display: flex;
-            align-items: center;
-            justify-content: flex-start;
-            gap: 12px;
-            transition: all 0.3s;
-            width: 250px;
-        }
-        #btn-add-connection:hover { background: white; color: black; }
+
         
         /* Discover Connections Button */
         #btn-discover-connections {
@@ -298,20 +315,7 @@
             width: 250px;
         }
         #btn-discover-connections:hover { background: white; color: black; }
-        /* Theme Toggle Button */
-        #btn-theme {
-            background: transparent;
-            border: none;
-            color: rgba(255,255,255,0.7);
-            cursor: pointer;
-            transition: 0.2s;
-            font-size: 12px;
-            letter-spacing: 1px;
-            padding: 0;
-            display: flex;
-            align-items: center;
-        }
-        #btn-theme:hover { color: white; }
+
 
         /* Modal Styles */
         .modal {
@@ -319,21 +323,21 @@
             top: 50%;
             left: 50%;
             transform: translate(-50%, -50%);
-            background: rgba(0, 0, 0, 0.85);
+            background: rgba(0, 0, 0, 0.6);
             backdrop-filter: blur(15px);
             -webkit-backdrop-filter: blur(15px);
-            border: 1px solid rgba(255, 255, 255, 0.15);
-            border-radius: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 24px;
             box-shadow: 0 10px 40px rgba(0,0,0,0.5);
             padding: 0;
-            width: 380px;
+            width: 550px;
             max-width: 90%;
             max-height: 85vh;
             color: white;
             z-index: 1000;
         }
 
-        #add-modal {
+        #add-modal, #about-modal {
             display: flex;
             flex-direction: column;
             overflow: hidden;
@@ -343,7 +347,15 @@
             transition: all 0.3s ease;
         }
         
-        #add-modal.visible {
+        #about-modal {
+            width: 600px;
+            max-width: 90%;
+            height: auto;
+            max-height: 80vh;
+            padding: 40px 30px;
+        }
+
+        #add-modal.visible, #about-modal.visible {
             opacity: 1;
             pointer-events: auto;
             transform: translate(-50%, -50%) scale(1);
@@ -359,10 +371,14 @@
             border: 1px solid rgba(255,255,255,0.2);
             padding: 10px;
             color: white;
-            border-radius: 4px;
+            border-radius: 12px;
             font-family: inherit;
             font-size: 12px;
             outline: none;
+            box-sizing: border-box;
+        }
+        .form-group input, .form-group select {
+            height: 38px;
         }
         .form-group input:focus, .form-group textarea:focus, .form-group select:focus { border-color: rgba(255,255,255,0.5); }
         
@@ -370,7 +386,7 @@
             background: rgba(255,255,255,0.03);
             border: 1px solid rgba(255,255,255,0.1);
             padding: 6px;
-            border-radius: 4px;
+            border-radius: 12px;
             margin-bottom: 6px;
             display: flex;
             align-items: center;
@@ -384,11 +400,12 @@
             background: rgba(255,255,255,0.1); border: 1px dashed rgba(255,255,255,0.3); padding: 8px; font-size: 10px; margin-bottom: 10px; color: white; width: 100%;
         }
         .btn-add-more-conn:hover { background: rgba(255,255,255,0.2); color: white; }
-        .btn-submit { background: white; color: black; border: none; font-weight: bold; font-size: 12px; padding: 12px; width: 100%; border-radius: 4px;}
+        .btn-submit { background: white; color: black; border: none; font-weight: bold; font-size: 12px; padding: 12px; width: 100%; border-radius: 12px;}
         .btn-submit:hover { background: #ddd; }
         #modal-overlay {
             position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.6); z-index: 999; opacity: 0; pointer-events: none; transition: 0.3s;
+            background: rgba(0,0,0,0.4);
+            z-index: 999; opacity: 0; pointer-events: none; transition: 0.3s;
         }
         #modal-overlay.visible { opacity: 1; pointer-events: auto; }
 
@@ -467,83 +484,90 @@
         /* Action buttons in info card */
         .info-actions { display: flex; gap: 8px; margin-top: 15px; }
         .info-actions button { flex: 1; padding: 8px 0; margin-bottom: 0; }
-        #btn-edit-node { background: rgba(255,255,255,0.1); border-color: rgba(255,255,255,0.3); }
-        #btn-delete-node { background: rgba(255,50,50,0.1); border-color: rgba(255,50,50,0.3); color: #ff8888; }
-        #btn-delete-node:hover { background: rgba(255,50,50,0.3); color: white; }
+
     </style>
 </head>
 
 <body class="light-mode">
     <div id="loading">טוען...</div>
 
-    <div id="top-bar" style="flex-direction: column; gap: 8px;">
-        <div style="font-weight: 800; font-size: 16px; letter-spacing: 2px; color: white; margin-left: 2px;">FEED THE BEAST</div>
-        <div style="display: flex; gap: 12px; align-items: flex-start;">
+    <div id="top-bar" style="flex-direction: column; gap: 16px;">
+        <div style="display: flex; gap: 10px; align-items: flex-start;">
             <div id="path-panel" class="panel collapsed">
                 <div class="panel-header" id="path-header">
-                    <span>Path Finder</span>
-                    <span class="panel-icon">+</span>
+                    <button class="info-action-btn" style="margin: 0;">[ TRACE VEIN ]</button>
                 </div>
                 <div class="panel-body">
                     <div style="display: flex; align-items: center; margin-bottom: 8px; color: rgba(255,255,255,0.7); font-size: 12px; letter-spacing: 1px;">
-                        [<input type="text" id="start-node" list="people-list" placeholder="START PERSON" autocomplete="off" style="background: transparent; border: none; color: white; width: 100%; outline: none; font-size: 11px; font-family: inherit; text-align: center; text-transform: uppercase; letter-spacing: 1px; padding: 5px;">]
+                        [<input type="text" id="start-node" list="people-list" placeholder="ORIGIN NODE" autocomplete="off" style="background: transparent; border: none; color: white; width: 100%; outline: none; font-size: 11px; font-family: inherit; text-align: center; text-transform: uppercase; letter-spacing: 1px; padding: 5px;">]
                     </div>
                     <div style="display: flex; align-items: center; margin-bottom: 15px; color: rgba(255,255,255,0.7); font-size: 12px; letter-spacing: 1px;">
-                        [<input type="text" id="end-node" list="people-list" placeholder="END PERSON" autocomplete="off" style="background: transparent; border: none; color: white; width: 100%; outline: none; font-size: 11px; font-family: inherit; text-align: center; text-transform: uppercase; letter-spacing: 1px; padding: 5px;">]
+                        [<input type="text" id="end-node" list="people-list" placeholder="TARGET NODE" autocomplete="off" style="background: transparent; border: none; color: white; width: 100%; outline: none; font-size: 11px; font-family: inherit; text-align: center; text-transform: uppercase; letter-spacing: 1px; padding: 5px;">]
                     </div>
-                    <button id="btn-find">Find Path</button>
+                    <button id="btn-find">Trace Path</button>
                     <button id="btn-reset">Reset View</button>
                 </div>
             </div>
 
-            <div id="search-container">
-                <svg id="search-icon" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <circle cx="11" cy="11" r="8"></circle>
-                    <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
-                </svg>
-                <input type="text" id="search-input" list="people-list" placeholder="what you looking for" autocomplete="off">
+            <div id="search-wrapper" style="position: relative; display: flex; align-items: center; margin: 0; width: auto;">
+                <input type="text" id="search-input" class="info-action-btn" placeholder="[ WHAT YOU LOOKIN FOR ]" autocomplete="off" style="margin: 0; width: 220px; cursor: text; border-radius: 12px;">
+                <div id="search-dropdown" style="display: none; position: absolute; top: 100%; left: 0; min-width: 280px; background: rgba(0,0,0,0.85); backdrop-filter: blur(15px); border: 1px solid rgba(255,255,255,0.1); border-radius: 16px; z-index: 1000; margin-top: 8px; max-height: 400px; overflow-y: auto; overflow-x: hidden; padding: 8px 0; box-shadow: 0 4px 20px rgba(0,0,0,0.5);">
+                </div>
             </div>
 
-            <button id="btn-pause" style="background: transparent; border: none; color: rgba(255,255,255,0.7); cursor: pointer; transition: 0.2s; font-size: 12px; letter-spacing: 1px; padding: 0 10px; height: 34px; display: flex; align-items: center;">[pause]</button>
+            <button id="btn-pause" class="info-action-btn" style="margin: 0;">[ FREEZE ]</button>
         </div>
     </div>
 
     <div id="info-panel-container">
         <div id="info-card">
-        <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
-            <button id="btn-prev-person" style="background: rgba(255,255,255,0.1); border: none; color: white; padding: 2px 10px; cursor: pointer; border-radius: 4px;">&larr; Prev</button>
-            <button id="btn-next-person" style="background: rgba(255,255,255,0.1); border: none; color: white; padding: 2px 10px; cursor: pointer; border-radius: 4px;">Next &rarr;</button>
-        </div>
-        <h2 id="info-name">Name</h2>
-        <div id="info-role" style="font-size: 12px; color: rgba(255,255,255,0.7); margin-bottom: 10px;"></div>
-        <div id="info-age" style="font-size: 11px; color: rgba(255,255,255,0.6); margin-bottom: 4px;"></div>
-        <div id="info-city" style="font-size: 11px; color: rgba(255,255,255,0.6); margin-bottom: 10px;"></div>
-        <div id="info-description" style="font-size: 10px; color: rgba(255,255,255,0.5); line-height: 1.4; margin-bottom: 10px;"></div>
-        <div id="info-tags" style="font-size: 10px; color: rgba(255,255,255,0.5); margin-bottom: 10px;"></div>
-        
-        <details id="info-connections-container" style="margin-top: 15px; margin-bottom: 15px; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 10px;">
-            <summary style="font-size: 11px; font-weight: bold; margin-bottom: 8px; color: #aaa; cursor: pointer; outline: none; list-style: none; display: flex; justify-content: flex-start; align-items: center; gap: 6px;">
-                CONNECTED TO <span style="font-size: 9px; color: white;">▼</span>
-            </summary>
-            <div id="info-connections-list" style="font-size: 10px; color: rgba(255,255,255,0.8); max-height: 120px; overflow-y: auto; margin-top: 8px;"></div>
+            <!-- Header: Name and Menu -->
+            <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px;">
+                <h2 id="info-name" style="margin: 0;">Name</h2>
+                <div style="display: flex; align-items: center; gap: 15px; margin-top: 6px;">
+                    <div id="info-menu-container" style="position: relative;">
+                        <button id="btn-info-menu" style="background:transparent; border:none; color:white; font-size:22px; cursor:pointer; padding:0; line-height:0.8; opacity:0.6; letter-spacing:2px; outline:none;">...</button>
+                        <div id="info-menu-dropdown" style="display: none; position: absolute; right: 0; top: 20px; background: rgba(0,0,0,0.8); backdrop-filter: blur(15px); border: 1px solid rgba(255,255,255,0.1); padding: 12px; border-radius: 16px; z-index: 100; min-width: 140px;">
+                            <button id="btn-edit-node" class="info-action-btn" style="display: block; width:100%; margin-bottom: 12px; text-align: left; white-space: nowrap;">[ EDIT ]</button>
+                            <button id="btn-delete-node" class="info-action-btn" style="display: block; width:100%; margin-bottom: 0; text-align: left; white-space: nowrap; color: #ff4444;">[ DELETE ]</button>
+                        </div>
+                    </div>
+                    <button id="btn-close-card" style="background:transparent; border:none; color:white; font-size:24px; cursor:pointer; padding:0; line-height:0.8; font-weight:100; opacity:0.6; outline:none;">&times;</button>
+                </div>
+            </div>
             
-        </details>
+            <!-- Role -->
+            <div id="info-role" style="font-size: 13px; color: rgba(255,255,255,0.6); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 12px; font-weight: 200;"></div>
 
-        <button id="btn-show-network" style="margin-bottom: 8px; background: rgba(255,255,255,0.15); font-weight: bold; font-size: 11px;">SHOW NETWORK</button>
-        <button id="btn-path-dest">Show Path To Another Person</button>
-        <div id="info-path"></div>
-        <div class="info-actions">
-            <button id="btn-edit-node">EDIT</button>
-            <button id="btn-delete-node">DELETE</button>
-        </div>
-        <button id="btn-add-from-here" style="margin-top: 8px; border: 1px dashed rgba(255,255,255,0.3); background: transparent;">+ Add Connection From Here</button>
-        
-        <div id="info-suggestions" style="margin-top: 15px; margin-bottom: 15px; border-top: 1px dashed rgba(255,255,255,0.2); padding-top: 10px; display: none;">
-            <div style="font-size: 11px; font-weight: bold; margin-bottom: 8px; color: #aaa;">SUGGESTED CONNECTIONS</div>
-            <div id="info-suggestions-list"></div>
-        </div>
+            <!-- Meta Data -->
+            <div style="display: flex; gap: 15px; margin-bottom: 12px; font-size: 13px; color: rgba(255,255,255,0.7); letter-spacing: 0.5px; font-weight: 200;">
+                <span id="info-age"></span>
+                <span id="info-city"></span>
+            </div>
 
-        <button id="btn-close-card" style="margin-top: 10px; font-size: 9px; background: rgba(255,255,255,0.05);">Close</button>
+            <!-- About -->
+            <div id="info-description" style="font-size: 13px; color: rgba(255,255,255,0.7); line-height: 1.5; margin-bottom: 25px; font-weight: 200;"></div>
+            
+            <!-- Primary Actions -->
+            <div style="display: flex; flex-direction: row; justify-content: center; gap: 15px; margin-bottom: 25px;">
+                <button id="btn-path-dest" class="info-action-btn" style="margin: 0;">[ LOCATE CONNECTION ]</button>
+                <button id="btn-add-from-here" class="info-action-btn" style="margin: 0;">[ ADD CONNECTION ]</button>
+            </div>
+            
+            <!-- Connections -->
+            <details id="info-connections-container" style="border-top: 1px solid rgba(255,255,255,0.1); padding-top: 15px;">
+                <summary style="font-size: 12px; font-weight: 200; margin-bottom: 12px; color: rgba(255,255,255,0.5); letter-spacing: 1.5px; text-transform: uppercase; cursor: pointer; outline: none; list-style: none;">
+                    Connected To <span style="font-size: 8px; margin-left: 5px;">▼</span>
+                </summary>
+                <div id="info-connections-list" style="max-height: 160px; overflow-y: auto;"></div>
+            </details>
+
+            <div id="info-path" style="margin-top: 15px; font-size: 13px; color: rgba(255,255,255,0.7); font-weight: 200;"></div>
+            
+            <div id="info-suggestions" style="margin-top: 20px; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 15px; display: none;">
+                <div style="font-size: 12px; font-weight: 200; margin-bottom: 12px; color: rgba(255,255,255,0.5); letter-spacing: 1.5px; text-transform: uppercase;">Suggested</div>
+                <div id="info-suggestions-list"></div>
+            </div>
         
         <div id="info-secondary-card" style="position: relative; display: none; border-top: 1px dashed rgba(255,255,255,0.3); padding-top: 15px; margin-top: 15px;">
             <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 5px;">
@@ -555,13 +579,13 @@
             </div>
             <div id="sec-info-details" style="font-size: 10px; color: rgba(255,255,255,0.6); margin-bottom: 10px;"></div>
             <div style="display: flex; gap: 5px;">
-                <button id="btn-sec-ignore" style="flex: 1; background: transparent; color: #aaa; border: 1px solid rgba(255,255,255,0.2); border-radius: 4px; padding: 6px; font-size: 10px; cursor: pointer;">Not Related</button>
-                <button id="btn-sec-connect" style="flex: 1; background: white; color: black; border: none; border-radius: 4px; padding: 6px; font-weight: bold; font-size: 10px; cursor: pointer;">Connect</button>
+                <button id="btn-sec-ignore" style="flex: 1; background: transparent; color: #aaa; border: 1px solid rgba(255,255,255,0.2); border-radius: 12px; padding: 6px; font-size: 10px; cursor: pointer;">Not Related</button>
+                <button id="btn-sec-connect" style="flex: 1; background: white; color: black; border: none; border-radius: 12px; padding: 6px; font-weight: bold; font-size: 10px; cursor: pointer;">Connect</button>
             </div>
         </div>
     </div>
     
-    <div id="conn-secondary-card" style="position: relative; display: none; background: rgba(0, 0, 0, 0.85); backdrop-filter: blur(8px); border: 1px solid rgba(255, 255, 255, 0.15); padding: 15px; border-radius: 8px; pointer-events: auto; color: white;">
+    <div id="conn-secondary-card" style="position: relative; display: none; background: rgba(0, 0, 0, 0.6); backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px); border: 1px solid rgba(255, 255, 255, 0.1); padding: 20px; border-radius: 12px; pointer-events: auto; color: white; box-shadow: 0 10px 30px rgba(0,0,0,0.5);">
         <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 5px;">
             <div style="padding-right: 20px;">
                 <h3 id="conn-sec-name" style="margin: 0; font-size: 14px; font-weight: bold;"></h3>
@@ -570,7 +594,7 @@
             <button id="btn-close-conn-sec" style="position: absolute; top: 10px; right: 10px; background: transparent; color: #aaa; border: none; font-size: 16px; cursor: pointer; padding: 0; line-height: 1; min-width: auto; height: auto; width: auto;">&times;</button>
         </div>
         <div id="conn-sec-details" style="font-size: 11px; color: rgba(255,255,255,0.6); margin-bottom: 10px;"></div>
-        <button id="btn-conn-sec-view" style="width: 100%; background: white; color: black; border: none; border-radius: 4px; padding: 8px; font-weight: bold; font-size: 11px; cursor: pointer;">View Profile</button>
+        <button id="btn-conn-sec-view" style="width: 100%; background: white; color: black; border: none; border-radius: 12px; padding: 8px; font-weight: bold; font-size: 11px; cursor: pointer;">View Profile</button>
     </div>
 </div>
 
@@ -579,15 +603,32 @@
     <button id="btn-discover-connections" style="display: none;">
         <span style="font-size: 14px; font-weight: lighter; width: 14px; display: inline-block;"></span> DISCOVER CONNECTIONS
     </button>
-    <button id="btn-add-connection">
-        <span style="font-size: 14px; font-weight: lighter; width: 14px; display: inline-block; text-align: center;">+</span> ADD CONNECTION
+    <button id="btn-add-connection" class="info-action-btn" style="position: absolute; bottom: 30px; left: 30px; margin: 0; z-index: 100;">
+        [ FEED THE BEAST ]
     </button>
     <div style="position: absolute; bottom: 30px; right: 30px; display: flex; align-items: center; gap: 15px; z-index: 100;">
-        <a href="about.html" id="btn-info" style="text-decoration: none; background: rgba(0,0,0,0.85); backdrop-filter: blur(8px); border: 1px solid rgba(255,255,255,0.15); border-radius: 50%; color: white; width: 34px; height: 34px; cursor: pointer; transition: 0.2s; font-size: 16px; display: flex; align-items: center; justify-content: center; font-family: serif; font-style: italic;">i</a>
-        <button id="btn-theme" title="Toggle Light/Dark Mode">[dark mode]</button>
+        <button id="btn-info" class="info-action-btn" onclick="document.getElementById('about-modal').classList.add('visible'); document.getElementById('modal-overlay').classList.add('visible');" style="margin: 0;">[ ABOUT THE BEAST ]</button>
+        <button id="btn-theme" class="info-action-btn" style="margin: 0;" title="Toggle Day/Night Mode">[ night ]</button>
     </div>
 
     <div id="modal-overlay" class="modal-overlay"></div>
+
+    <!-- About Modal -->
+    <div id="about-modal" class="modal">
+        <span class="close-btn" id="btn-close-about" onclick="document.getElementById('about-modal').classList.remove('visible'); document.getElementById('modal-overlay').classList.remove('visible');" style="position: absolute; top: 15px; right: 20px; font-size: 28px; cursor: pointer; color: white; opacity: 0.6; transition: 0.2s; z-index: 10;">&times;</span>
+        <div style="overflow-y: auto; height: 100%; padding-right: 10px; font-family: 'Inter', sans-serif; text-align: left;">
+            <h1 style="font-weight: 300; font-size: 28px; margin-bottom: 20px; letter-spacing: 2px; text-transform: uppercase;">FEED THE BEAST</h1>
+            <p style="margin-bottom: 15px; color: rgba(255,255,255,0.85); font-size: 15px; line-height: 1.6;"><strong>Feed the Beast</strong> is an interactive installation that reveals the hidden network of human connections surrounding us.</p>
+            <p style="margin-bottom: 15px; color: rgba(255,255,255,0.85); font-size: 15px; line-height: 1.6;">Each node represents a real person. Each line represents a real relationship. Together, they form a living organism built from family ties, friendships, workplaces, schools, shared experiences, and chance encounters.</p>
+            <p style="margin-bottom: 15px; color: rgba(255,255,255,0.85); font-size: 15px; line-height: 1.6;">While digital platforms often present social connections as isolated profiles and visible friend lists, a far more complex network exists beneath the surface. Invisible pathways connect people across communities, professions, cities, and generations.</p>
+            <p style="margin-bottom: 15px; color: rgba(255,255,255,0.85); font-size: 15px; line-height: 1.6;">This project transforms that invisible network into a physical space that can be explored, navigated, and expanded.</p>
+            <p style="margin-bottom: 30px; color: rgba(255,255,255,0.85); font-size: 15px; line-height: 1.6;">Through searching, discovering shared backgrounds, and tracing connection paths between individuals, visitors can uncover how people are linked to one another, how strangers may be connected through unexpected routes, and how a single relationship can reshape the structure of the entire network.</p>
+
+            <p style="margin-bottom: 15px; color: rgba(255,255,255,0.85); font-size: 15px; line-height: 1.6;">The organism is never complete. With every new participant and every new connection, it grows, adapts, and reorganizes itself.</p>
+            <p style="margin-bottom: 15px; color: rgba(255,255,255,0.85); font-size: 15px; line-height: 1.6;">Feed the Beast is not a social network.</p>
+            <p style="margin-bottom: 15px; color: rgba(255,255,255,0.85); font-size: 15px; line-height: 1.6;">It is a visualization of the human infrastructure that exists behind one.</p>
+        </div>
+    </div>
     
     <div id="discover-modal" class="modal" style="display: none; padding-top: 40px; padding-bottom: 20px; max-width: 95vw; width: 95vw; height: 90vh; box-sizing: border-box; flex-direction: column;">
         <span class="close-btn" id="btn-close-discover" style="position: absolute; font-size: 32px; right: 25px; top: 15px; cursor: pointer; color: white;">&times;</span>
@@ -620,7 +661,6 @@
                     <div style="text-align: center; margin-bottom: 20px;">
                         <h2 style="font-weight: 300; margin-bottom: 10px;">What's your name?</h2>
                         <p style="color: rgba(255,255,255,0.6); font-size: 12px;">Enter your full name to begin.</p>
-                        <p style="color: rgba(255,255,255,0.5); font-size: 10px; margin-top: 15px;">Tip: The more details you provide in the next steps, the better the network will connect!</p>
                     </div>
                     <div class="form-group">
                         <input type="text" id="f-name-initial" placeholder="e.g., John Doe" style="font-size: 16px; padding: 15px; text-align: center; border-radius: 12px;">
@@ -641,7 +681,7 @@
                         <p style="color: rgba(255,255,255,0.6); font-size: 12px;">Someone with a similar name is already in the network.</p>
                     </div>
                     
-                    <div id="match-profile-card" style="background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; padding: 15px; margin-bottom: 20px;">
+                    <div id="match-profile-card" style="background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 16px; padding: 15px; margin-bottom: 20px;">
                         <div id="match-name" style="font-size: 16px; font-weight: bold; margin-bottom: 5px;"></div>
                         <div id="match-role" style="font-size: 12px; color: rgba(255,255,255,0.6);"></div>
                         <div id="match-city" style="font-size: 12px; color: rgba(255,255,255,0.6);"></div>
@@ -657,11 +697,10 @@
                 <!-- STEP 4: DEMOGRAPHICS -->
                 <div id="wizard-step-4" class="wizard-step">
                     <div style="text-align: center; margin-bottom: 20px;">
-                        <h2 style="font-weight: 300; margin-bottom: 10px;">Demographics</h2>
-                        <p style="color: rgba(255,255,255,0.6); font-size: 12px;">Where are they from?</p>
+                        <h2 style="font-weight: 300; margin-bottom: 10px;">Background</h2>
                     </div>
-                    <div class="form-group" style="display: none;">
-                        <label>Name</label>
+                    <div class="form-group" id="edit-name-group" style="display: none;">
+                        <label>Full Name</label>
                         <input type="text" id="f-name" required>
                     </div>
                     <div style="display:flex; gap:10px;">
@@ -713,10 +752,7 @@
                         </label>
                         <textarea id="f-desc" rows="4" placeholder="Write freely about work, schools, army unit, hobbies..."></textarea>
                     </div>
-                    <div class="form-group" style="display: none;">
-                        <label>Tags</label>
-                        <input type="text" id="f-tags">
-                    </div>
+                    <input type="hidden" id="f-tags">
                     
                     <!-- Accordion for Edit Mode Connections -->
                     <div id="edit-connections-accordion" style="display: none; margin-top: 20px; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 15px;">
@@ -820,13 +856,18 @@
         controls.dampingFactor = 0.08;
         controls.minDistance = 0.001;
         controls.maxDistance = 6000;
-        controls.zoomSpeed = 2.5; // Make zooming in/out very fast
+        controls.zoomSpeed = 0.4; // Extremely slow zoom for a very gradual and smooth building effect
         controls.rotateSpeed = 1.2; // Make roaming faster
         controls.panSpeed = 1.2;
         controls.autoRotate = true;
         controls.autoRotateSpeed = 0.5;
         controls.enableKeys = false; // Disable keyboard controls
         controls.enablePan = true;   // Enable panning so users can navigate to off-center nodes
+        
+        // Cancel automated camera animations if the user manually interacts with the controls
+        controls.addEventListener('start', () => {
+            isCameraAnimating = false;
+        });
         
         // Swap controls so Left Click (or 1 finger touch) PANS, and Right Click (or 2 fingers) ROTATES
         controls.mouseButtons = {
@@ -1418,6 +1459,9 @@
             }
             updateDatalist(); // Populate and sort datalist
 
+            document.getElementById('loading').style.display = 'none';
+            document.getElementById('top-bar').style.display = 'flex';
+
             if (isUISetup) return;
             isUISetup = true;
 
@@ -1431,33 +1475,133 @@
             });
             // (Controls panel removed)
 
-            // Search — queries API
+            // Search — queries API and populates dropdown
+            const searchInput = document.getElementById('search-input');
+            const searchDropdown = document.getElementById('search-dropdown');
             let searchDebounce = null;
-            document.getElementById('search-input').addEventListener('input', (e) => {
+            searchInput.addEventListener('input', (e) => {
                 const term = e.target.value.trim();
                 clearTimeout(searchDebounce);
-                if (!term) { resetSearch(); return; }
+                if (!term) { 
+                    resetSearch(); 
+                    searchDropdown.style.display = 'none';
+                    return; 
+                }
                 searchDebounce = setTimeout(async () => {
                     try {
                         const res = await fetch(`/api/people/search/query?q=${encodeURIComponent(term)}`);
-                        const matches = await res.json();
+                        const data = await res.json();
+                        
+                        const matches = Array.isArray(data) ? data : (data.people || []);
+                        const metadata = data.metadata || [];
+                        
+                        searchDropdown.innerHTML = '';
+                        let hasResults = false;
+                        
+                        if (metadata.length > 0) {
+                            hasResults = true;
+                            metadata.forEach(m => {
+                                const item = document.createElement('div');
+                                item.className = 'search-dropdown-item';
+                                item.style.borderBottom = '1px solid rgba(255,255,255,0.05)';
+                                item.style.background = 'rgba(255,255,255,0.02)';
+                                
+                                const nameDiv = document.createElement('div');
+                                nameDiv.className = 'search-item-name';
+                                nameDiv.innerHTML = `<span style="opacity:0.4; font-size:9px; margin-right:8px; letter-spacing:1px;">[ ${m.type} ]</span>${m.value}`;
+                                
+                                item.appendChild(nameDiv);
+                                
+                                item.addEventListener('click', () => {
+                                    searchInput.value = m.value;
+                                    searchDropdown.style.display = 'none';
+                                    
+                                    // Highlight matching nodes based on this specific metadata value
+                                    const lVal = m.value.toLowerCase();
+                                    const matchedNames = new Set(matches.filter(p => {
+                                        return (p.city && p.city.toLowerCase().includes(lVal)) ||
+                                               (p.role && p.role.toLowerCase().includes(lVal)) ||
+                                               (p.tags && p.tags.toLowerCase().includes(lVal));
+                                    }).map(p => p.name));
+                                    
+                                    applySearchHighlight(matchedNames);
+                                });
+                                
+                                searchDropdown.appendChild(item);
+                            });
+                        }
+                        
+                        if (matches.length > 0) {
+                            hasResults = true;
+                            matches.forEach(m => {
+                                const item = document.createElement('div');
+                                item.className = 'search-dropdown-item';
+                                
+                                const nameDiv = document.createElement('div');
+                                nameDiv.className = 'search-item-name';
+                                nameDiv.textContent = m.name;
+                                
+                                const contextDiv = document.createElement('div');
+                                contextDiv.className = 'search-item-context';
+                                const contextParts = [];
+                                if (m.city) contextParts.push(m.city);
+                                if (m.role) contextParts.push(m.role);
+                                if (m.tags) contextParts.push(m.tags);
+                                contextDiv.textContent = contextParts.join(' • ');
+                                
+                                item.appendChild(nameDiv);
+                                if (contextParts.length > 0) item.appendChild(contextDiv);
+                                
+                                item.addEventListener('click', () => {
+                                    searchInput.value = m.name;
+                                    searchDropdown.style.display = 'none';
+                                    const nodeIdx = userNames.indexOf(m.name);
+                                    if (nodeIdx !== -1) {
+                                        currentSearchNodes.clear(); // Clear search mode so connections appear!
+                                        selectNode(nodeIdx, true);
+                                    }
+                                });
+                                
+                                searchDropdown.appendChild(item);
+                            });
+                        }
+                        
+                        searchDropdown.style.display = hasResults ? 'block' : 'none';
+                        
                         const matchNames = new Set(matches.map(m => m.name));
                         applySearchHighlight(matchNames);
                     } catch (err) { console.error(err); }
                 }, 200);
             });
 
+            // Close dropdown when clicking outside
+            document.addEventListener('click', (e) => {
+                if (!e.target.closest('#search-wrapper')) {
+                    searchDropdown.style.display = 'none';
+                }
+            });
+
             document.getElementById('btn-pause').addEventListener('click', () => {
                 isPaused = !isPaused;
-                document.getElementById('btn-pause').textContent = isPaused ? "[play]" : "[pause]";
+                document.getElementById('btn-pause').textContent = isPaused ? "[ AWAKEN ]" : "[ FREEZE ]";
             });
 
             document.getElementById('btn-find').onclick = () => {
-                const sIdx = userNames.indexOf(sStart.value);
-                const eIdx = userNames.indexOf(sEnd.value);
-                if (sIdx !== -1 && eIdx !== -1) {
-                    const path = findPath(sIdx, eIdx);
-                    if (path) { initiatePathReveal(path); selectNode(eIdx, false); }
+                const sVal = sStart.value.toLowerCase().trim();
+                const eVal = sEnd.value.toLowerCase().trim();
+                
+                const sIdx = userNames.findIndex(n => n.toLowerCase() === sVal);
+                const eIdx = userNames.findIndex(n => n.toLowerCase() === eVal);
+                
+                if (sIdx === -1) return alert("Could not find start person. Please select from the list.");
+                if (eIdx === -1) return alert("Could not find end person. Please select from the list.");
+                
+                const path = findPath(sIdx, eIdx);
+                if (path) { 
+                    initiatePathReveal(path); 
+                    selectNode(eIdx, false); 
+                } else {
+                    alert("No connection path exists between these two people in the current network.");
                 }
             };
 
@@ -1469,12 +1613,6 @@
                     const btn = document.getElementById('btn-path-dest');
                     btn.textContent = "Click destination node on canvas...";
                     btn.classList.add('active');
-                }
-            };
-
-            document.getElementById('btn-show-network').onclick = () => {
-                if (selectedNodeId !== null) {
-                    selectNode(selectedNodeId, true);
                 }
             };
 
@@ -1503,16 +1641,27 @@
                         const strandId = Math.floor(validHits[0].index / pPerStrand);
                         
                         let isValidTarget = true;
-                        if (!pathTargetMode) {
-                            if (layoutMode === 'focus' && strandId !== focusedNodeId && !focusedNeighbors.has(strandId)) {
-                                isValidTarget = false;
-                            } else if (layoutMode === 'path' && (!currentPath || !currentPath.includes(strandId))) {
-                                isValidTarget = false;
-                            }
-                        }
                         
                         if (isValidTarget) {
-                            selectNode(strandId, false);
+                            if (pathTargetMode) {
+                                const endId = strandId;
+                                const startId = selectedNodeId;
+                                disablePathTargetMode();
+                                
+                                if (startId !== null && startId !== endId) {
+                                    const path = findPath(startId, endId);
+                                    if (path) {
+                                        initiatePathReveal(path);
+                                        selectNode(endId, false);
+                                    } else {
+                                        alert("No connection path exists between these two people in the current network.");
+                                    }
+                                } else {
+                                    selectNode(strandId, false);
+                                }
+                            } else {
+                                selectNode(strandId, false);
+                            }
                         } else {
                             if (pathTargetMode) disablePathTargetMode();
                             resetView();
@@ -1542,8 +1691,6 @@
                 document.body.style.cursor = validHits.length > 0 ? 'pointer' : 'default';
             });
 
-            document.getElementById('loading').style.display = 'none';
-            document.getElementById('top-bar').style.display = 'flex';
         }
 
         // --- Search helpers ---
@@ -1558,7 +1705,7 @@
             // Hide all labels initially
             labelObjects.forEach(l => {
                 l.element.style.color = 'rgba(255,255,255,0.0)';
-                l.element.style.fontWeight = 'normal';
+                l.element.style.fontWeight = '200';
                 l.element.style.textShadow = 'none';
                 l.element.style.border = 'none';
                 l.element.classList.remove('searched');
@@ -1580,11 +1727,12 @@
 
         function resetSearch() {
             if (!globalGeometry) return;
+            currentSearchNodes.clear();
             const colors = globalGeometry.attributes.color.array;
             for (let i = 0; i < colors.length; i++) colors[i] = 1.0;
             labelObjects.forEach(l => {
                 l.element.style.color = 'rgba(255,255,255,0.95)';
-                l.element.style.fontWeight = 'normal';
+                l.element.style.fontWeight = '200';
                 l.element.style.textShadow = '0 0 4px rgba(0,0,0,1)';
                 l.element.classList.remove('searched');
             });
@@ -1683,23 +1831,30 @@
             isTouringPath = true;
             isCameraAnimating = true;
             messiColored = false;
+            pathRevealState = 1;
             
             // Clean up old visuals
             const colors = globalGeometry.attributes.color.array;
+            const sizes = globalGeometry.attributes.size.array;
             for (let i = 0; i < colors.length; i += 3) {
                 colors[i] = 0.4; colors[i+1] = 0.4; colors[i+2] = 0.4;
             }
+            for (let i = 0; i < numStrands; i++) {
+                sizes[i * pPerStrand] = 176.0; // Default nucleus
+            }
             for (const pathNodeId of path) {
+                sizes[pathNodeId * pPerStrand] = 400.0; // HUGE nucleus for path nodes!
                 for (let j = 0; j < pPerStrand; j++) {
                     const idx = (pathNodeId * pPerStrand + j) * 3;
                     colors[idx] = 1.0; colors[idx+1] = 1.0; colors[idx+2] = 1.0;
                 }
             }
             globalGeometry.attributes.color.needsUpdate = true;
+            globalGeometry.attributes.size.needsUpdate = true;
             labelObjects.forEach((l, idx) => { 
                 if (!path.includes(idx)) {
                     l.element.style.color = 'rgba(255,255,255,0.4)'; 
-                    l.element.style.fontWeight = 'normal';
+                    l.element.style.fontWeight = '200';
                     l.element.style.opacity = '0.4';
                 } else {
                     l.element.style.color = 'rgba(255,255,255,1.0)';
@@ -1708,6 +1863,7 @@
             });
             
             renderPathChain(path);
+            drawPathLines(path);
 
             // Lay them out linearly
             const pathSpacing = 500;
@@ -1797,19 +1953,23 @@
                 }
             }
 
-            // Create family path line (solid white)
+            // Create family path line (solid white) using Cylinders for real thickness
             if (familyPoints.length > 0) {
-                const familyGeo = new THREE.BufferGeometry().setFromPoints(familyPoints);
-                const familyMat = new THREE.LineBasicMaterial({
-                    color: 0xFFFFFF,
-                    linewidth: 4,
-                    transparent: true,
-                    opacity: 0.95,
-                    depthTest: true,
-                    depthWrite: false
-                });
-                pathLineSegFamily = new THREE.LineSegments(familyGeo, familyMat);
-                pathLineSegFamily.frustumCulled = false;
+                const group = new THREE.Group();
+                const mat = new THREE.MeshBasicMaterial({ color: 0xFFFFFF, transparent: true, opacity: 0.95 });
+                for (let i = 0; i < familyPoints.length; i += 2) {
+                    const p1 = familyPoints[i];
+                    const p2 = familyPoints[i+1];
+                    const dist = p1.distanceTo(p2);
+                    const geo = new THREE.CylinderGeometry(4, 4, dist, 6);
+                    geo.translate(0, dist / 2, 0);
+                    const cyl = new THREE.Mesh(geo, mat);
+                    cyl.position.copy(p1);
+                    cyl.lookAt(p2);
+                    cyl.rotateX(Math.PI / 2);
+                    group.add(cyl);
+                }
+                pathLineSegFamily = group;
                 masterGroup.add(pathLineSegFamily);
             }
 
@@ -1841,17 +2001,21 @@
                 }
 
                 if (dashedSegments.length > 0) {
-                    const friendGeo = new THREE.BufferGeometry().setFromPoints(dashedSegments);
-                    const friendMat = new THREE.LineBasicMaterial({
-                        color: 0xFFFF00,
-                        linewidth: 3,
-                        transparent: true,
-                        opacity: 0.8,
-                        depthTest: true,
-                        depthWrite: false
-                    });
-                    pathLineSegFriend = new THREE.LineSegments(friendGeo, friendMat);
-                    pathLineSegFriend.frustumCulled = false;
+                    const group = new THREE.Group();
+                    const mat = new THREE.MeshBasicMaterial({ color: 0xFFFFFF, transparent: true, opacity: 0.8 });
+                    for (let i = 0; i < dashedSegments.length; i += 2) {
+                        const p1 = dashedSegments[i];
+                        const p2 = dashedSegments[i+1];
+                        const dist = p1.distanceTo(p2);
+                        const geo = new THREE.CylinderGeometry(4, 4, dist, 6);
+                        geo.translate(0, dist / 2, 0);
+                        const cyl = new THREE.Mesh(geo, mat);
+                        cyl.position.copy(p1);
+                        cyl.lookAt(p2);
+                        cyl.rotateX(Math.PI / 2);
+                        group.add(cyl);
+                    }
+                    pathLineSegFriend = group;
                     masterGroup.add(pathLineSegFriend);
                 }
             }
@@ -1859,9 +2023,15 @@
 
         function selectNode(id, triggerFocus = true) {
             if (pathTargetMode && selectedNodeId !== null && selectedNodeId !== id) {
-                const path = findPath(selectedNodeId, id);
-                if (path) { initiatePathReveal(path); selectNode(id, false); }
+                const startId = selectedNodeId;
                 disablePathTargetMode();
+                const path = findPath(startId, id);
+                if (path) { 
+                    initiatePathReveal(path); 
+                    selectNode(id, false); 
+                } else {
+                    alert("No connection path exists between these two people in the current network.");
+                }
                 return;
             }
             selectedNodeId = id;
@@ -1872,14 +2042,12 @@
                 focusedNodeId = id;
                 focusedNeighbors = new Set(graphAdjacency[id] || []);
             
-                // Reposition nodes: Center the chosen node, put neighbors in a ring
                 let neighborsArr = Array.from(focusedNeighbors);
                 const numNeighbors = neighborsArr.length;
                 
                 let angularPositions = [];
                 let totalAngularPos = 1;
 
-                // --- Angular Cluster Sorting ---
                 // Sort neighbors so mutually connected friends are adjacent
                 if (numNeighbors > 0) {
                     let localAdj = new Map();
@@ -1894,7 +2062,6 @@
 
                     let unvisited = new Set(neighborsArr);
                     let sortedNeighbors = [];
-                    // Start with the node that has the most local connections
                     let current = neighborsArr.reduce((a, b) => localAdj.get(a).length > localAdj.get(b).length ? a : b);
                     sortedNeighbors.push(current);
                     unvisited.delete(current);
@@ -1902,21 +2069,14 @@
                     while (unvisited.size > 0) {
                         let bestNext = null;
                         let maxScore = -1;
-
                         for (let cand of unvisited) {
                             let isConnectedToCurrent = localAdj.get(current).includes(cand) ? 1 : 0;
                             let connsToChain = 0;
                             for (let sn of sortedNeighbors) {
                                 if (localAdj.get(cand).includes(sn)) connsToChain++;
                             }
-                            
-                            // Weight: direct connection to current is most important, then general chain connections
                             let score = isConnectedToCurrent * 100 + connsToChain * 10 + localAdj.get(cand).length;
-                            
-                            if (score > maxScore) {
-                                maxScore = score;
-                                bestNext = cand;
-                            }
+                            if (score > maxScore) { maxScore = score; bestNext = cand; }
                         }
                         current = bestNext;
                         sortedNeighbors.push(current);
@@ -1924,132 +2084,115 @@
                     }
                     neighborsArr = sortedNeighbors;
                     
-                    // --- Angular Gap Calculation ---
-                    // Add physical gaps on the circle between disconnected clusters
                     let currentPos = 0;
                     angularPositions.push(currentPos);
                     for (let k = 1; k < neighborsArr.length; k++) {
                         let nPrev = neighborsArr[k-1];
                         let nCurr = neighborsArr[k];
-                        // If they are directly connected, place them normally (distance 1)
-                        // If they are disconnected, leave a large gap (distance 3)
-                        if (graphAdjacency[nPrev].includes(nCurr)) {
-                            currentPos += 1;
-                        } else {
-                            currentPos += 3.5;
-                        }
+                        if (graphAdjacency[nPrev].includes(nCurr)) currentPos += 1;
+                        else currentPos += 3.5;
                         angularPositions.push(currentPos);
                     }
-                    totalAngularPos = currentPos + 3.5; // Final gap to close the circle
+                    totalAngularPos = currentPos + 3.5;
                 }
+
+                const targetNode = pointData[id * pPerStrand];
+                const C = new THREE.Vector3(targetNode.baseCx, targetNode.baseCy, targetNode.baseCz);
                 
-                // Calculate the final camera direction (looking from camera's position towards the origin)
-                const finalCamDir = new THREE.Vector3(0,0,0).sub(camera.position).normalize();
-                if (finalCamDir.lengthSq() < 0.1) finalCamDir.set(0, 0, -1);
+                let dir = C.clone().normalize();
+                if (dir.lengthSq() < 0.1) dir.set(0, 0, 1);
+                let viewDir = dir.clone().multiplyScalar(-1); // Camera looks at C from C + dir*650
                 
                 const camUp = camera.up.clone().normalize();
-                let camRight = new THREE.Vector3().crossVectors(finalCamDir, camUp).normalize();
+                let camRight = new THREE.Vector3().crossVectors(viewDir, camUp).normalize();
                 if (camRight.lengthSq() < 0.1) {
-                    camRight = new THREE.Vector3().crossVectors(finalCamDir, new THREE.Vector3(1,0,0)).normalize();
+                    camRight = new THREE.Vector3().crossVectors(viewDir, new THREE.Vector3(1,0,0)).normalize();
                 }
-                const trueUp = new THREE.Vector3().crossVectors(camRight, finalCamDir).normalize();
+                const trueUp = new THREE.Vector3().crossVectors(camRight, viewDir).normalize();
+                
+                const repelRadius = 800; // Force background nodes outside the 2D planar network
                 
                 for (let i = 0; i < numStrands; i++) {
                     const p = pointData[i * pPerStrand];
-                    p.vx = 0; p.vy = 0; p.vz = 0;
-                    
                     if (i === id) {
-                        p.targetCx = 0; p.targetCy = 0; p.targetCz = 0;
+                        p.targetCx = C.x; p.targetCy = C.y; p.targetCz = C.z;
                     } else if (focusedNeighbors.has(i)) {
                         const nIdx = neighborsArr.indexOf(i);
                         const angle = (angularPositions[nIdx] / Math.max(1, totalAngularPos)) * Math.PI * 2;
                         
-                        // --- Proximity Mapping (Exaggerated for Prominence) ---
                         const connInfo = getConnectionInfo(id, i);
-                        const cType = connInfo.type;
-                        const cStrength = connInfo.strength;
-                        
                         let r = 300;
-                        if (cType === 'family_core') {
-                            // Core Family: closest (70 to 120)
-                            r = 120 - ((cStrength - 1) * 12.5);
-                        } else if (cType === 'family_extended') {
-                            // Extended Family: further out (150 to 200)
-                            r = 200 - ((cStrength - 1) * 12.5);
-                        } else if (cType === 'friend') {
-                            // Friend: mid-range (250 to 350)
-                            r = 350 - ((cStrength - 1) * 25); 
-                        } else {
-                            // Acquaintance: outer ring (420 to 550)
-                            r = 550 - ((cStrength - 1) * 32.5);
-                        }
+                        if (connInfo.type === 'family_core') r = 120 - ((connInfo.strength - 1) * 12.5);
+                        else if (connInfo.type === 'family_extended') r = 200 - ((connInfo.strength - 1) * 12.5);
+                        else if (connInfo.type === 'friend') r = 350 - ((connInfo.strength - 1) * 25);
+                        else r = 550 - ((connInfo.strength - 1) * 32.5);
                         
                         const c = Math.cos(angle) * r;
                         const s = Math.sin(angle) * r;
-                        p.targetCx = camRight.x * c + trueUp.x * s;
-                        p.targetCy = camRight.y * c + trueUp.y * s;
-                        p.targetCz = camRight.z * c + trueUp.z * s;
+                        p.targetCx = C.x + camRight.x * c + trueUp.x * s;
+                        p.targetCy = C.y + camRight.y * c + trueUp.y * s;
+                        p.targetCz = C.z + camRight.z * c + trueUp.z * s;
                     } else {
-                        // Push rest of network into the background along the camera's view direction
-                        // This keeps them in their 3D formation but moves them further away
-                        p.targetCx = p.baseCx - finalCamDir.x * 1200;
-                        p.targetCy = p.baseCy - finalCamDir.y * 1200;
-                        p.targetCz = p.baseCz - finalCamDir.z * 1200;
+                        const P = new THREE.Vector3(p.baseCx, p.baseCy, p.baseCz);
+                        const v = P.clone().sub(C);
+                        
+                        const z = v.dot(viewDir); 
+                        const v2d = v.clone().sub(viewDir.clone().multiplyScalar(z));
+                        
+                        let dist2d = v2d.length();
+                        if (dist2d < repelRadius) {
+                            const scale = dist2d > 0.1 ? repelRadius / dist2d : 1;
+                            v2d.multiplyScalar(scale);
+                        }
+                        
+                        let pushedZ = z;
+                        if (pushedZ < 200) pushedZ = 200; // Push safely behind the 2D plane
+                        
+                        const finalP = C.clone().add(v2d).add(viewDir.clone().multiplyScalar(pushedZ));
+                        p.targetCx = finalP.x;
+                        p.targetCy = finalP.y;
+                        p.targetCz = finalP.z;
                     }
                 }
-                
-                // Dim everyone, brighten focused node and its neighbors
-                const colors = globalGeometry.attributes.color.array;
-                for (let i = 0; i < colors.length; i += 3) {
-                    colors[i] = 0.08; colors[i+1] = 0.08; colors[i+2] = 0.08; // Decreased visibility slightly for light mode
-                }
-                for (let j = 0; j < pPerStrand; j++) {
-                    const idx = (id * pPerStrand + j) * 3;
-                    colors[idx] = 1.0; colors[idx+1] = 1.0; colors[idx+2] = 1.0;
-                }
-                for (const neighborId of focusedNeighbors) {
-                    for (let j = 0; j < pPerStrand; j++) {
-                        const idx = (neighborId * pPerStrand + j) * 3;
-                        colors[idx] = 1.0; colors[idx+1] = 1.0; colors[idx+2] = 1.0;
-                    }
-                }
-                globalGeometry.attributes.color.needsUpdate = true;
                 
                 labelObjects.forEach((l, idx) => {
                     if (idx === id || focusedNeighbors.has(idx)) {
                         l.element.style.color = 'rgba(255,255,255,1.0)';
-                        l.element.style.fontWeight = 'bold';
+                        l.element.style.fontWeight = idx === id ? 'bold' : '200';
                         l.element.style.opacity = '1.0';
+                        l.element.style.display = 'block';
                     } else {
-                        l.element.style.color = 'rgba(255,255,255,0.4)'; // Increased visibility
-                        l.element.style.fontWeight = 'normal';
-                        l.element.style.opacity = '0.3'; // Increased visibility
+                        l.element.style.opacity = '0.05';
                     }
                 });
-                
-                // Dim connection lines that are not part of the personal network
+
                 if (typeof connectionCurves !== 'undefined') {
                     connectionCurves.forEach(curve => {
                         const aNode = curve.aIdx / pPerStrand;
                         const bNode = curve.bIdx / pPerStrand;
-                        const isFocusCurve = (aNode === id && focusedNeighbors.has(bNode)) || 
-                                             (bNode === id && focusedNeighbors.has(aNode));
-                        const isSecondaryCurve = focusedNeighbors.has(aNode) && focusedNeighbors.has(bNode);
-                        
-                        if (isFocusCurve) {
+                        if (aNode === id || bNode === id) {
                             curve.mesh.material.uniforms.uOpacity.value = 1.0;
-                        } else if (isSecondaryCurve) {
-                            curve.mesh.material.uniforms.uOpacity.value = 0.25; // Show connections between neighbors
                         } else {
-                            curve.mesh.material.uniforms.uOpacity.value = 0.04; // Very faint background lines
+                            curve.mesh.material.uniforms.uOpacity.value = 0.03;
                         }
                     });
                 }
                 
-                // Move camera to view the circle but don't lock rotation so user can explore
+                const colors = globalGeometry.attributes.color.array;
+                for (let i = 0; i < numStrands; i++) {
+                    if (i === id || focusedNeighbors.has(i)) {
+                        colors[i] = 1.0;
+                    } else {
+                        colors[i] = 0.05;
+                    }
+                }
+                globalGeometry.attributes.color.needsUpdate = true;
+                
+                // Move camera to view the node in its natural environment
+                // camera variables are already defined above (dir)
                 controls.autoRotate = false;
-                camTargetLookAt.set(0, 0, 0);
-                camTargetPos.copy(finalCamDir).multiplyScalar(-850); // Zoom in closer!
+                camTargetLookAt.copy(C);
+                camTargetPos.copy(C).add(dir.multiplyScalar(650)); // View from outside looking in
                 isCameraAnimating = true;
             }
 
@@ -2074,7 +2217,7 @@
         function disablePathTargetMode() {
             pathTargetMode = false;
             const btn = document.getElementById('btn-path-dest');
-            btn.textContent = "Show Path To Another Person";
+            btn.textContent = "[ LOCATE CONNECTION ]";
             btn.classList.remove('active');
         }
 
@@ -2105,8 +2248,11 @@
                 p.targetCx = p.baseCx; p.targetCy = p.baseCy; p.targetCz = p.baseCz;
             }
             const colors = globalGeometry.attributes.color.array;
+            const sizes = globalGeometry.attributes.size.array;
             for (let i = 0; i < colors.length; i++) colors[i] = 1.0;
+            for (let i = 0; i < numStrands; i++) sizes[i * pPerStrand] = 176.0; // Reset to default
             globalGeometry.attributes.color.needsUpdate = true;
+            globalGeometry.attributes.size.needsUpdate = true;
             
             if (typeof connectionCurves !== 'undefined') {
                 connectionCurves.forEach(curve => {
@@ -2116,7 +2262,7 @@
             
             labelObjects.forEach(l => { 
                 l.element.style.color = 'rgba(255,255,255,0.95)'; 
-                l.element.style.fontWeight = 'normal'; 
+                l.element.style.fontWeight = '200'; 
                 l.element.style.opacity = '1.0';
             });
             document.getElementById('info-panel-container').classList.remove('visible');
@@ -2138,10 +2284,13 @@
         function showPersonCard(index, person) {
             document.getElementById('info-name').textContent = person.name;
             document.getElementById('info-role').textContent = person.role || '';
-            document.getElementById('info-age').textContent = person.age ? `Age: ${person.age}` : '';
+            const currentYear = new Date().getFullYear();
+            const birthYear = person.age ? currentYear - parseInt(person.age) : null;
+            document.getElementById('info-age').textContent = birthYear ? `Birth Year: ${birthYear}` : '';
             document.getElementById('info-city').textContent = person.city ? `${person.city}, ${person.country}` : '';
             document.getElementById('info-description').textContent = person.description || '';
-            document.getElementById('info-tags').textContent = person.tags ? person.tags.split(',').join(' ') : '';
+            
+            // Tags are handled internally and are no longer displayed on the info card
             
             const connListDiv = document.getElementById('info-connections-list');
             const connSecCard = document.getElementById('conn-secondary-card');
@@ -2152,14 +2301,11 @@
                 person.connections.forEach(c => {
                     const targetPerson = people.find(p => p.id === c.id);
                     if (targetPerson) {
-                        const typeMap = { 'friend': 'Friend', 'family_core': 'Family (Close)', 'family_extended': 'Family (Ext)', 'acquaintance': 'Acquaintance' };
-                        
                         const d = document.createElement('div');
                         d.style.cssText = 'display: flex; align-items: center; background: transparent; padding: 4px 6px; margin-bottom: 2px; cursor: pointer; transition: 0.2s; border-radius: 4px;';
                         d.innerHTML = `
                             <div style="flex: 1; display: flex; justify-content: space-between; align-items: center;">
                                 <span style="font-size: 11px; color: white;">• ${targetPerson.name}</span>
-                                <span style="font-size: 9px; color: #aaa;">(${typeMap[c.type] || c.type})</span>
                             </div>
                         `;
                         
@@ -2177,7 +2323,8 @@
                             document.getElementById('conn-sec-details').textContent = details.join(' | ');
                             
                             document.getElementById('btn-conn-sec-view').onclick = () => {
-                                selectNode(targetPerson.id, true);
+                                const targetIdx = dbIdToIdx[targetPerson.id];
+                                selectNode(targetIdx, true);
                             };
                         });
                         
@@ -2289,22 +2436,22 @@
             selectedNodeId = index;
         }
 
-        document.getElementById('btn-next-person').onclick = () => {
-            if (selectedNodeId !== null && selectedNodeId < people.length - 1) {
-                selectNode(selectedNodeId + 1, false);
-            }
-        };
-
-        document.getElementById('btn-prev-person').onclick = () => {
-            if (selectedNodeId !== null && selectedNodeId > 0) {
-                selectNode(selectedNodeId - 1, false);
-            }
-        };
-
+        // Remove navigation buttons logic
         document.getElementById('btn-close-card').onclick = () => {
             document.getElementById('info-panel-container').classList.remove('visible');
             selectedNodeId = null;
         };
+
+        const infoMenuDropdown = document.getElementById('info-menu-dropdown');
+        document.getElementById('btn-info-menu').onclick = (e) => {
+            e.stopPropagation();
+            infoMenuDropdown.style.display = infoMenuDropdown.style.display === 'none' ? 'block' : 'none';
+        };
+        document.addEventListener('click', (e) => {
+            if (!e.target.closest('#info-menu-container')) {
+                infoMenuDropdown.style.display = 'none';
+            }
+        });
 
         // --- Animation ---
         const clock = new THREE.Clock();
@@ -2340,13 +2487,25 @@
             }
             scene.updateMatrixWorld();
 
-            let lerpSpeed = 0.05;
+            let lerpSpeed = 0.007; // Extraordinarily slow camera pan
             if (isCameraAnimating) {
                 camera.position.lerp(camTargetPos, lerpSpeed);
                 controls.target.lerp(camTargetLookAt, lerpSpeed);
+                camera.lookAt(controls.target); // Force lookAt since OrbitControls is bypassed
+                
+                // Stop animating if close enough
+                if (camera.position.distanceTo(camTargetPos) < 1.0 && controls.target.distanceTo(camTargetLookAt) < 1.0) {
+                    isCameraAnimating = false;
+                }
             }
 
             const camDist = camera.position.distanceTo(controls.target);
+            
+            // Auto-exit focus mode when zooming out fully!
+            if (!isCameraAnimating && layoutMode === 'focus' && camDist > 1500) {
+                resetView(true); // Preserve camera state but transition back to normal sphere logic
+            }
+            
             const zoomLevel = Math.max(0, 1100 - camDist) / 1100;
             let speedMult = 1.0 - zoomLevel * 0.9; // Slow down drastically as we zoom in
             if (currentSearchNodes.size > 0) speedMult = 0.0; // Completely freeze movement during search
@@ -2355,10 +2514,9 @@
             controls.autoRotate = !isPaused && !isCameraAnimating; 
             controls.autoRotateSpeed = 0.15 * speedMult; // Slower auto-rotation
             
-            // "Super slow" movement when zoomed in
-            const interactionSpeed = zoomLevel > 0.5 ? 0.05 : 1.0; 
-            controls.rotateSpeed = interactionSpeed; 
-            controls.panSpeed = interactionSpeed;
+            // Normal movement speed everywhere
+            controls.rotateSpeed = 1.2; 
+            controls.panSpeed = 1.2;
 
             // REMOVED FORCED LOCKING - Camera can roam freely!
             // const flatAngle = Math.PI / 2;
@@ -2427,11 +2585,13 @@
                     targetOpacity = inPath ? 1.0 : 0.15; // Background network is faint
                 } else if (layoutMode === 'focus') {
                     if (aNode === focusedNodeId || bNode === focusedNodeId) {
-                        targetOpacity = 1.0; // Connections to center are fully visible
+                        targetOpacity = 1.5; // Connections to center are fully visible (black)
                     } else if (focusedNeighbors.has(aNode) && focusedNeighbors.has(bNode)) {
-                        targetOpacity = 0.3; // Connections between neighbors are semi-visible
+                        targetOpacity = 0.15; // Connections between neighbors are very faint
                     } else {
-                        targetOpacity = 0.25; // Rest of network is dimmed to faint visibility
+                        const opA = window.nodeRevealOpacities ? window.nodeRevealOpacities[aNode] : 0.0;
+                        const opB = window.nodeRevealOpacities ? window.nodeRevealOpacities[bNode] : 0.0;
+                        targetOpacity = Math.min(opA, opB) * 1.0; // Appear only when both nodes appear
                     }
                 } else if (currentSearchNodes.size > 0) {
                     targetOpacity = 0.0; // User requested: NO lines should be visible during search
@@ -2460,6 +2620,43 @@
                 const bCurve = new THREE.QuadraticBezierCurve3(pA, cp, pB);
                 
                 curve.mesh.geometry.setFromPoints(bCurve.getPoints(12));
+            }
+            
+            // Dynamically update background opacity in focus mode based on zoom distance
+            if (layoutMode === 'focus') {
+                const colors = globalGeometry.attributes.color.array;
+                const revealRadius = (camDist - 650) * 2.5; // Radius expands much slower as you zoom out
+                
+                window.nodeRevealOpacities = window.nodeRevealOpacities || new Float32Array(numStrands);
+                const C_node = pointData[focusedNodeId * pPerStrand];
+                const centerPos = new THREE.Vector3(C_node.baseCx, C_node.baseCy, C_node.baseCz);
+                
+                for (let i = 0; i < numStrands; i++) {
+                    const pIdx = i * pPerStrand;
+                    let opacity = 1.0;
+                    if (i !== focusedNodeId && !focusedNeighbors.has(i)) {
+                        const P = new THREE.Vector3(pointData[pIdx].baseCx, pointData[pIdx].baseCy, pointData[pIdx].baseCz);
+                        const distToCenter = P.distanceTo(centerPos);
+                        opacity = Math.max(0, Math.min(1.0, (revealRadius - distToCenter) / 400.0)); // Very wide fade band (400) for super smooth fade-in
+                    }
+                    window.nodeRevealOpacities[i] = opacity;
+                    
+                    for (let j = 0; j < pPerStrand; j++) {
+                        const idx = (pIdx + j) * 3;
+                        colors[idx] = opacity;
+                        colors[idx+1] = opacity;
+                        colors[idx+2] = opacity;
+                    }
+                }
+                globalGeometry.attributes.color.needsUpdate = true;
+                
+                labelObjects.forEach((l, idx) => {
+                    if (idx !== focusedNodeId && !focusedNeighbors.has(idx)) {
+                        const op = window.nodeRevealOpacities[idx];
+                        l.element.style.opacity = op.toFixed(3);
+                        l.element.style.display = op > 0.05 ? 'block' : 'none'; 
+                    }
+                });
             }
 
             let introCamRight, introCamUp;
@@ -2509,10 +2706,11 @@
                         }
                     }
 
-                    const forceX = (data.targetCx - data.cx) * 0.02;
-                    const forceY = (data.targetCy - data.cy) * 0.02;
-                    const forceZ = (data.targetCz - data.cz) * 0.02;
-                    data.vx = (data.vx + forceX) * 0.85; data.vy = (data.vy + forceY) * 0.85; data.vz = (data.vz + forceZ) * 0.85;
+                    // Soft, slow spring physics for cinematic node layout transitions
+                    const forceX = (data.targetCx - data.cx) * 0.005;
+                    const forceY = (data.targetCy - data.cy) * 0.005;
+                    const forceZ = (data.targetCz - data.cz) * 0.005;
+                    data.vx = (data.vx + forceX) * 0.92; data.vy = (data.vy + forceY) * 0.92; data.vz = (data.vz + forceZ) * 0.92;
                     data.cx += data.vx; data.cy += data.vy; data.cz += data.vz;
 
                     const deepZoom = Math.max(0, (zoomLevel - 0.6) * 2.5);
@@ -2550,10 +2748,16 @@
                         const dCam = _worldPos.distanceTo(camera.position);
                         let op = Math.max(0, Math.min(1.0, 1.0 - ((dCam - 1000) / 600))); // Fade out between distance 1000 and 1600
                         if (layoutMode === 'path' || currentSearchNodes.has(data.strandId)) op = 1.0;
-                        if (layoutMode === 'focus' && (data.strandId === focusedNodeId || focusedNeighbors.has(data.strandId))) op = 1.0; // Keep focus nodes visible
+                        if (layoutMode === 'focus') {
+                            if (data.strandId === focusedNodeId || focusedNeighbors.has(data.strandId)) {
+                                op = 1.0; // Keep focus nodes visible
+                            } else {
+                                const revealOp = window.nodeRevealOpacities ? window.nodeRevealOpacities[data.strandId] : 0.0;
+                                op = revealOp;
+                                lbl.element.style.display = revealOp > 0.05 ? 'block' : 'none';
+                            }
+                        }
                         lbl.element.style.opacity = op.toFixed(3);
-
-                        // Nodes always visible
                     }
                     continue;
                 }
@@ -2602,7 +2806,9 @@
 
             posAttr.needsUpdate = true;
 
-            controls.update();
+            if (!isCameraAnimating) {
+                controls.update(); // Only update OrbitControls when not manually animating
+            }
 
             // Update line shader uniforms with real camera distance
             if (lineUniforms.family) lineUniforms.family.uCamDist.value = camDist;
@@ -2657,7 +2863,24 @@
                 const screenY = (-(labelScreenPos.y) * 0.5 + 0.5) * window.innerHeight;
                 const dist = Math.hypot(screenX - event.clientX, screenY - event.clientY);
                 if (dist < 60) {
-                    showPersonCard(i, people[i]);
+                    if (pathTargetMode) {
+                        const endId = i;
+                        const startId = selectedNodeId;
+                        disablePathTargetMode();
+                        if (startId !== null && startId !== endId) {
+                            const path = findPath(startId, endId);
+                            if (path) {
+                                initiatePathReveal(path);
+                                selectNode(endId, false);
+                            } else {
+                                alert("No connection path exists between these two people in the current network.");
+                            }
+                        } else {
+                            selectNode(i, false);
+                        }
+                    } else {
+                        selectNode(i, true);
+                    }
                     break;
                 }
             }
@@ -3092,7 +3315,7 @@
             const genericRoles = ['softwareengineer', 'fullstackdeveloper', 'frontenddeveloper', 'backenddeveloper', 'mobiledeveloper', 'iosdeveloper', 'androiddeveloper', 'webdeveloper', 'gamedeveloper', 'devopsengineer', 'sitelieliabilityengineer', 'sre', 'cloudengineer', 'cloudarchitect', 'solutionsarchitect', 'dataengineer', 'dataanalyst', 'datascientist', 'machinelearningengineer', 'aiengineer', 'airesearcher', 'promptengineer', 'cybersecurityanalyst', 'cybersecurityengineer', 'informationsecuritymanager', 'penetrationtester', 'socanalyst', 'qaengineer', 'automationengineer', 'testengineer', 'productmanager', 'technicalproductmanager', 'projectmanager', 'programmanager', 'scrummaster', 'businessanalyst', 'systemsanalyst', 'uxdesigner', 'uidesigner', 'uxresearcher', 'productdesigner', 'servicedesigner', 'interactiondesigner', 'technicalwriter', 'solutionsconsultant', 'customersuccessmanager', 'technicalsupportengineer', 'salesengineer', 'presalesengineer', 'itmanager', 'itadministrator', 'databaseadministrator', 'dba', 'networkengineer', 'embeddedsystemsengineer', 'hardwareengineer', 'electronicsengineer', 'roboticsengineer', 'computervisionengineer', 'blockchaindeveloper', 'arvrdeveloper', 'marketingmanager', 'digitalmarketingmanager', 'brandmanager', 'marketingdirector', 'chiefmarketingofficer', 'cmo', 'performancemarketingmanager', 'growthmarketingmanager', 'productmarketingmanager', 'contentmarketingmanager', 'socialmediamanager', 'communitymanager', 'influencermarketingmanager', 'emailmarketingspecialist', 'seospecialist', 'semspecialist', 'ppcspecialist', 'marketingspecialist', 'marketingcoordinator', 'marketinganalyst', 'marketresearchanalyst', 'brandstrategist', 'creativestrategist', 'communicationsmanager', 'publicrelationsmanager', 'prmanager', 'prspecialist', 'mediaplanner', 'mediabuyer', 'campaignmanager', 'advertisingmanager', 'copywriter', 'contentcreator', 'contentmanager', 'contentstrategist', 'creativedirector', 'artdirector', 'graphicdesigner', 'uxwriter', 'crmmanager', 'partnershipmanager', 'businessdevelopmentmanager', 'eventmanager', 'eventproducer', 'ecommercemanager', 'affiliatemarketingmanager', 'influencerrelationsmanager', 'marketingconsultant', 'freelancer', 'welfarenco', 'mashakittash', 'combatsoldier', 'lochem', 'lochemet', 'educationnco', 'mashakitchinuch', 'operationsroomcontroller', 'sambatzit', 'commander', 'mefaked', 'mefakedet', 'intelligenceanalyst', 'modiin', 'infantryinstructor', 'madrichatchir', 'combatinstructor', 'madrichatkrav', 'traininginstructor', 'madricha', 'operationsnco', 'mashakmivtzaim', 'humanresourcesnco', 'mashakitkoachadam', 'הייטק', 'hightech', 'hitech', 'high-tech', 'hi-tech', 'tech', 'טק', 'student', 'סטודנט', 'סטודנטית', 'manager', 'מנהל', 'מנהלת', 'friend', 'friends', 'חבר', 'חברה', 'חברים', 'family', 'משפחה', 'colleague', 'קולגה', 'partner', 'בן זוג', 'בת זוג', 'ex', 'אקס', 'אקסית'];
             
             const p1Tags = p1.tags ? (Array.isArray(p1.tags) ? p1.tags : p1.tags.split(',').map(t=>t.trim().toLowerCase()).filter(Boolean)) : [];
-            const p1Text = ' ' + [(p1.city||'').toLowerCase(), (p1.role||'').toLowerCase(), ...p1Tags].join(' ').replace(/[,.!]/g, ' ') + ' ';
+            const p1Text = ' ' + [(p1.city||'').toLowerCase(), (p1.role||'').toLowerCase(), (p1.description||'').toLowerCase(), ...p1Tags].join(' ').replace(/[,.!]/g, ' ') + ' ';
             const p1Years = p1Tags.map(t => t.replace(/^#/, '')).filter(t => /^(19|20)\d{2}$/.test(t));
             const p1Age = p1.age ? parseInt(p1.age) : null;
             const p1CityLower = p1.city ? p1.city.toLowerCase() : '';
@@ -3173,11 +3396,18 @@
             }
             p2Tags.forEach(t => {
                 const cleanTag = t.replace(/^#/, '');
-                if (p1Tags.includes(t)) {
+                const match = p1Tags.find(p1t => {
+                    const cleanP1 = p1t.replace(/^#/, '');
+                    return cleanTag === cleanP1 || 
+                           (cleanTag.length > 3 && cleanP1.includes(cleanTag)) || 
+                           (cleanP1.length > 3 && cleanTag.includes(cleanP1));
+                });
+                
+                if (match) {
                     if (genericRoles.includes(cleanTag)) {
                         score += 5;
                     } else {
-                        score += 30;
+                        score += 15; // Reduced from 30 to prevent weak matches from generic tags
                         sharedStrings.push(cleanTag);
                     }
                 }
@@ -3193,17 +3423,27 @@
         }
 
         function generateRecommendations() {
+            let tags = document.getElementById('f-tags').value.split(',').map(t => t.trim()).filter(Boolean);
+            const desc = document.getElementById('f-desc').value.trim();
+            if (tags.length === 0 && desc) {
+                const words = desc.split(/[\s,.-]+/);
+                const ignoreWords = ['this','that','with','from','they','the','and','for','was','not','are','but','you','all','any','can','her','him','out'];
+                const keywords = words.filter(w => w.length > 3 && !ignoreWords.includes(w.toLowerCase())).slice(0, 4);
+                tags = keywords.map(w => '#' + w.replace(/[^a-zA-Zא-ת]/g, ''));
+            }
+
             const p1 = {
                 age: document.getElementById('f-age').value.trim(),
                 city: document.getElementById('f-city').value.trim(),
                 role: document.getElementById('f-role').value.trim(),
-                tags: document.getElementById('f-tags').value.split(',').map(t => t.trim()).filter(Boolean)
+                description: desc,
+                tags: tags
             };
             
             let scores = [];
             people.forEach(p => {
                 const result = calculateMatchScore(p1, p);
-                if (result.score >= 25) { // Increased threshold to avoid weak generic matches
+                if (result.score >= 15) { // Reduced threshold back to 15 so single matches (like City) trigger a suggestion
                     scores.push({ person: p, score: result.score });
                 }
             });
@@ -3226,13 +3466,13 @@
                 }
                 const p = pendingRecs.shift();
                 const div = document.createElement('div');
-                div.style.cssText = 'background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; padding: 15px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; transition: 0.3s;';
+                div.style.cssText = 'background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 16px; padding: 15px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; transition: 0.3s;';
                 div.innerHTML = `
                     <div>
                         <div style="font-size: 14px; font-weight: bold;">${p.name}</div>
                         <div style="font-size: 10px; color: rgba(255,255,255,0.6);">${p.role || ''} • ${p.city || ''}</div>
                     </div>
-                    <button type="button" class="btn-add-rec" data-id="${p.id}" style="background: white; color: black; border: none; padding: 6px 12px; border-radius: 4px; font-weight: bold; font-size: 10px; cursor: pointer;">Add</button>
+                    <button type="button" class="btn-add-rec" data-id="${p.id}" style="background: white; color: black; border: none; padding: 6px 12px; border-radius: 12px; font-weight: bold; font-size: 10px; cursor: pointer;">Add</button>
                 `;
                 recList.appendChild(div);
                 
@@ -3268,6 +3508,7 @@
                 document.getElementById('modal-title').textContent = 'Add Person';
                 document.getElementById('btn-submit-form').textContent = 'SAVE TO NETWORK';
                 document.getElementById('form-person-id').value = '';
+                document.getElementById('edit-name-group').style.display = 'none';
                 form.reset();
                 document.getElementById('f-name-initial').value = '';
                 document.getElementById('connections-section').style.display = 'block';
@@ -3287,6 +3528,7 @@
                 document.getElementById('modal-title').textContent = 'Edit Person';
                 document.getElementById('btn-submit-form').textContent = 'UPDATE NETWORK';
                 document.getElementById('form-person-id').value = personData.id;
+                document.getElementById('edit-name-group').style.display = 'block';
                 document.getElementById('f-name').value = personData.name || '';
                 document.getElementById('f-age').value = personData.age || '';
                 document.getElementById('f-role').value = personData.role || '';
@@ -3353,7 +3595,7 @@
         document.getElementById('btn-theme').addEventListener('click', () => {
             document.body.classList.toggle('light-mode');
             const isLight = document.body.classList.contains('light-mode');
-            document.getElementById('btn-theme').textContent = isLight ? '[dark mode]' : '[light mode]';
+            document.getElementById('btn-theme').textContent = isLight ? '[ night ]' : '[ day ]';
         });
         document.getElementById('btn-close-modal').addEventListener('click', closeModal);
         overlay.addEventListener('click', closeModal);
@@ -3389,6 +3631,10 @@
         function addConnectionEntry(defaultTargetId = null, defaultType = 'friend', defaultStrength = 3) {
             const div = document.createElement('div');
             div.className = 'connection-entry';
+            div.style.display = 'flex';
+            div.style.gap = '6px';
+            div.style.alignItems = 'center';
+            div.style.marginBottom = '10px';
             
             let defaultName = '';
             if (defaultTargetId !== null) {
@@ -3397,21 +3643,21 @@
             }
 
             div.innerHTML = `
-                <input type="text" class="conn-target" list="people-list" placeholder="Search..." value="${defaultName}" autocomplete="off" style="width: 35%; margin: 0; padding: 6px; font-size: 11px;">
-                <select class="conn-type" style="width: 30%; margin: 0; padding: 6px; font-size: 11px;">
+                <input type="text" class="conn-target" list="people-list" placeholder="Search Name..." value="${defaultName}" autocomplete="off" style="width: 42%; height: 36px; margin: 0; padding: 0 8px; font-size: 12px; border-radius: 12px; box-sizing: border-box; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.2); color: white;">
+                <select class="conn-type" style="width: 32%; height: 36px; margin: 0; padding: 0 8px; font-size: 12px; border-radius: 12px; box-sizing: border-box;">
                     <option value="friend" ${defaultType === 'friend' ? 'selected' : ''}>Friend</option>
                     <option value="family_core" ${defaultType === 'family_core' ? 'selected' : ''}>Fam(Close)</option>
                     <option value="family_extended" ${defaultType === 'family_extended' ? 'selected' : ''}>Fam(Ext)</option>
                     <option value="acquaintance" ${defaultType === 'acquaintance' ? 'selected' : ''}>Acq</option>
                 </select>
-                <select class="conn-strength" style="width: 25%; margin: 0; padding: 6px; font-size: 11px;">
+                <select class="conn-strength" style="width: 18%; height: 36px; margin: 0; padding: 0 8px; font-size: 12px; border-radius: 12px; box-sizing: border-box;">
                     <option value="5" ${defaultStrength == 5 ? 'selected' : ''}>5/5</option>
                     <option value="4" ${defaultStrength == 4 ? 'selected' : ''}>4/5</option>
                     <option value="3" ${defaultStrength == 3 ? 'selected' : ''}>3/5</option>
                     <option value="2" ${defaultStrength == 2 ? 'selected' : ''}>2/5</option>
                     <option value="1" ${defaultStrength == 1 ? 'selected' : ''}>1/5</option>
                 </select>
-                <button type="button" class="btn-remove-conn">&times;</button>
+                <button type="button" class="btn-remove-conn" style="width: 28px; height: 28px; padding: 0; display: flex; align-items: center; justify-content: center; font-size: 16px;">&times;</button>
             `;
             
             div.querySelector('.conn-target').addEventListener('input', updateDatalist);
