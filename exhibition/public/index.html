@@ -6,16 +6,17 @@
     <title>Feed the Beast</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@100;200;300;400;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@100;200;300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { overflow: hidden; background: #000; font-family: 'Inter', sans-serif; transition: filter 0.5s; }
+        h1, h2, h3, p, span, div { text-wrap: pretty; }
+        body { width: 100vw; height: 100vh; overflow: hidden; background: #0a0a0a; font-family: 'Poppins', sans-serif; transition: filter 0.5s; }
         body.light-mode { filter: invert(1) hue-rotate(180deg); }
         canvas { display: block; }
 
         .node-label {
-            color: rgba(255, 255, 255, 0.95);
-            font-size: 11px;
+            color: rgba(245, 245, 245, 0.95);
+            font-size: 9.5px;
             pointer-events: none; /* Revert to none so hover only triggers on the circle */
             cursor: pointer;
             text-align: center;
@@ -27,16 +28,16 @@
             padding-bottom: 5px;
             text-shadow: 0 0 4px rgba(0,0,0,1);
             letter-spacing: 0.5px;
-            font-weight: 200;
-            transition: color 0.3s, transform 0.2s;
+            font-weight: 300;
+            transition: color 0.3s, transform 0.2s, font-weight 0.3s;
             user-select: none;
             transform: translateY(60px); /* Position label strictly underneath node */
             position: relative;
         }
 
         .node-label:hover {
-            color: rgba(255, 255, 255, 1);
-            text-shadow: 0 0 8px rgba(255,255,255,0.4);
+            color: rgba(245, 245, 245, 1);
+            text-shadow: 0 0 8px rgba(245,245,245,0.4);
         }
 
 
@@ -54,13 +55,20 @@
         .panel {
             background: transparent;
             border: none;
-            color: white;
+            color: #F5F5F5;
             width: max-content;
             overflow: hidden;
             flex-shrink: 0;
+            border-radius: 10px;
+            transition: background 0.3s, backdrop-filter 0.3s, width 0.3s, border 0.3s;
         }
         .panel:not(.collapsed) {
-            width: 220px;
+            width: 260px;
+            background: rgba(0, 0, 0, 0.25);
+            backdrop-filter: blur(25px);
+            -webkit-backdrop-filter: blur(25px);
+            border: 1px solid rgba(245,245,245,0.2);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
         }
 
         .panel-header {
@@ -68,7 +76,7 @@
             font-size: 10px;
             text-transform: uppercase;
             letter-spacing: 1px;
-            color: rgba(255,255,255,0.8);
+            color: rgba(245,245,245,0.8);
             cursor: pointer;
             display: flex;
             justify-content: flex-start;
@@ -77,17 +85,18 @@
             white-space: nowrap;
         }
 
-        .panel-body { padding: 14px; border-top: 1px solid rgba(255,255,255,0.1); }
+        .panel-body { padding: 15px; border-top: 1px solid rgba(245,245,245,0.2); margin-top: 5px; }
         .panel.collapsed .panel-body { display: none; }
         .panel.collapsed .panel-header { border-bottom: none; }
         .panel-icon { font-size: 12px; transition: transform 0.3s; }
+        .panel:not(.collapsed) { }
         .panel:not(.collapsed) .panel-icon { transform: rotate(45deg); }
 
         #search-input:focus { 
             opacity: 1; 
             background: white;
             color: black !important;
-            border-color: white;
+            border-color: #F5F5F5;
         }
         #search-input::placeholder {
             color: inherit;
@@ -96,40 +105,40 @@
         .search-dropdown-item {
             padding: 10px 16px;
             cursor: pointer;
-            border-bottom: 1px solid rgba(255,255,255,0.05);
+            border-bottom: 1px solid rgba(245,245,245,0.05);
             transition: background 0.2s;
         }
         .search-dropdown-item:last-child {
             border-bottom: none;
         }
         .search-dropdown-item:hover {
-            background: rgba(255,255,255,0.1);
+            background: rgba(245,245,245,0.1);
         }
         .search-item-name {
             font-size: 13px;
             font-weight: 500;
-            color: white;
+            color: #F5F5F5;
             margin-bottom: 4px;
         }
         .search-item-context {
             font-size: 10px;
-            color: rgba(255,255,255,0.6);
+            color: rgba(245,245,245,0.6);
             line-height: 1.3;
         }
 
         .controls-list {
             font-size: 10px;
             line-height: 1.6;
-            color: rgba(255,255,255,0.8);
+            color: rgba(245,245,245,0.8);
             font-family: 'Courier New', monospace;
         }
         .controls-list div {
             margin-bottom: 8px;
             padding-bottom: 6px;
-            border-bottom: 1px solid rgba(255,255,255,0.1);
+            border-bottom: 1px solid rgba(245,245,245,0.2);
         }
         .controls-list .label {
-            color: rgba(255,255,255,0.6);
+            color: rgba(245,245,245,0.6);
             font-size: 9px;
             text-transform: uppercase;
             letter-spacing: 0.5px;
@@ -145,15 +154,15 @@
             width: 100%;
             padding: 8px;
             margin-bottom: 8px;
-            background: rgba(255,255,255,0.05);
-            border: 1px solid rgba(255,255,255,0.2);
-            color: white;
-            border-radius: 12px;
+            background: rgba(245,245,245,0.05);
+            border: 1px solid rgba(245,245,245,0.2);
+            color: #F5F5F5;
+            border-radius: 10px;
             outline: none;
             font-size: 11px;
             font-family: inherit;
         }
-        select option { background: #000; color: #fff; }
+        select option { background: #000; color: #F5F5F5; }
         button {
             background: transparent;
             cursor: pointer;
@@ -187,13 +196,13 @@
         }
 
         #info-card {
-            background: rgba(0, 0, 0, 0.6);
-            backdrop-filter: blur(15px);
-            -webkit-backdrop-filter: blur(15px);
-            border: 1px solid rgba(255, 255, 255, 0.1);
+            background: rgba(0, 0, 0, 0.25);
+            backdrop-filter: blur(25px);
+            -webkit-backdrop-filter: blur(25px);
+            border: 1px solid rgba(245,245,245,0.2);
             padding: 25px;
-            border-radius: 12px;
-            color: white;
+            border-radius: 10px;
+            color: #F5F5F5;
             width: 100%;
             pointer-events: auto;
             box-shadow: 0 10px 30px rgba(0,0,0,0.5);
@@ -202,60 +211,63 @@
         .info-action-btn {
             background: transparent;
             border: 1px solid transparent;
-            border-radius: 4px;
-            color: white;
-            opacity: 0.6;
+            border-radius: 10px;
+            color: #E6E6E6;
+            opacity: 1;
             cursor: pointer;
             font-size: 12px;
             letter-spacing: 1.5px;
             text-transform: uppercase;
             text-align: center;
-            padding: 6px 12px;
+            padding: 0 16px;
             margin-bottom: 8px;
             width: auto;
             transition: all 0.2s ease;
             outline: none;
-            font-weight: 200;
+            font-weight: 300;
+            box-sizing: border-box;
+            height: 32px;
+            line-height: 30px;
         }
         .info-action-btn:hover { 
             opacity: 1;
             background: white;
             color: black !important;
-            border-color: white;
+            border: 1px solid #F5F5F5;
         }
         .tag-pill {
             display: inline-block;
             padding: 4px 10px;
-            background: rgba(255,255,255,0.05);
-            border: 1px solid rgba(255,255,255,0.1);
-            border-radius: 20px;
+            background: rgba(245,245,245,0.05);
+            border: 1px solid rgba(245,245,245,0.2);
+            border-radius: 10px;
             font-size: 9px;
             letter-spacing: 0.5px;
-            color: rgba(255,255,255,0.7);
+            color: rgba(245,245,245,0.7);
         }
         #info-badge {
             display: inline-block;
             padding: 3px 8px;
-            background: rgba(255,255,255,0.1);
-            border: 1px solid rgba(255,255,255,0.3);
-            border-radius: 4px;
+            background: rgba(245,245,245,0.1);
+            border: 1px solid rgba(245,245,245,0.2);
+            border-radius: 10px;
             font-size: 10px;
             font-weight: 500;
             margin-bottom: 15px;
-            color: rgba(255,255,255,0.8);
+            color: rgba(245,245,245,0.8);
             letter-spacing: 0.5px;
             text-transform: uppercase;
         }
 
         #btn-path-dest.active {
-            color: white;
+            color: #F5F5F5;
             animation: pulse-bw 1.5s infinite;
         }
 
         .path-chain {
             margin-top: 15px;
             font-size: 11px;
-            color: rgba(255,255,255,0.6);
+            color: rgba(245,245,245,0.6);
             display: flex;
             flex-wrap: wrap;
             gap: 4px;
@@ -264,30 +276,30 @@
         }
         .path-node {
             cursor: pointer;
-            color: white;
+            color: #F5F5F5;
             padding: 2px 4px;
             border-radius: 3px;
-            background: rgba(255,255,255,0.15);
+            background: rgba(245,245,245,0.15);
             transition: 0.2s;
         }
         .path-node:hover { background: white; color: black; }
-        .path-arrow { color: rgba(255,255,255,0.4); font-size: 9px; }
+        .path-arrow { color: rgba(245,245,245,0.4); font-size: 9px; }
 
         #loading {
             position: absolute;
             top: 50%;
             left: 50%;
             transform: translate(-50%, -50%);
-            color: rgba(255,255,255,0.5);
+            color: rgba(245,245,245,0.5);
             font-size: 12px;
             letter-spacing: 2px;
             text-transform: uppercase;
         }
 
         @keyframes pulse-bw {
-            0% { box-shadow: 0 0 0 0 rgba(255,255,255,0.3); }
-            70% { box-shadow: 0 0 0 6px rgba(255,255,255,0); }
-            100% { box-shadow: 0 0 0 0 rgba(255,255,255,0); }
+            0% { box-shadow: 0 0 0 0 rgba(245,245,245,0.3); }
+            70% { box-shadow: 0 0 0 6px rgba(245,245,245,0); }
+            100% { box-shadow: 0 0 0 0 rgba(245,245,245,0); }
         }
 
 
@@ -299,10 +311,10 @@
             left: 30px;
             background: rgba(0, 0, 0, 0.85);
             backdrop-filter: blur(8px);
-            border: 1px solid rgba(255, 255, 255, 0.3);
-            color: white;
+            border: 1px solid rgba(245,245,245,0.2);
+            color: #F5F5F5;
             padding: 12px 24px;
-            border-radius: 30px;
+            border-radius: 10px;
             font-size: 11px;
             letter-spacing: 1px;
             cursor: pointer;
@@ -323,17 +335,17 @@
             top: 50%;
             left: 50%;
             transform: translate(-50%, -50%);
-            background: rgba(0, 0, 0, 0.6);
-            backdrop-filter: blur(15px);
-            -webkit-backdrop-filter: blur(15px);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            border-radius: 24px;
+            background: rgba(0, 0, 0, 0.25);
+            backdrop-filter: blur(25px);
+            -webkit-backdrop-filter: blur(25px);
+            border: 1px solid rgba(245,245,245,0.2);
+            border-radius: 10px;
             box-shadow: 0 10px 40px rgba(0,0,0,0.5);
             padding: 0;
             width: 550px;
             max-width: 90%;
             max-height: 85vh;
-            color: white;
+            color: #F5F5F5;
             z-index: 1000;
         }
 
@@ -360,18 +372,18 @@
             pointer-events: auto;
             transform: translate(-50%, -50%) scale(1);
         }
-        .modal-header { font-size: 18px; padding: 20px; font-weight: 300; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(255,255,255,0.1); }
+        .modal-header { font-size: 18px; padding: 20px; font-weight: 300; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(245,245,245,0.2); }
         .modal-close { cursor: pointer; opacity: 0.6; transition: 0.2s; font-size: 20px; }
         .modal-close:hover { opacity: 1; }
         .form-group { margin-bottom: 15px; }
-        .form-group label { display: block; font-size: 10px; color: rgba(255,255,255,0.6); margin-bottom: 5px; text-transform: uppercase; letter-spacing: 0.5px; }
+        .form-group label { display: block; font-size: 10px; color: rgba(245,245,245,0.6); margin-bottom: 5px; text-transform: uppercase; letter-spacing: 0.5px; }
         .form-group input, .form-group textarea, .form-group select {
             width: 100%;
-            background: rgba(255,255,255,0.05);
-            border: 1px solid rgba(255,255,255,0.2);
+            background: rgba(245,245,245,0.05);
+            border: 1px solid rgba(245,245,245,0.2);
             padding: 10px;
-            color: white;
-            border-radius: 12px;
+            color: #F5F5F5;
+            border-radius: 10px;
             font-family: inherit;
             font-size: 12px;
             outline: none;
@@ -380,13 +392,23 @@
         .form-group input, .form-group select {
             height: 38px;
         }
-        .form-group input:focus, .form-group textarea:focus, .form-group select:focus { border-color: rgba(255,255,255,0.5); }
+        .form-group input:focus, .form-group textarea:focus, .form-group select:focus { border-color: rgba(245,245,245,0.5); }
+
+        select {
+            appearance: none;
+            -webkit-appearance: none;
+            background-image: url('data:image/svg+xml;utf8,<svg fill="%23F5F5F5" height="24" viewBox="0 0 24 24" width="24" xmlns="http://www.w3.org/2000/svg"><path d="M7 10l5 5 5-5z"/></svg>');
+            background-repeat: no-repeat;
+            background-position: right 8px center;
+            background-size: 16px;
+            padding-right: 30px !important;
+        }
         
         .connection-entry {
-            background: rgba(255,255,255,0.03);
-            border: 1px solid rgba(255,255,255,0.1);
+            background: rgba(245,245,245,0.03);
+            border: 1px solid rgba(245,245,245,0.2);
             padding: 6px;
-            border-radius: 12px;
+            border-radius: 10px;
             margin-bottom: 6px;
             display: flex;
             align-items: center;
@@ -397,10 +419,10 @@
         }
         .btn-remove-conn:hover { background: rgba(255,50,50,0.1); color: #ff5555; }
         .btn-add-more-conn {
-            background: rgba(255,255,255,0.1); border: 1px dashed rgba(255,255,255,0.3); padding: 8px; font-size: 10px; margin-bottom: 10px; color: white; width: 100%;
+            background: rgba(245,245,245,0.1); border: 1px dashed rgba(245,245,245,0.3); padding: 8px; font-size: 10px; margin-bottom: 10px; color: #F5F5F5; width: 100%;
         }
-        .btn-add-more-conn:hover { background: rgba(255,255,255,0.2); color: white; }
-        .btn-submit { background: white; color: black; border: none; font-weight: bold; font-size: 12px; padding: 12px; width: 100%; border-radius: 12px;}
+        .btn-add-more-conn:hover { background: rgba(245,245,245,0.2); color: #F5F5F5; }
+        .btn-submit { background: white; color: black; border: none; font-weight: bold; font-size: 12px; padding: 12px; width: 100%; border-radius: 10px;}
         .btn-submit:hover { background: #ddd; }
         #modal-overlay {
             position: absolute; top: 0; left: 0; width: 100%; height: 100%;
@@ -421,8 +443,8 @@
         .scan-spinner {
             width: 40px;
             height: 40px;
-            border: 2px solid rgba(255,255,255,0.1);
-            border-top-color: white;
+            border: 2px solid rgba(245,245,245,0.1);
+            border-top-color: #F5F5F5;
             border-radius: 50%;
             animation: spin 1s linear infinite;
             margin: 0 auto;
@@ -433,48 +455,49 @@
 
         .progress-step {
             width: 28px; height: 28px; border-radius: 50%;
-            border: 2px solid rgba(255,255,255,0.2);
+            border: 2px solid rgba(245,245,245,0.2);
             display: flex; justify-content: center; align-items: center;
-            font-size: 12px; color: rgba(255,255,255,0.4);
+            font-size: 12px; color: rgba(245,245,245,0.4);
             transition: 0.3s;
             background: transparent;
         }
         .progress-step.active {
-            border-color: white; color: black; background: white;
+            border-color: #F5F5F5; color: black; background: white;
             font-weight: bold;
         }
         .progress-step.completed {
-            border-color: white; color: black; background: white;
+            border-color: #F5F5F5; color: black; background: white;
             font-weight: bold;
         }
         .progress-line {
-            width: 40px; height: 2px; background: rgba(255,255,255,0.2);
+            width: 40px; height: 2px; background: rgba(245,245,245,0.2);
             transition: 0.3s;
         }
         .progress-line.active { background: white; }
 
         .btn-apple-primary {
-            flex: 1; padding: 12px; border-radius: 12px; font-size: 14px; font-weight: 600;
+            flex: 1; padding: 0 20px; height: 44px; border-radius: 10px; font-size: 14px; font-weight: 600;
             background: white; color: black; border: none; cursor: pointer; transition: 0.2s;
+            display: inline-flex; align-items: center; justify-content: center; box-sizing: border-box;
         }
         .btn-apple-primary:hover { opacity: 0.8; }
         .btn-apple-secondary {
-            flex: 1; padding: 12px; border-radius: 12px; font-size: 14px; font-weight: 600;
-            background: rgba(255,255,255,0.1); color: white; border: none; cursor: pointer; transition: 0.2s;
+            flex: 1; padding: 12px; border-radius: 10px; font-size: 14px; font-weight: 600;
+            background: rgba(245,245,245,0.1); color: #F5F5F5; border: none; cursor: pointer; transition: 0.2s;
         }
-        .btn-apple-secondary:hover { background: rgba(255,255,255,0.2); }
+        .btn-apple-secondary:hover { background: rgba(245,245,245,0.2); }
 
         .tooltip-icon {
             display: inline-flex; justify-content: center; align-items: center;
-            width: 14px; height: 14px; border-radius: 50%; background: rgba(255,255,255,0.2);
-            font-size: 10px; color: white; cursor: help; position: relative;
+            width: 14px; height: 14px; border-radius: 50%; background: rgba(245,245,245,0.2);
+            font-size: 10px; color: #F5F5F5; cursor: help; position: relative;
         }
         .tooltip-text {
             visibility: hidden; width: 220px; background: rgba(0,0,0,0.9);
-            color: #fff; text-align: center; border-radius: 8px; padding: 10px;
+            color: #F5F5F5; text-align: center; border-radius: 10px; padding: 10px;
             position: absolute; z-index: 10; bottom: 150%; left: 50%;
             transform: translateX(-50%); opacity: 0; transition: opacity 0.3s;
-            font-size: 11px; font-weight: normal; border: 1px solid rgba(255,255,255,0.2);
+            font-size: 11px; font-weight: normal; border: 1px solid rgba(245,245,245,0.2);
             pointer-events: none; box-shadow: 0 4px 15px rgba(0,0,0,0.5);
         }
         .tooltip-icon:hover .tooltip-text {
@@ -498,11 +521,11 @@
                     <button class="info-action-btn" style="margin: 0;">[ TRACE VEIN ]</button>
                 </div>
                 <div class="panel-body">
-                    <div style="display: flex; align-items: center; margin-bottom: 8px; color: rgba(255,255,255,0.7); font-size: 12px; letter-spacing: 1px;">
-                        [<input type="text" id="start-node" list="people-list" placeholder="ORIGIN NODE" autocomplete="off" style="background: transparent; border: none; color: white; width: 100%; outline: none; font-size: 11px; font-family: inherit; text-align: center; text-transform: uppercase; letter-spacing: 1px; padding: 5px;">]
+                    <div style="display: flex; align-items: center; margin-bottom: 8px; color: rgba(245,245,245,0.7); font-size: 12px; letter-spacing: 1px;">
+                        [<input type="text" id="start-node" list="people-list" placeholder="ORIGIN NODE" autocomplete="off" style="background: transparent; border: none; color: #F5F5F5; width: 100%; outline: none; font-size: 11px; font-family: inherit; text-align: center; text-transform: uppercase; letter-spacing: 1px; padding: 5px;">]
                     </div>
-                    <div style="display: flex; align-items: center; margin-bottom: 15px; color: rgba(255,255,255,0.7); font-size: 12px; letter-spacing: 1px;">
-                        [<input type="text" id="end-node" list="people-list" placeholder="TARGET NODE" autocomplete="off" style="background: transparent; border: none; color: white; width: 100%; outline: none; font-size: 11px; font-family: inherit; text-align: center; text-transform: uppercase; letter-spacing: 1px; padding: 5px;">]
+                    <div style="display: flex; align-items: center; margin-bottom: 15px; color: rgba(245,245,245,0.7); font-size: 12px; letter-spacing: 1px;">
+                        [<input type="text" id="end-node" list="people-list" placeholder="TARGET NODE" autocomplete="off" style="background: transparent; border: none; color: #F5F5F5; width: 100%; outline: none; font-size: 11px; font-family: inherit; text-align: center; text-transform: uppercase; letter-spacing: 1px; padding: 5px;">]
                     </div>
                     <button id="btn-find">Trace Path</button>
                     <button id="btn-reset">Reset View</button>
@@ -510,8 +533,8 @@
             </div>
 
             <div id="search-wrapper" style="position: relative; display: flex; align-items: center; margin: 0; width: auto;">
-                <input type="text" id="search-input" class="info-action-btn" placeholder="[ WHAT YOU LOOKIN FOR ]" autocomplete="off" style="margin: 0; width: 220px; cursor: text; border-radius: 12px;">
-                <div id="search-dropdown" style="display: none; position: absolute; top: 100%; left: 0; min-width: 280px; background: rgba(0,0,0,0.85); backdrop-filter: blur(15px); border: 1px solid rgba(255,255,255,0.1); border-radius: 16px; z-index: 1000; margin-top: 8px; max-height: 400px; overflow-y: auto; overflow-x: hidden; padding: 8px 0; box-shadow: 0 4px 20px rgba(0,0,0,0.5);">
+                <input type="text" id="search-input" class="info-action-btn" placeholder="[ WHAT YOU LOOKIN FOR ]" autocomplete="off" style="margin: 0; width: 220px; cursor: text; border-radius: 10px;">
+                <div id="search-dropdown" style="display: none; position: absolute; top: 100%; left: 0; min-width: 280px; background: rgba(0,0,0,0.3); backdrop-filter: blur(25px); border: 1px solid rgba(245,245,245,0.2); border-radius: 10px; z-index: 1000; margin-top: 8px; max-height: 400px; overflow-y: auto; overflow-x: hidden; padding: 8px 0; box-shadow: 0 4px 20px rgba(0,0,0,0.5);">
                 </div>
             </div>
 
@@ -526,27 +549,27 @@
                 <h2 id="info-name" style="margin: 0;">Name</h2>
                 <div style="display: flex; align-items: center; gap: 15px; margin-top: 6px;">
                     <div id="info-menu-container" style="position: relative;">
-                        <button id="btn-info-menu" style="background:transparent; border:none; color:white; font-size:22px; cursor:pointer; padding:0; line-height:0.8; opacity:0.6; letter-spacing:2px; outline:none;">...</button>
-                        <div id="info-menu-dropdown" style="display: none; position: absolute; right: 0; top: 20px; background: rgba(0,0,0,0.8); backdrop-filter: blur(15px); border: 1px solid rgba(255,255,255,0.1); padding: 12px; border-radius: 16px; z-index: 100; min-width: 140px;">
+                        <button id="btn-info-menu" style="background:transparent; border:none; color:#F5F5F5; font-size:22px; cursor:pointer; padding:0; line-height:0.8; opacity:0.6; letter-spacing:2px; outline:none;">...</button>
+                        <div id="info-menu-dropdown" style="display: none; position: absolute; right: 0; top: 20px; background: rgba(0,0,0,0.3); backdrop-filter: blur(25px); border: 1px solid rgba(245,245,245,0.2); padding: 12px; border-radius: 10px; z-index: 100; min-width: 140px;">
                             <button id="btn-edit-node" class="info-action-btn" style="display: block; width:100%; margin-bottom: 12px; text-align: left; white-space: nowrap;">[ EDIT ]</button>
                             <button id="btn-delete-node" class="info-action-btn" style="display: block; width:100%; margin-bottom: 0; text-align: left; white-space: nowrap; color: #ff4444;">[ DELETE ]</button>
                         </div>
                     </div>
-                    <button id="btn-close-card" style="background:transparent; border:none; color:white; font-size:24px; cursor:pointer; padding:0; line-height:0.8; font-weight:100; opacity:0.6; outline:none;">&times;</button>
+                    <button id="btn-close-card" style="background:transparent; border:none; color:#F5F5F5; font-size:24px; cursor:pointer; padding:0; line-height:0.8; font-weight:100; opacity:0.6; outline:none;">&times;</button>
                 </div>
             </div>
             
             <!-- Role -->
-            <div id="info-role" style="font-size: 13px; color: rgba(255,255,255,0.6); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 12px; font-weight: 200;"></div>
+            <div id="info-role" style="font-size: 13px; color: rgba(245,245,245,0.6); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 12px; font-weight: 200;"></div>
 
             <!-- Meta Data -->
-            <div style="display: flex; gap: 15px; margin-bottom: 12px; font-size: 13px; color: rgba(255,255,255,0.7); letter-spacing: 0.5px; font-weight: 200;">
+            <div style="display: flex; gap: 15px; margin-bottom: 12px; font-size: 13px; color: rgba(245,245,245,0.7); letter-spacing: 0.5px; font-weight: 200;">
                 <span id="info-age"></span>
                 <span id="info-city"></span>
             </div>
 
             <!-- About -->
-            <div id="info-description" style="font-size: 13px; color: rgba(255,255,255,0.7); line-height: 1.5; margin-bottom: 25px; font-weight: 200;"></div>
+            <div id="info-description" style="font-size: 13px; color: rgba(245,245,245,0.7); line-height: 1.5; margin-bottom: 25px; font-weight: 200;"></div>
             
             <!-- Primary Actions -->
             <div style="display: flex; flex-direction: row; justify-content: center; gap: 15px; margin-bottom: 25px;">
@@ -555,21 +578,21 @@
             </div>
             
             <!-- Connections -->
-            <details id="info-connections-container" style="border-top: 1px solid rgba(255,255,255,0.1); padding-top: 15px;">
-                <summary style="font-size: 12px; font-weight: 200; margin-bottom: 12px; color: rgba(255,255,255,0.5); letter-spacing: 1.5px; text-transform: uppercase; cursor: pointer; outline: none; list-style: none;">
+            <details id="info-connections-container" style="border-top: 1px solid rgba(245,245,245,0.2); padding-top: 15px;">
+                <summary style="font-size: 12px; font-weight: 200; margin-bottom: 12px; color: rgba(245,245,245,0.5); letter-spacing: 1.5px; text-transform: uppercase; cursor: pointer; outline: none; list-style: none;">
                     Connected To <span style="font-size: 8px; margin-left: 5px;">▼</span>
                 </summary>
                 <div id="info-connections-list" style="max-height: 160px; overflow-y: auto;"></div>
             </details>
 
-            <div id="info-path" style="margin-top: 15px; font-size: 13px; color: rgba(255,255,255,0.7); font-weight: 200;"></div>
+            <div id="info-path" style="margin-top: 15px; font-size: 13px; color: rgba(245,245,245,0.7); font-weight: 200;"></div>
             
-            <div id="info-suggestions" style="margin-top: 20px; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 15px; display: none;">
-                <div style="font-size: 12px; font-weight: 200; margin-bottom: 12px; color: rgba(255,255,255,0.5); letter-spacing: 1.5px; text-transform: uppercase;">Suggested</div>
+            <div id="info-suggestions" style="margin-top: 20px; border-top: 1px solid rgba(245,245,245,0.2); padding-top: 15px; display: none;">
+                <div style="font-size: 12px; font-weight: 200; margin-bottom: 12px; color: rgba(245,245,245,0.5); letter-spacing: 1.5px; text-transform: uppercase;">Suggested</div>
                 <div id="info-suggestions-list"></div>
             </div>
         
-        <div id="info-secondary-card" style="position: relative; display: none; border-top: 1px dashed rgba(255,255,255,0.3); padding-top: 15px; margin-top: 15px;">
+        <div id="info-secondary-card" style="position: relative; display: none; border-top: 1px dashed rgba(245,245,245,0.3); padding-top: 15px; margin-top: 15px;">
             <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 5px;">
                 <div style="padding-right: 20px;">
                     <h3 id="sec-info-name" style="margin: 0; font-size: 14px; font-weight: bold;"></h3>
@@ -577,15 +600,17 @@
                 </div>
                 <button id="btn-close-sec" style="position: absolute; top: 15px; right: 0px; background: transparent; color: #aaa; border: none; font-size: 16px; cursor: pointer; padding: 0; line-height: 1; min-width: auto; height: auto; width: auto;">&times;</button>
             </div>
-            <div id="sec-info-details" style="font-size: 10px; color: rgba(255,255,255,0.6); margin-bottom: 10px;"></div>
+            <div id="sec-info-details" style="font-size: 10px; color: rgba(245,245,245,0.6); margin-bottom: 10px;"></div>
             <div style="display: flex; gap: 5px;">
-                <button id="btn-sec-ignore" style="flex: 1; background: transparent; color: #aaa; border: 1px solid rgba(255,255,255,0.2); border-radius: 12px; padding: 6px; font-size: 10px; cursor: pointer;">Not Related</button>
-                <button id="btn-sec-connect" style="flex: 1; background: white; color: black; border: none; border-radius: 12px; padding: 6px; font-weight: bold; font-size: 10px; cursor: pointer;">Connect</button>
+                <button id="btn-sec-ignore" style="flex: 1; background: transparent; color: #aaa; border: 1px solid rgba(245,245,245,0.2); border-radius: 10px; padding: 6px; font-size: 10px; cursor: pointer;">Not Related</button>
+                <button id="btn-sec-connect" style="flex: 1; background: white; color: black; border: none; border-radius: 10px; padding: 6px; font-weight: bold; font-size: 10px; cursor: pointer;">Connect</button>
             </div>
         </div>
     </div>
     
-    <div id="conn-secondary-card" style="position: relative; display: none; background: rgba(0, 0, 0, 0.6); backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px); border: 1px solid rgba(255, 255, 255, 0.1); padding: 20px; border-radius: 12px; pointer-events: auto; color: white; box-shadow: 0 10px 30px rgba(0,0,0,0.5);">
+    <div id="conn-secondary-card" style="position: relative; display: none; background: rgba(0, 0, 0, 0.25);
+            backdrop-filter: blur(25px);
+            -webkit-backdrop-filter: blur(25px); border: 1px solid rgba(245,245,245,0.2); padding: 20px; border-radius: 10px; pointer-events: auto; color: #F5F5F5; box-shadow: 0 10px 30px rgba(0,0,0,0.5);">
         <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 5px;">
             <div style="padding-right: 20px;">
                 <h3 id="conn-sec-name" style="margin: 0; font-size: 14px; font-weight: bold;"></h3>
@@ -593,8 +618,8 @@
             </div>
             <button id="btn-close-conn-sec" style="position: absolute; top: 10px; right: 10px; background: transparent; color: #aaa; border: none; font-size: 16px; cursor: pointer; padding: 0; line-height: 1; min-width: auto; height: auto; width: auto;">&times;</button>
         </div>
-        <div id="conn-sec-details" style="font-size: 11px; color: rgba(255,255,255,0.6); margin-bottom: 10px;"></div>
-        <button id="btn-conn-sec-view" style="width: 100%; background: white; color: black; border: none; border-radius: 12px; padding: 8px; font-weight: bold; font-size: 11px; cursor: pointer;">View Profile</button>
+        <div id="conn-sec-details" style="font-size: 11px; color: rgba(245,245,245,0.6); margin-bottom: 10px;"></div>
+        <button id="btn-conn-sec-view" style="width: 100%; background: white; color: black; border: none; border-radius: 10px; padding: 8px; font-weight: bold; font-size: 11px; cursor: pointer;">View Profile</button>
     </div>
 </div>
 
@@ -615,30 +640,28 @@
 
     <!-- About Modal -->
     <div id="about-modal" class="modal">
-        <span class="close-btn" id="btn-close-about" onclick="document.getElementById('about-modal').classList.remove('visible'); document.getElementById('modal-overlay').classList.remove('visible');" style="position: absolute; top: 15px; right: 20px; font-size: 28px; cursor: pointer; color: white; opacity: 0.6; transition: 0.2s; z-index: 10;">&times;</span>
-        <div style="overflow-y: auto; height: 100%; padding-right: 10px; font-family: 'Inter', sans-serif; text-align: left;">
-            <h1 style="font-weight: 300; font-size: 28px; margin-bottom: 20px; letter-spacing: 2px; text-transform: uppercase;">FEED THE BEAST</h1>
-            <p style="margin-bottom: 15px; color: rgba(255,255,255,0.85); font-size: 15px; line-height: 1.6;"><strong>Feed the Beast</strong> is an interactive installation that reveals the hidden network of human connections surrounding us.</p>
-            <p style="margin-bottom: 15px; color: rgba(255,255,255,0.85); font-size: 15px; line-height: 1.6;">Each node represents a real person. Each line represents a real relationship. Together, they form a living organism built from family ties, friendships, workplaces, schools, shared experiences, and chance encounters.</p>
-            <p style="margin-bottom: 15px; color: rgba(255,255,255,0.85); font-size: 15px; line-height: 1.6;">While digital platforms often present social connections as isolated profiles and visible friend lists, a far more complex network exists beneath the surface. Invisible pathways connect people across communities, professions, cities, and generations.</p>
-            <p style="margin-bottom: 15px; color: rgba(255,255,255,0.85); font-size: 15px; line-height: 1.6;">This project transforms that invisible network into a physical space that can be explored, navigated, and expanded.</p>
-            <p style="margin-bottom: 30px; color: rgba(255,255,255,0.85); font-size: 15px; line-height: 1.6;">Through searching, discovering shared backgrounds, and tracing connection paths between individuals, visitors can uncover how people are linked to one another, how strangers may be connected through unexpected routes, and how a single relationship can reshape the structure of the entire network.</p>
-
-            <p style="margin-bottom: 15px; color: rgba(255,255,255,0.85); font-size: 15px; line-height: 1.6;">The organism is never complete. With every new participant and every new connection, it grows, adapts, and reorganizes itself.</p>
-            <p style="margin-bottom: 15px; color: rgba(255,255,255,0.85); font-size: 15px; line-height: 1.6;">Feed the Beast is not a social network.</p>
-            <p style="margin-bottom: 15px; color: rgba(255,255,255,0.85); font-size: 15px; line-height: 1.6;">It is a visualization of the human infrastructure that exists behind one.</p>
+        <span class="close-btn" id="btn-close-about" onclick="document.getElementById('about-modal').classList.remove('visible'); document.getElementById('modal-overlay').classList.remove('visible');" style="position: absolute; top: 40px; right: 30px; font-size: 28px; cursor: pointer; color: #F5F5F5; opacity: 0.6; transition: 0.2s; z-index: 10; line-height: 1;">&times;</span>
+        <div style="overflow-y: auto; height: 100%; padding: 0 40px; font-family: 'Poppins', sans-serif; text-align: left;">
+            <h1 style="font-weight: 600; font-size: 32px; margin-bottom: 12px; text-transform: uppercase; line-height: 1;">FEED THE BEAST</h1>
+            <p style="margin-bottom: 35px; font-style: italic; color: rgba(245,245,245,0.85); font-size: 15px; font-weight: 300;">An interactive installation that reveals the hidden network of human connections surrounding&nbsp;us.</p>
+            
+            <p style="margin-bottom: 20px; color: rgba(245,245,245,0.85); font-size: 15px; line-height: 1.6; font-weight: 300;">Each node represents a real person. Each line represents a real relationship. Together, they form a living&nbsp;organism.</p>
+            
+            <p style="margin-bottom: 20px; color: rgba(245,245,245,0.85); font-size: 15px; line-height: 1.6; font-weight: 300;">Explore the system, trace paths between individuals, uncover hidden links, and discover how people are connected in ways that often remain&nbsp;unseen.</p>
+            
+            <p style="margin-bottom: 20px; color: rgba(245,245,245,0.85); font-size: 15px; line-height: 1.6; font-weight: 300;">The organism is never complete. With every new participant and every new connection, it grows, adapts, and reorganizes&nbsp;itself.</p>
         </div>
     </div>
     
     <div id="discover-modal" class="modal" style="display: none; padding-top: 40px; padding-bottom: 20px; max-width: 95vw; width: 95vw; height: 90vh; box-sizing: border-box; flex-direction: column;">
-        <span class="close-btn" id="btn-close-discover" style="position: absolute; font-size: 32px; right: 25px; top: 15px; cursor: pointer; color: white;">&times;</span>
+        <span class="close-btn" id="btn-close-discover" style="position: absolute; font-size: 32px; right: 25px; top: 15px; cursor: pointer; color: #F5F5F5;">&times;</span>
         <h2 style="margin-bottom: 5px; font-weight: 300; font-size: 28px; text-align: center;">Discover Connections</h2>
-        <p style="font-size: 14px; color: rgba(255,255,255,0.6); margin-bottom: 30px; text-align: center;">Help us map the network by approving suggested matches.</p>
+        <p style="font-size: 14px; color: rgba(245,245,245,0.6); margin-bottom: 30px; text-align: center;">Help us map the network by approving suggested matches.</p>
         <div id="discover-list" style="flex: 1; overflow-y: auto; padding-right: 15px; display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 25px; align-content: start;"></div>
     </div>
 
     <div id="add-modal" class="modal">
-        <span class="close-btn" id="btn-close-modal" style="position: absolute; top: 15px; right: 20px; font-size: 28px; cursor: pointer; color: white; opacity: 0.6; transition: 0.2s; z-index: 10;">&times;</span>
+        <span class="close-btn" id="btn-close-modal" style="position: absolute; top: 15px; right: 20px; font-size: 28px; cursor: pointer; color: #F5F5F5; opacity: 0.6; transition: 0.2s; z-index: 10;">&times;</span>
         <h2 id="modal-title" style="display: none;">Add Person</h2>
         
         <div id="form-progress-bar" style="display: flex; justify-content: center; align-items: center; gap: 8px; margin-top: 25px; margin-bottom: 20px;">
@@ -660,10 +683,10 @@
                 <div id="wizard-step-1" class="wizard-step active">
                     <div style="text-align: center; margin-bottom: 20px;">
                         <h2 style="font-weight: 300; margin-bottom: 10px;">What's your name?</h2>
-                        <p style="color: rgba(255,255,255,0.6); font-size: 12px;">Enter your full name to begin.</p>
+                        <p style="color: rgba(245,245,245,0.6); font-size: 12px;">Enter your full name to begin.</p>
                     </div>
                     <div class="form-group">
-                        <input type="text" id="f-name-initial" placeholder="e.g., John Doe" style="font-size: 16px; padding: 15px; text-align: center; border-radius: 12px;">
+                        <input type="text" id="f-name-initial" placeholder="e.g., John Doe" style="font-size: 16px; padding: 0 15px; height: 44px; text-align: center; border-radius: 10px; box-sizing: border-box;">
                     </div>
                 </div>
 
@@ -671,26 +694,26 @@
                 <div id="wizard-step-2" class="wizard-step" style="text-align: center; padding: 40px 0;">
                     <div class="scan-spinner"></div>
                     <h3 style="font-weight: 300; margin-top: 20px; letter-spacing: 1px;">Scanning Network...</h3>
-                    <p style="color: rgba(255,255,255,0.5); font-size: 11px; margin-top: 10px;">Checking for existing connections</p>
+                    <p style="color: rgba(245,245,245,0.5); font-size: 11px; margin-top: 10px;">Checking for existing connections</p>
                 </div>
 
                 <!-- STEP 3: MATCH FOUND -->
                 <div id="wizard-step-3" class="wizard-step" style="text-align: center;">
                     <div style="margin-bottom: 20px;">
                         <h2 style="font-weight: 300; margin-bottom: 10px; color: #aaffaa;">Match Found!</h2>
-                        <p style="color: rgba(255,255,255,0.6); font-size: 12px;">Someone with a similar name is already in the network.</p>
+                        <p style="color: rgba(245,245,245,0.6); font-size: 12px;">Someone with a similar name is already in the network.</p>
                     </div>
                     
-                    <div id="match-profile-card" style="background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 16px; padding: 15px; margin-bottom: 20px;">
+                    <div id="match-profile-card" style="background: rgba(245,245,245,0.05); border: 1px solid rgba(245,245,245,0.2); border-radius: 10px; padding: 15px; margin-bottom: 20px;">
                         <div id="match-name" style="font-size: 16px; font-weight: bold; margin-bottom: 5px;"></div>
-                        <div id="match-role" style="font-size: 12px; color: rgba(255,255,255,0.6);"></div>
-                        <div id="match-city" style="font-size: 12px; color: rgba(255,255,255,0.6);"></div>
+                        <div id="match-role" style="font-size: 12px; color: rgba(245,245,245,0.6);"></div>
+                        <div id="match-city" style="font-size: 12px; color: rgba(245,245,245,0.6);"></div>
                     </div>
                     
                     <h3 style="font-weight: 300; margin-bottom: 15px;">Is this you?</h3>
                     <div style="display: flex; gap: 10px;">
                         <button type="button" id="btn-match-yes" class="btn-submit" style="flex: 1; background: white; color: black;">Yes, that's me!</button>
-                        <button type="button" id="btn-match-no" class="btn-submit" style="flex: 1; background: transparent; border: 1px solid rgba(255,255,255,0.3); color: white;">Not Me</button>
+                        <button type="button" id="btn-match-no" class="btn-submit" style="flex: 1; background: transparent; border: 1px solid rgba(245,245,245,0.2); color: #F5F5F5;">Not Me</button>
                     </div>
                 </div>
 
@@ -706,7 +729,7 @@
                     <div style="display:flex; gap:10px;">
                         <div class="form-group" style="flex:1;">
                             <label>Birth Year</label>
-                            <select id="f-birth-year" style="width: 100%; padding: 10px; background: rgba(255,255,255,0.05); color: inherit; border: 1px solid rgba(255,255,255,0.2); border-radius: 4px; font-family: inherit; font-size: 12px; appearance: auto;">
+                            <select id="f-birth-year" style="width: 100%; padding: 10px; background-color: rgba(245,245,245,0.05); color: inherit; border: 1px solid rgba(245,245,245,0.2); border-radius: 10px; font-family: inherit; font-size: 12px;">
                                 <option value="" style="color: black;">Select Year</option>
                             </select>
                             <input type="hidden" id="f-age">
@@ -723,7 +746,7 @@
                     <div class="form-group">
                         <label style="display: flex; justify-content: space-between; align-items: center;">
                             Where are you originally from?
-                            <label style="font-size: 10px; font-weight: normal; display: flex; align-items: center; gap: 5px; cursor: pointer; color: rgba(255,255,255,0.7);">
+                            <label style="font-size: 10px; font-weight: normal; display: flex; align-items: center; gap: 5px; cursor: pointer; color: rgba(245,245,245,0.7);">
                                 <input type="checkbox" id="f-same-city" style="width: auto; margin: 0;"> Same as current
                             </label>
                         </label>
@@ -735,7 +758,7 @@
                 <div id="wizard-step-4b" class="wizard-step">
                     <div style="text-align: center; margin-bottom: 20px;">
                             <h2 style="font-weight: 300; margin-bottom: 10px;">Profession & Details</h2>
-                            <p style="color: rgba(255,255,255,0.6); font-size: 12px;">The more details you write, the better!</p>
+                            <p style="color: rgba(245,245,245,0.6); font-size: 12px;">The more details you write, the better!</p>
                     </div>
                     <div class="form-group">
                         <label>Role / Profession</label>
@@ -755,8 +778,8 @@
                     <input type="hidden" id="f-tags">
                     
                     <!-- Accordion for Edit Mode Connections -->
-                    <div id="edit-connections-accordion" style="display: none; margin-top: 20px; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 15px;">
-                        <div id="btn-toggle-edit-conns" style="cursor: pointer; display: flex; justify-content: space-between; align-items: center; font-weight: bold; font-size: 14px; color: rgba(255,255,255,0.8);">
+                    <div id="edit-connections-accordion" style="display: none; margin-top: 20px; border-top: 1px solid rgba(245,245,245,0.2); padding-top: 15px;">
+                        <div id="btn-toggle-edit-conns" style="cursor: pointer; display: flex; justify-content: space-between; align-items: center; font-weight: bold; font-size: 14px; color: rgba(245,245,245,0.8);">
                             <span>Edit Connections</span>
                             <span id="edit-conns-arrow" style="transition: transform 0.3s; font-size: 12px;">▼</span>
                         </div>
@@ -770,7 +793,7 @@
                 <div id="wizard-step-5" class="wizard-step">
                     <div style="text-align: center; margin-bottom: 20px;">
                         <h2 style="font-weight: 300; margin-bottom: 10px;">People you may know</h2>
-                        <p style="color: rgba(255,255,255,0.6); font-size: 12px;">Based on your details, you might know these people.</p>
+                        <p style="color: rgba(245,245,245,0.6); font-size: 12px;">Based on your details, you might know these people.</p>
                     </div>
                     
                     <div id="recommendation-list"></div>
@@ -780,7 +803,7 @@
                 <div id="wizard-step-6" class="wizard-step">
                     <div style="text-align: center; margin-bottom: 20px;">
                         <h2 style="font-weight: 300; margin-bottom: 10px;">Add Connections</h2>
-                        <p style="color: rgba(255,255,255,0.6); font-size: 12px;">Add anyone else you know in the network.</p>
+                        <p style="color: rgba(245,245,245,0.6); font-size: 12px;">Add anyone else you know in the network.</p>
                     </div>
                     
                     <div id="wizard-step-6-original-parent">
@@ -792,26 +815,26 @@
                 </div>
             </div> <!-- End of scrollable wrapper -->
 
-            <div id="wizard-step-1-footer" class="wizard-step active" style="padding: 20px; border-top: 1px solid rgba(255,255,255,0.1); display: flex;">
+            <div id="wizard-step-1-footer" class="wizard-step active" style="padding: 20px; border-top: 1px solid rgba(245,245,245,0.2); display: flex;">
                 <button type="button" id="btn-wizard-next-1" class="btn-apple-primary">Continue</button>
             </div>
 
-            <div id="wizard-step-4-footer" class="wizard-step" style="padding: 20px; border-top: 1px solid rgba(255,255,255,0.1); display: flex; gap: 10px;">
+            <div id="wizard-step-4-footer" class="wizard-step" style="padding: 20px; border-top: 1px solid rgba(245,245,245,0.2); display: flex; gap: 10px;">
                 <button type="button" class="btn-apple-secondary" id="btn-wizard-back-4">Back</button>
                 <button type="button" class="btn-apple-primary" id="btn-wizard-next-4">Next</button>
             </div>
 
-            <div id="wizard-step-4b-footer" class="wizard-step" style="padding: 20px; border-top: 1px solid rgba(255,255,255,0.1); display: flex; gap: 10px;">
+            <div id="wizard-step-4b-footer" class="wizard-step" style="padding: 20px; border-top: 1px solid rgba(245,245,245,0.2); display: flex; gap: 10px;">
                 <button type="button" class="btn-apple-secondary" id="btn-wizard-back-4b">Back</button>
                 <button type="button" class="btn-apple-primary" id="btn-wizard-next-4b">Next</button>
             </div>
 
-            <div id="wizard-step-5-footer" class="wizard-step" style="padding: 20px; border-top: 1px solid rgba(255,255,255,0.1); display: flex; gap: 10px;">
+            <div id="wizard-step-5-footer" class="wizard-step" style="padding: 20px; border-top: 1px solid rgba(245,245,245,0.2); display: flex; gap: 10px;">
                 <button type="button" class="btn-apple-secondary" id="btn-wizard-back-5">Back</button>
                 <button type="button" class="btn-apple-primary" id="btn-wizard-next-5">Continue</button>
             </div>
 
-            <div id="wizard-step-6-footer" class="wizard-step" style="padding: 20px; border-top: 1px solid rgba(255,255,255,0.1); display: flex; gap: 10px;">
+            <div id="wizard-step-6-footer" class="wizard-step" style="padding: 20px; border-top: 1px solid rgba(245,245,245,0.2); display: flex; gap: 10px;">
                 <button type="button" class="btn-apple-secondary" id="btn-wizard-back-6">Back</button>
                 <button type="submit" class="btn-apple-primary" id="btn-submit-form">SAVE TO NETWORK</button>
             </div>
@@ -834,12 +857,13 @@
         const connParams = { depth: 50, freq: 50, resil: 50 };
 
         const scene = new THREE.Scene();
-        scene.fog = new THREE.FogExp2(0x000000, 0.0);
+        scene.fog = new THREE.FogExp2(0x0a0a0a, 0.0);
 
         const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 8000);
         camera.position.set(0, 0, 1800);
 
         const renderer = new THREE.WebGLRenderer({ antialias: true, logarithmicDepthBuffer: true });
+        renderer.setClearColor(0x0a0a0a);
         renderer.setSize(window.innerWidth, window.innerHeight);
         renderer.setPixelRatio(window.devicePixelRatio);
         document.body.appendChild(renderer.domElement);
@@ -854,7 +878,7 @@
         const controls = new OrbitControls(camera, renderer.domElement);
         controls.enableDamping = true;
         controls.dampingFactor = 0.08;
-        controls.minDistance = 0.001;
+        controls.minDistance = 150;
         controls.maxDistance = 6000;
         controls.zoomSpeed = 0.4; // Extremely slow zoom for a very gradual and smooth building effect
         controls.rotateSpeed = 1.2; // Make roaming faster
@@ -1473,6 +1497,12 @@
             document.getElementById('path-header').addEventListener('click', () => {
                 document.getElementById('path-panel').classList.toggle('collapsed');
             });
+            window.addEventListener('pointerdown', (e) => {
+                const pathPanel = document.getElementById('path-panel');
+                if (!pathPanel.classList.contains('collapsed') && !pathPanel.contains(e.target)) {
+                    pathPanel.classList.add('collapsed');
+                }
+            });
             // (Controls panel removed)
 
             // Search — queries API and populates dropdown
@@ -1503,8 +1533,8 @@
                             metadata.forEach(m => {
                                 const item = document.createElement('div');
                                 item.className = 'search-dropdown-item';
-                                item.style.borderBottom = '1px solid rgba(255,255,255,0.05)';
-                                item.style.background = 'rgba(255,255,255,0.02)';
+                                item.style.borderBottom = '1px solid rgba(245,245,245,0.05)';
+                                item.style.background = 'rgba(245,245,245,0.02)';
                                 
                                 const nameDiv = document.createElement('div');
                                 nameDiv.className = 'search-item-name';
@@ -1652,15 +1682,15 @@
                                     const path = findPath(startId, endId);
                                     if (path) {
                                         initiatePathReveal(path);
-                                        selectNode(endId, false);
+                                        selectNode(endId, true);
                                     } else {
                                         alert("No connection path exists between these two people in the current network.");
                                     }
                                 } else {
-                                    selectNode(strandId, false);
+                                    selectNode(strandId, true);
                                 }
                             } else {
-                                selectNode(strandId, false);
+                                selectNode(strandId, true);
                             }
                         } else {
                             if (pathTargetMode) disablePathTargetMode();
@@ -1704,8 +1734,9 @@
             
             // Hide all labels initially
             labelObjects.forEach(l => {
-                l.element.style.color = 'rgba(255,255,255,0.0)';
-                l.element.style.fontWeight = '200';
+                l.element.style.color = 'rgba(245, 245, 245, 0.95)';
+                l.element.style.transform = 'translateY(60px) scale(1)';
+                l.element.style.fontWeight = '300';
                 l.element.style.textShadow = 'none';
                 l.element.style.border = 'none';
                 l.element.classList.remove('searched');
@@ -1716,9 +1747,9 @@
                     currentSearchNodes.add(idx);
                     colorNode(idx, 1, 1, 1);
                     if (labelObjects[idx]) {
-                        labelObjects[idx].element.style.color = 'rgba(255,255,255,1.0)';
-                        labelObjects[idx].element.style.fontWeight = 'bold';
-                        // Removed glowing text-shadow
+                        labelObjects[idx].element.style.color = 'rgba(245, 245, 245, 1)';
+                        labelObjects[idx].element.style.transform = 'translateY(60px) scale(1.3)';
+                        labelObjects[idx].element.style.fontWeight = '500';
                     }
                 }
             });
@@ -1731,8 +1762,8 @@
             const colors = globalGeometry.attributes.color.array;
             for (let i = 0; i < colors.length; i++) colors[i] = 1.0;
             labelObjects.forEach(l => {
-                l.element.style.color = 'rgba(255,255,255,0.95)';
-                l.element.style.fontWeight = '200';
+                l.element.style.color = 'rgba(245,245,245,0.95)';
+                l.element.style.fontWeight = '300';
                 l.element.style.textShadow = '0 0 4px rgba(0,0,0,1)';
                 l.element.classList.remove('searched');
             });
@@ -1851,14 +1882,16 @@
             }
             globalGeometry.attributes.color.needsUpdate = true;
             globalGeometry.attributes.size.needsUpdate = true;
-            labelObjects.forEach((l, idx) => { 
-                if (!path.includes(idx)) {
-                    l.element.style.color = 'rgba(255,255,255,0.4)'; 
-                    l.element.style.fontWeight = '200';
-                    l.element.style.opacity = '0.4';
-                } else {
-                    l.element.style.color = 'rgba(255,255,255,1.0)';
-                    l.element.style.fontWeight = 'bold';
+            Object.values(labelObjects).forEach(l => {
+                l.element.style.color = 'rgba(245,245,245,0.2)';
+                l.element.style.transform = 'translateY(60px) scale(1)';
+                l.element.style.fontWeight = '300';
+            });
+            path.forEach(idx => {
+                if (labelObjects[idx]) {
+                    labelObjects[idx].element.style.color = 'rgba(245, 245, 245, 1)';
+                    labelObjects[idx].element.style.transform = 'translateY(60px) scale(1.3)';
+                    labelObjects[idx].element.style.fontWeight = '500';
                 }
             });
             
@@ -1912,7 +1945,7 @@
                 const span = document.createElement('span');
                 span.className = 'path-node';
                 span.textContent = userNames[nodeId];
-                span.onclick = () => selectNode(nodeId);
+                span.onclick = (e) => { e.stopPropagation(); selectNode(nodeId, true); }; span.onpointerdown = (e) => e.stopPropagation();
                 chainDiv.appendChild(span);
                 if (idx < path.length - 1) {
                     const arrow = document.createElement('span');
@@ -2156,9 +2189,14 @@
                 }
                 
                 labelObjects.forEach((l, idx) => {
+                    if (labelObjects[idx]) {
+                        let l = labelObjects[idx];
+                        l.element.style.color = idx === id ? 'rgba(245, 245, 245, 1)' : 'rgba(245, 245, 245, 0.95)';
+                        l.element.style.transform = idx === id ? 'translateY(60px) scale(1.3)' : 'translateY(60px) scale(1)';
+                        l.element.style.fontWeight = idx === id ? '600' : '300';
+                        l.element.style.zIndex = idx === id ? '100' : '1';
+                    }
                     if (idx === id || focusedNeighbors.has(idx)) {
-                        l.element.style.color = 'rgba(255,255,255,1.0)';
-                        l.element.style.fontWeight = idx === id ? 'bold' : '200';
                         l.element.style.opacity = '1.0';
                         l.element.style.display = 'block';
                     } else {
@@ -2261,8 +2299,8 @@
             }
             
             labelObjects.forEach(l => { 
-                l.element.style.color = 'rgba(255,255,255,0.95)'; 
-                l.element.style.fontWeight = '200'; 
+                l.element.style.color = 'rgba(245,245,245,0.95)'; 
+                l.element.style.fontWeight = '300'; 
                 l.element.style.opacity = '1.0';
             });
             document.getElementById('info-panel-container').classList.remove('visible');
@@ -2288,7 +2326,12 @@
             const birthYear = person.age ? currentYear - parseInt(person.age) : null;
             document.getElementById('info-age').textContent = birthYear ? `Birth Year: ${birthYear}` : '';
             document.getElementById('info-city').textContent = person.city ? `${person.city}, ${person.country}` : '';
-            document.getElementById('info-description').textContent = person.description || '';
+            let descText = (person.description || '').trim();
+            if (descText) {
+                // Prevent orphan words by replacing the last space with a non-breaking space
+                descText = descText.replace(/ ([^ ]+)$/, '&nbsp;$1');
+            }
+            document.getElementById('info-description').innerHTML = descText;
             
             // Tags are handled internally and are no longer displayed on the info card
             
@@ -2302,14 +2345,14 @@
                     const targetPerson = people.find(p => p.id === c.id);
                     if (targetPerson) {
                         const d = document.createElement('div');
-                        d.style.cssText = 'display: flex; align-items: center; background: transparent; padding: 4px 6px; margin-bottom: 2px; cursor: pointer; transition: 0.2s; border-radius: 4px;';
+                        d.style.cssText = 'display: flex; align-items: center; background: transparent; padding: 4px 6px; margin-bottom: 2px; cursor: pointer; transition: 0.2s; border-radius: 10px;';
                         d.innerHTML = `
                             <div style="flex: 1; display: flex; justify-content: space-between; align-items: center;">
-                                <span style="font-size: 11px; color: white;">• ${targetPerson.name}</span>
+                                <span style="font-size: 11px; color: #F5F5F5;">• ${targetPerson.name}</span>
                             </div>
                         `;
                         
-                        d.addEventListener('mouseenter', () => d.style.background = 'rgba(255,255,255,0.05)');
+                        d.addEventListener('mouseenter', () => d.style.background = 'rgba(245,245,245,0.05)');
                         d.addEventListener('mouseleave', () => d.style.background = 'transparent');
                         
                         d.addEventListener('click', () => {
@@ -2373,12 +2416,12 @@
                     d.innerHTML = `
                         <div style="width: 6px; height: 6px; border-radius: 50%; background: #4CAF50; margin-right: 8px;"></div>
                         <div style="flex: 1; display: flex; justify-content: space-between; align-items: center;">
-                            <span style="font-size: 11px; font-weight: bold; color: white;">${match.person.name}</span>
+                            <span style="font-size: 11px; font-weight: bold; color: #F5F5F5;">${match.person.name}</span>
                             <span style="font-size: 9px; color: #aaa;">${sharedText}</span>
                         </div>
                     `;
                     
-                    d.addEventListener('mouseenter', () => d.style.background = 'rgba(255,255,255,0.05)');
+                    d.addEventListener('mouseenter', () => d.style.background = 'rgba(245,245,245,0.05)');
                     d.addEventListener('mouseleave', () => d.style.background = 'transparent');
                     
                     suggList.appendChild(d);
@@ -2871,7 +2914,7 @@
                             const path = findPath(startId, endId);
                             if (path) {
                                 initiatePathReveal(path);
-                                selectNode(endId, false);
+                                selectNode(endId, true);
                             } else {
                                 alert("No connection path exists between these two people in the current network.");
                             }
@@ -3052,7 +3095,7 @@
                 
                 topMatches.forEach((match, idx) => {
                     const d = document.createElement('div');
-                    d.style.cssText = 'background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; padding: 20px; display: flex; flex-direction: column; align-items: center; justify-content: space-between; gap: 15px; box-sizing: border-box; box-shadow: 0 4px 15px rgba(0,0,0,0.2);';
+                    d.style.cssText = 'background: rgba(245,245,245,0.05); border: 1px solid rgba(245,245,245,0.2); border-radius: 10px; padding: 20px; display: flex; flex-direction: column; align-items: center; justify-content: space-between; gap: 15px; box-sizing: border-box; box-shadow: 0 4px 15px rgba(0,0,0,0.2);';
                     let sharedText = match.shared.length > 0 ? `Shared: ${match.shared.join(', ')}` : 'Similar background';
                     
                     const role1 = match.p1.role ? match.p1.role : '';
@@ -3061,25 +3104,25 @@
                     d.innerHTML = `
                         <div style="display: flex; justify-content: space-between; width: 100%; align-items: flex-start;">
                             <div style="text-align: center; flex: 1;">
-                                <div style="font-size: 16px; font-weight: bold; color: white; margin-bottom: 4px;">${match.p1.name}</div>
+                                <div style="font-size: 16px; font-weight: bold; color: #F5F5F5; margin-bottom: 4px;">${match.p1.name}</div>
                                 <div style="font-size: 11px; color: #aaa; line-height: 1.3;">${role1}</div>
                             </div>
                             
-                            <div style="width: 30px; text-align: center; color: rgba(255,255,255,0.2); font-size: 20px; font-weight: 300;">&</div>
+                            <div style="width: 30px; text-align: center; color: rgba(245,245,245,0.2); font-size: 20px; font-weight: 300;">&</div>
                             
                             <div style="text-align: center; flex: 1;">
-                                <div style="font-size: 16px; font-weight: bold; color: white; margin-bottom: 4px;">${match.p2.name}</div>
+                                <div style="font-size: 16px; font-weight: bold; color: #F5F5F5; margin-bottom: 4px;">${match.p2.name}</div>
                                 <div style="font-size: 11px; color: #aaa; line-height: 1.3;">${role2}</div>
                             </div>
                         </div>
                         
-                        <div style="font-size: 12px; color: #4CAF50; background: rgba(76, 175, 80, 0.1); padding: 6px 12px; border-radius: 12px; border: 1px solid rgba(76, 175, 80, 0.2); text-align: center; width: 90%;">
+                        <div style="font-size: 12px; color: #4CAF50; background: rgba(76, 175, 80, 0.1); padding: 6px 12px; border-radius: 10px; border: 1px solid rgba(76, 175, 80, 0.2); text-align: center; width: 90%;">
                             ${sharedText}
                         </div>
                         
                         <div style="display: flex; gap: 12px; width: 100%; margin-top: 10px;">
-                            <button class="btn-discover-ignore" style="flex: 1; background: transparent; color: #aaa; border: 1px solid rgba(255,255,255,0.2); border-radius: 20px; padding: 12px; font-size: 12px; cursor: pointer; transition: 0.2s;">Not Related</button>
-                            <button class="btn-discover-add" data-idx="${idx}" style="flex: 1; background: white; color: black; border: none; border-radius: 20px; padding: 12px; font-weight: bold; font-size: 12px; cursor: pointer; transition: 0.2s;">CONNECT</button>
+                            <button class="btn-discover-ignore" style="flex: 1; background: transparent; color: #aaa; border: 1px solid rgba(245,245,245,0.2); border-radius: 10px; padding: 12px; font-size: 12px; cursor: pointer; transition: 0.2s;">Not Related</button>
+                            <button class="btn-discover-add" data-idx="${idx}" style="flex: 1; background: white; color: black; border: none; border-radius: 10px; padding: 12px; font-weight: bold; font-size: 12px; cursor: pointer; transition: 0.2s;">CONNECT</button>
                         </div>
                     `;
                     discoverList.appendChild(d);
@@ -3466,13 +3509,13 @@
                 }
                 const p = pendingRecs.shift();
                 const div = document.createElement('div');
-                div.style.cssText = 'background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 16px; padding: 15px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; transition: 0.3s;';
+                div.style.cssText = 'background: rgba(245,245,245,0.05); border: 1px solid rgba(245,245,245,0.2); border-radius: 10px; padding: 15px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; transition: 0.3s;';
                 div.innerHTML = `
                     <div>
                         <div style="font-size: 14px; font-weight: bold;">${p.name}</div>
-                        <div style="font-size: 10px; color: rgba(255,255,255,0.6);">${p.role || ''} • ${p.city || ''}</div>
+                        <div style="font-size: 10px; color: rgba(245,245,245,0.6);">${p.role || ''} • ${p.city || ''}</div>
                     </div>
-                    <button type="button" class="btn-add-rec" data-id="${p.id}" style="background: white; color: black; border: none; padding: 6px 12px; border-radius: 12px; font-weight: bold; font-size: 10px; cursor: pointer;">Add</button>
+                    <button type="button" class="btn-add-rec" data-id="${p.id}" style="background: white; color: black; border: none; padding: 6px 12px; border-radius: 10px; font-weight: bold; font-size: 10px; cursor: pointer;">Add</button>
                 `;
                 recList.appendChild(div);
                 
@@ -3643,14 +3686,14 @@
             }
 
             div.innerHTML = `
-                <input type="text" class="conn-target" list="people-list" placeholder="Search Name..." value="${defaultName}" autocomplete="off" style="width: 42%; height: 36px; margin: 0; padding: 0 8px; font-size: 12px; border-radius: 12px; box-sizing: border-box; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.2); color: white;">
-                <select class="conn-type" style="width: 32%; height: 36px; margin: 0; padding: 0 8px; font-size: 12px; border-radius: 12px; box-sizing: border-box;">
+                <input type="text" class="conn-target" list="people-list" placeholder="Search Name..." value="${defaultName}" autocomplete="off" style="width: 42%; height: 36px; margin: 0; padding: 0 8px; font-size: 12px; border-radius: 10px; box-sizing: border-box; background: rgba(245,245,245,0.05); border: 1px solid rgba(245,245,245,0.2); color: #F5F5F5;">
+                <select class="conn-type" style="width: 32%; height: 36px; margin: 0; padding: 0 8px; font-size: 12px; border-radius: 10px; box-sizing: border-box;">
                     <option value="friend" ${defaultType === 'friend' ? 'selected' : ''}>Friend</option>
                     <option value="family_core" ${defaultType === 'family_core' ? 'selected' : ''}>Fam(Close)</option>
                     <option value="family_extended" ${defaultType === 'family_extended' ? 'selected' : ''}>Fam(Ext)</option>
                     <option value="acquaintance" ${defaultType === 'acquaintance' ? 'selected' : ''}>Acq</option>
                 </select>
-                <select class="conn-strength" style="width: 18%; height: 36px; margin: 0; padding: 0 8px; font-size: 12px; border-radius: 12px; box-sizing: border-box;">
+                <select class="conn-strength" style="width: 18%; height: 36px; margin: 0; padding: 0 8px; font-size: 12px; border-radius: 10px; box-sizing: border-box;">
                     <option value="5" ${defaultStrength == 5 ? 'selected' : ''}>5/5</option>
                     <option value="4" ${defaultStrength == 4 ? 'selected' : ''}>4/5</option>
                     <option value="3" ${defaultStrength == 3 ? 'selected' : ''}>3/5</option>
@@ -3744,7 +3787,7 @@
                     const percentIncrease = (((newR/oldR)**3) - 1) * 100;
                     
                     const notif = document.createElement('div');
-                    notif.style.cssText = 'position:fixed; top:50%; left:50%; transform:translate(-50%,-50%); background:rgba(0,0,0,0.85); color:white; padding:35px 50px; border-radius:20px; font-size:28px; text-align:center; z-index:9999; backdrop-filter:blur(20px); opacity:0; transition:opacity 0.8s ease-in-out; font-weight: 300; pointer-events: none; border: 1px solid rgba(255,255,255,0.1); box-shadow: 0 20px 50px rgba(0,0,0,0.5); letter-spacing: 1px;';
+                    notif.style.cssText = 'position:fixed; top:50%; left:50%; transform:translate(-50%,-50%); background:rgba(0,0,0,0.85); color:#F5F5F5; padding:35px 50px; border-radius: 10px; font-size:28px; text-align:center; z-index:9999; backdrop-filter:blur(20px); opacity:0; transition:opacity 0.8s ease-in-out; font-weight: 300; pointer-events: none; border: 1px solid rgba(245,245,245,0.2); box-shadow: 0 20px 50px rgba(0,0,0,0.5); letter-spacing: 1px;';
                     notif.innerHTML = `Welcome to the Network!<br><span style="font-size:15px; opacity:0.6; display:block; margin-top:12px; letter-spacing: 0.5px;">Network volume increased by ${percentIncrease.toFixed(1)}%</span>`;
                     document.body.appendChild(notif);
                     
@@ -3852,6 +3895,16 @@
                                 const p = pointData[i * pPerStrand];
                                 p.targetCx = p.baseCx;
                                 p.targetCy = p.baseCy;
+                                
+                                labelObjects.forEach(l => {
+                                    l.element.style.fontWeight = '300';
+                                });
+                                if (focusedNodeId !== null && labelObjects[focusedNodeId]) {
+                                    labelObjects[focusedNodeId].element.style.color = 'rgba(245, 245, 245, 1)';
+                                    labelObjects[focusedNodeId].element.style.transform = 'translateY(60px) scale(1.3)';
+                                    labelObjects[focusedNodeId].element.style.fontWeight = '500';
+                                }
+                                
                                 p.targetCz = p.baseCz;
                             }
 
