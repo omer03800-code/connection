@@ -349,6 +349,12 @@
             z-index: 1000;
         }
 
+        #add-modal {
+            width: 900px;
+            max-width: 95vw;
+            height: 650px;
+        }
+
         #add-modal, #about-modal {
             display: flex;
             flex-direction: column;
@@ -475,17 +481,69 @@
         }
         .progress-line.active { background: white; }
 
+        .footer-buttons {
+            display: flex; gap: 15px; margin-top: auto; padding-top: 30px;
+        }
         .btn-apple-primary {
-            flex: 1; padding: 0 20px; height: 44px; border-radius: 10px; font-size: 14px; font-weight: 600;
-            background: white; color: black; border: none; cursor: pointer; transition: 0.2s;
-            display: inline-flex; align-items: center; justify-content: center; box-sizing: border-box;
+            flex: 1; height: 48px; border-radius: 12px; font-size: 14px; font-weight: 600;
+            background: #F5F5F5; color: #111; border: none; cursor: pointer; transition: 0.2s;
+            text-transform: none;
         }
         .btn-apple-primary:hover { opacity: 0.8; }
         .btn-apple-secondary {
-            flex: 1; padding: 12px; border-radius: 10px; font-size: 14px; font-weight: 600;
+            flex: 1; height: 48px; border-radius: 12px; font-size: 14px; font-weight: 600;
             background: rgba(245,245,245,0.1); color: #F5F5F5; border: none; cursor: pointer; transition: 0.2s;
+            text-transform: none;
         }
         .btn-apple-secondary:hover { background: rgba(245,245,245,0.2); }
+        
+        /* Typography Hierarchy */
+        .wizard-step h2 {
+            font-weight: 300; margin-bottom: 30px; font-size: 28px; line-height: 1.2;
+        }
+        .step-explanation {
+            font-size: 14px; color: rgba(245,245,245,0.6); margin-bottom: 30px; line-height: 1.4; font-weight: 300;
+        }
+
+        /* Toggle Switch */
+        .type-toggle {
+            display: inline-flex;
+            background: rgba(245,245,245,0.05);
+            border: 1px solid rgba(245,245,245,0.2);
+            border-radius: 30px;
+            padding: 4px;
+            position: relative;
+            margin-bottom: 40px;
+        }
+        .type-toggle-btn {
+            padding: 12px 24px;
+            border-radius: 26px;
+            border: none;
+            background: transparent;
+            color: rgba(245,245,245,0.6);
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: 0.3s;
+            position: relative;
+            z-index: 2;
+            white-space: nowrap;
+            letter-spacing: 0.5px;
+            text-transform: none;
+        }
+        .type-toggle-btn.active {
+            color: #111;
+        }
+        .type-toggle-slider {
+            position: absolute;
+            top: 4px;
+            left: 4px;
+            height: calc(100% - 8px);
+            background: #F5F5F5;
+            border-radius: 26px;
+            transition: 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+            z-index: 1;
+        }
 
         .tooltip-icon {
             display: inline-flex; justify-content: center; align-items: center;
@@ -697,54 +755,64 @@
             .wizard-layout {
                 display: flex; 
                 flex-direction: row;
-                height: 100%; 
+                flex: 1;
                 overflow: hidden;
             }
             .wizard-form-area {
                 flex: 1.5; 
-                padding: 30px; 
+                padding: 40px; 
                 overflow-y: auto; 
                 display: flex; 
                 flex-direction: column;
+                justify-content: flex-start;
             }
             .wizard-preview-area {
                 flex: 1; 
                 background: rgba(0,0,0,0.2); 
                 border-left: 1px solid rgba(245,245,245,0.1); 
-                padding: 30px; 
+                padding: 40px; 
                 display: flex; 
                 flex-direction: column; 
                 align-items: center; 
                 justify-content: flex-start;
                 overflow-y: auto;
             }
+            #live-network-preview {
+                display: flex;
+                flex-direction: row;
+                flex-wrap: wrap;
+                align-items: center;
+                justify-content: center;
+                gap: 10px;
+                width: 100%;
+            }
             .preview-node {
                 display: flex;
-                flex-direction: column;
+                flex-direction: row;
                 align-items: center;
                 animation: fadeInNode 0.5s ease forwards;
             }
             .preview-dot {
-                width: 12px;
-                height: 12px;
+                width: 14px;
+                height: 14px;
                 border-radius: 50%;
-                background: #F5F5F5;
-                box-shadow: 0 0 10px rgba(245,245,245,0.8);
-                margin-bottom: 8px;
+                background: rgba(245,245,245,0.9);
+                box-shadow: 0 0 15px rgba(245,245,245,0.5);
+                margin: 0 10px 8px 10px;
             }
             .preview-line {
-                width: 2px;
-                height: 40px;
+                width: 30px;
+                height: 1px;
                 background: rgba(245,245,245,0.3);
-                margin-bottom: 8px;
+                margin: 0;
             }
             .preview-text {
-                font-size: 12px;
+                font-size: 11px;
                 color: rgba(245,245,245,0.8);
                 text-transform: uppercase;
                 letter-spacing: 1px;
                 text-align: center;
-                margin-bottom: 8px;
+                margin-bottom: 2px;
             }
             @keyframes fadeInNode {
                 from { opacity: 0; transform: translateY(10px); }
@@ -804,26 +872,25 @@
                 <input type="hidden" id="form-mode" value="add">
                 <input type="hidden" id="form-person-id" value="">
                 <input type="hidden" id="form-is-myself" value="no">
+                <input type="hidden" id="f-tags" value="">
+                <input type="hidden" id="f-desc" value="">
                 
                 <!-- STEP 0 -->
                 <div id="wizard-step-0" class="wizard-step active">
-                    <h2 style="font-weight: 300; margin-bottom: 40px; font-size: 28px; text-align: center;">Who are you adding?</h2>
-                    <div style="display: flex; gap: 20px; justify-content: center;">
-                        <button type="button" class="btn-apple-secondary" onclick="document.getElementById('form-is-myself').value='yes'; goToWizardStep(1);" style="flex: 1; max-width: 180px; padding: 20px; font-size: 16px;">Myself</button>
-                        <button type="button" class="btn-apple-secondary" onclick="document.getElementById('form-is-myself').value='no'; goToWizardStep(1);" style="flex: 1; max-width: 180px; padding: 20px; font-size: 16px;">Someone Else</button>
+                    <h2>Enter the Network</h2>
+                    <p class="step-explanation">Are you adding your own thread, or someone else's?</p>
+                    
+                    <div style="display: flex; justify-content: center; margin-bottom: 30px;">
+                        <div class="type-toggle">
+                            <div class="type-toggle-slider" id="toggle-slider"></div>
+                            <button type="button" class="type-toggle-btn" id="toggle-btn-someone" onclick="setPersonType('someone')">Someone Else</button>
+                            <button type="button" class="type-toggle-btn active" id="toggle-btn-myself" onclick="setPersonType('myself')">Myself</button>
+                        </div>
                     </div>
-                </div>
-
-                <!-- STEP 1 -->
-                <div id="wizard-step-1" class="wizard-step">
-                    <h2 id="step-1-title" style="font-weight: 300; margin-bottom: 40px; font-size: 28px;">What's the name?</h2>
+                    
                     <div class="chapter-block">
-                        <label class="editorial-label">Full Name</label>
+                        <label class="editorial-label" id="step-1-title">What's your name?</label>
                         <input type="text" id="f-name-initial" class="editorial-input" placeholder="e.g. John Doe" autocomplete="off">
-                    </div>
-                    <div class="footer-buttons">
-                        <button type="button" class="btn-apple-secondary" onclick="goToWizardStep(0)">Back</button>
-                        <button type="button" class="btn-apple-primary" id="btn-wizard-next-1">Continue</button>
                     </div>
                 </div>
 
@@ -836,16 +903,15 @@
 
                 <!-- STEP 3 MATCH FOUND -->
                 <div id="wizard-step-3" class="wizard-step">
-                    <h2 style="font-weight: 300; margin-bottom: 10px; font-size: 24px;">Matches Found</h2>
-                    <p style="color: rgba(245,245,245,0.6); font-size: 14px; margin-bottom: 30px;">We found people with the same name already connected to the network.</p>
+                    <h2>Matches Found</h2>
+                    <p class="step-explanation">We found people with the same name already connected to the network.</p>
                     
                     <div id="match-profile-card" style="background: rgba(245,245,245,0.05); border: 1px solid rgba(245,245,245,0.2); border-radius: 10px; padding: 20px; margin-bottom: 30px;">
                         <div id="match-name" style="font-size: 18px; font-weight: 600; margin-bottom: 8px;"></div>
                         <div id="match-role" style="font-size: 14px; color: rgba(245,245,245,0.7); margin-bottom: 4px;"></div>
                         <div id="match-city" style="font-size: 14px; color: rgba(245,245,245,0.7);"></div>
                     </div>
-                    
-                    <div class="footer-buttons" style="margin-top: 0;">
+                    <div class="footer-buttons" style="margin-top: 0; display:flex; gap:10px;">
                         <button type="button" id="btn-match-yes" class="btn-apple-primary" style="flex: 1;">This Is The Person</button>
                         <button type="button" id="btn-match-no" class="btn-apple-secondary" style="flex: 1;">Different Person</button>
                     </div>
@@ -853,7 +919,7 @@
 
                 <!-- STEP 4 BASICS -->
                 <div id="wizard-step-4" class="wizard-step">
-                    <h2 style="font-weight: 300; margin-bottom: 40px; font-size: 28px;">Basic Information</h2>
+                    <h2>Basic Information</h2>
                     
                     <div class="chapter-block" id="edit-name-group" style="display: none;">
                         <label class="editorial-label">Full Name</label>
@@ -867,7 +933,7 @@
                         </div>
                         <div style="flex:1;">
                             <label class="editorial-label">Country</label>
-                            <input type="text" id="f-country" class="editorial-input" placeholder="e.g. Israel">
+                            <input type="text" id="f-country" class="editorial-input" placeholder="e.g. Israel" value="Israel">
                         </div>
                     </div>
 
@@ -885,15 +951,12 @@
                         <div class="dynamic-stats" id="stats-f-origin-city"></div>
                     </div>
 
-                    <div class="footer-buttons">
-                        <button type="button" class="btn-apple-secondary" id="btn-wizard-back-4">Back</button>
-                        <button type="button" class="btn-apple-primary" id="btn-wizard-next-4">Continue</button>
-                    </div>
+
                 </div>
 
                 <!-- STEP 5 CURRENT POSITION -->
                 <div id="wizard-step-5" class="wizard-step">
-                    <h2 style="font-weight: 300; margin-bottom: 40px; font-size: 28px;">What do they do today?</h2>
+                    <h2>What do they do today?</h2>
                     
                     <div class="chapter-block autocomplete-wrapper">
                         <label class="editorial-label">Current Role</label>
@@ -909,16 +972,13 @@
                         <div class="dynamic-stats" id="stats-f-workplace"></div>
                     </div>
 
-                    <div class="footer-buttons">
-                        <button type="button" class="btn-apple-secondary" id="btn-wizard-back-5">Back</button>
-                        <button type="button" class="btn-apple-primary" id="btn-wizard-next-5">Continue</button>
-                    </div>
+
                 </div>
 
-                <!-- STEP 6 LIFE CHAPTERS -->
+                <!-- STEP 6 LIFE CHAPTERS & MORE -->
                 <div id="wizard-step-6" class="wizard-step">
-                    <h2 style="font-weight: 300; margin-bottom: 10px; font-size: 28px;">Life Chapters</h2>
-                    <p style="color: rgba(245,245,245,0.6); font-size: 14px; margin-bottom: 40px;">Where might people know them from? (Optional)</p>
+                    <h2>Life Chapters</h2>
+                    <p class="step-explanation">Where might people know them from? (Optional)</p>
                     
                     <div class="chapter-block autocomplete-wrapper">
                         <label class="editorial-label">High School</label>
@@ -927,13 +987,11 @@
                         <div class="dynamic-stats" id="stats-f-highschool"></div>
                     </div>
 
-                    <div id="israel-military-section" style="display: none;">
-                        <div class="chapter-block autocomplete-wrapper">
-                            <label class="editorial-label">Military Service</label>
-                            <input type="text" id="f-military" class="editorial-input auto-military" placeholder="Unit, Base, or Role">
-                            <div class="autocomplete-dropdown" id="dropdown-f-military"></div>
-                            <div class="dynamic-stats" id="stats-f-military"></div>
-                        </div>
+                    <div class="chapter-block autocomplete-wrapper">
+                        <label class="editorial-label">Military Service</label>
+                        <input type="text" id="f-military" class="editorial-input auto-military" placeholder="Unit, Base, or Role">
+                        <div class="autocomplete-dropdown" id="dropdown-f-military"></div>
+                        <div class="dynamic-stats" id="stats-f-military"></div>
                     </div>
 
                     <div class="chapter-block autocomplete-wrapper">
@@ -950,63 +1008,37 @@
                         <div class="dynamic-stats" id="stats-f-prev-work"></div>
                     </div>
 
-                    <div class="footer-buttons">
-                        <button type="button" class="btn-apple-secondary" id="btn-wizard-back-6">Back</button>
-                        <button type="button" class="btn-apple-primary" id="btn-wizard-next-6">Continue</button>
-                    </div>
-                </div>
-
-                <!-- STEP 7 ANYTHING ELSE -->
-                <div id="wizard-step-7" class="wizard-step">
-                    <h2 style="font-weight: 300; margin-bottom: 10px; font-size: 28px;">Anything else?</h2>
-                    <p style="color: rgba(245,245,245,0.6); font-size: 14px; margin-bottom: 40px;">What else shaped their path? (Optional)</p>
-                    
-                    <div id="israel-extra-section" style="display: none;">
-                        <div class="chapter-block autocomplete-wrapper">
-                            <label class="editorial-label">Mechina / Gap Year / Youth Movement</label>
-                            <input type="text" id="f-youth" class="editorial-input auto-youth" placeholder="Movement or Program">
-                            <div class="autocomplete-dropdown" id="dropdown-f-youth"></div>
-                            <div class="dynamic-stats" id="stats-f-youth"></div>
+                    <div class="chapter-block autocomplete-wrapper" style="display: flex; gap: 10px; align-items: flex-end;">
+                        <div style="flex: 1;">
+                            <label class="editorial-label">Anything Else?</label>
+                            <select id="f-other-category" class="editorial-input" style="padding: 10px 0; outline: none; background: transparent; color: #F5F5F5; border: none; border-bottom: 1px solid rgba(245,245,245,0.4); font-size: 14px;">
+                                <option value="youth" style="background: #222;">Youth Movement / Mechina</option>
+                                <option value="community" style="background: #222;">Community / Volunteer</option>
+                                <option value="other" style="background: #222;">Other Chapter</option>
+                            </select>
                         </div>
-                    </div>
-
-                    <div class="chapter-block autocomplete-wrapper">
-                        <label class="editorial-label">Community / Volunteer Work</label>
-                        <input type="text" id="f-community" class="editorial-input auto-community" placeholder="Organization or Community">
-                        <div class="autocomplete-dropdown" id="dropdown-f-community"></div>
-                        <div class="dynamic-stats" id="stats-f-community"></div>
-                    </div>
-
-                    <div class="chapter-block autocomplete-wrapper">
-                        <label class="editorial-label">Other Chapter</label>
-                        <input type="text" id="f-other" class="editorial-input auto-other" placeholder="Anything else?">
-                        <div class="autocomplete-dropdown" id="dropdown-f-other"></div>
-                        <div class="dynamic-stats" id="stats-f-other"></div>
-                    </div>
-
-                    <div class="footer-buttons">
-                        <button type="button" class="btn-apple-secondary" id="btn-wizard-back-7">Back</button>
-                        <button type="button" class="btn-apple-primary" id="btn-wizard-next-7">Continue</button>
+                        <div style="flex: 2; position: relative;" class="autocomplete-wrapper">
+                            <input type="text" id="f-other-value" class="editorial-input auto-other" placeholder="Name of chapter">
+                            <div class="autocomplete-dropdown" id="dropdown-f-other-value"></div>
+                            <div class="dynamic-stats" id="stats-f-other-value"></div>
+                        </div>
                     </div>
                 </div>
 
                 <!-- STEP 8 SHARED PATHS (Suggested Connections) -->
                 <div id="wizard-step-8" class="wizard-step">
-                    <h2 style="font-weight: 300; margin-bottom: 10px; font-size: 28px;">Shared Paths Found</h2>
-                    <p style="color: rgba(245,245,245,0.6); font-size: 14px; margin-bottom: 30px;">Based on these chapters, they might know these people.</p>
+                    <h2>Shared Paths Found</h2>
+                    <p class="step-explanation">We found possible connections based on their life chapters.</p>
                     
                     <div id="recommendation-list"></div>
 
-                    <div class="footer-buttons">
-                        <button type="button" class="btn-apple-secondary" id="btn-wizard-back-8">Back</button>
-                        <button type="button" class="btn-apple-primary" id="btn-wizard-next-8">Continue</button>
-                    </div>
+
                 </div>
 
                 <!-- STEP 9 ADD CONNECTIONS -->
                 <div id="wizard-step-9" class="wizard-step">
-                    <h2 style="font-weight: 300; margin-bottom: 10px; font-size: 28px;">Who is already connected to them?</h2>
-                    <p style="color: rgba(245,245,245,0.6); font-size: 14px; margin-bottom: 30px;">Search and add people to link them directly.</p>
+                    <h2>Who is already connected to them?</h2>
+                    <p class="step-explanation">Select people they know from the network.</p>
                     
                     <div id="wizard-step-9-original-parent">
                         <div id="connections-section">
@@ -1025,10 +1057,7 @@
                         </div>
                     </div>
 
-                    <div class="footer-buttons">
-                        <button type="button" class="btn-apple-secondary" id="btn-wizard-back-9">Back</button>
-                        <button type="button" class="btn-apple-primary" id="btn-wizard-next-9">Join Network</button>
-                    </div>
+
                 </div>
 
                 <!-- STEP 10 JOINING ANIMATION -->
@@ -1038,17 +1067,14 @@
                     <p style="color: rgba(245,245,245,0.5); font-size: 13px; margin-top: 10px;">The Beast has grown.</p>
                 </div>
 
-            </div>
-
-            <!-- NETWORK PREVIEW -->
-            <div class="wizard-preview-area" id="wizard-preview-area" style="display: none;">
-                <h4 style="font-weight: 300; font-size: 14px; letter-spacing: 2px; color: rgba(245,245,245,0.4); margin-bottom: 40px; text-transform: uppercase;">Path</h4>
-                <div id="live-network-preview">
-                    <!-- Nodes added here -->
                 </div>
             </div>
-        </div>
 
+
+        <div id="global-wizard-footer" class="footer-buttons" style="display: none; justify-content: space-between; padding: 20px 40px; border-top: 1px solid rgba(245,245,245,0.1); background: transparent; margin-top: 0;">
+            <button type="button" class="btn-apple-secondary" id="btn-wizard-global-back" style="max-width: 200px;">Back</button>
+            <button type="button" class="btn-apple-primary" id="btn-wizard-global-next" style="max-width: 200px;">Continue</button>
+        </div>
         </form>
     </div>
 
@@ -3269,6 +3295,42 @@
 
 
         // --- NEW WIZARD LOGIC ---
+        function setPersonType(type) {
+            const isMyself = (type === 'myself');
+            document.getElementById('form-is-myself').value = isMyself ? 'yes' : 'no';
+            
+            const btnMyself = document.getElementById('toggle-btn-myself');
+            const btnSomeone = document.getElementById('toggle-btn-someone');
+            const slider = document.getElementById('toggle-slider');
+            
+            if (isMyself) {
+                btnMyself.classList.add('active');
+                btnSomeone.classList.remove('active');
+                if (slider) {
+                    slider.style.width = btnMyself.offsetWidth + 'px';
+                    slider.style.transform = `translateX(${btnSomeone.offsetWidth}px)`;
+                }
+            } else {
+                btnSomeone.classList.add('active');
+                btnMyself.classList.remove('active');
+                if (slider) {
+                    slider.style.width = btnSomeone.offsetWidth + 'px';
+                    slider.style.transform = 'translateX(0)';
+                }
+            }
+            updateWizardCopy(isMyself);
+        }
+
+        function updateWizardCopy(isMyself) {
+            document.getElementById('step-1-title').textContent = isMyself ? "What's your name?" : "What's their name?";
+            const step4Title = document.querySelector('#wizard-step-4 h2');
+            if (step4Title) step4Title.textContent = isMyself ? "Where are you from?" : "Where are they from?";
+            const step5Title = document.querySelector('#wizard-step-5 h2');
+            if (step5Title) step5Title.textContent = isMyself ? "What do you do today?" : "What do they do today?";
+            const step6Explanation = document.querySelector('#wizard-step-6 p.step-explanation');
+            if (step6Explanation) step6Explanation.textContent = isMyself ? "Where might people know you from? (Optional)" : "Where might people know them from? (Optional)";
+        }
+
         function goToWizardStep(step) {
             currentWizardStep = step;
             document.querySelectorAll('.wizard-step').forEach(el => {
@@ -3283,41 +3345,49 @@
                 stepEl.classList.add('active');
             }
             
+            // Path preview is now hidden as requested
             const previewArea = document.getElementById('wizard-preview-area');
-            if (step >= 4 && step <= 9) {
-                previewArea.style.display = 'flex';
+            if (previewArea) previewArea.style.display = 'none !important';
+            
+            // Handle Global Footer
+            const globalFooter = document.getElementById('global-wizard-footer');
+            if (!globalFooter) return;
+
+            // Steps that show the global footer: 0, 4, 5, 6, 8, 9
+            const stepsWithFooter = [0, 4, 5, 6, 8, 9];
+            if (stepsWithFooter.includes(step)) {
+                globalFooter.style.display = 'flex';
+                
+                const btnBack = document.getElementById('btn-wizard-global-back');
+                const btnNext = document.getElementById('btn-wizard-global-next');
+                
+                // Back button logic
+                btnBack.style.visibility = step === 0 ? 'hidden' : 'visible';
+                btnBack.onclick = () => {
+                    if (step === 4) goToWizardStep(0);
+                    else if (step === 5) goToWizardStep(4);
+                    else if (step === 6) goToWizardStep(5);
+                    else if (step === 8) goToWizardStep(6);
+                    else if (step === 9) goToWizardStep(8);
+                };
+                
+                // Next button logic
+                btnNext.textContent = step === 9 ? 'Join Network' : 'Continue';
+                btnNext.onclick = () => {
+                    if (step === 0) processStep0();
+                    else if (step === 4) processStep4();
+                    else if (step === 5) processStep5();
+                    else if (step === 6) processStep6();
+                    else if (step === 8) goToWizardStep(9);
+                    else if (step === 9) processStep9();
+                };
             } else {
-                previewArea.style.display = 'none';
+                globalFooter.style.display = 'none';
             }
         }
 
-        function addNodeToPreview(label, value) {
-            if (!value) return;
-            const previewContainer = document.getElementById('live-network-preview');
-            
-            // Add line if not first node
-            if (previewContainer.children.length > 0) {
-                const line = document.createElement('div');
-                line.className = 'preview-line';
-                previewContainer.appendChild(line);
-            }
-            
-            const node = document.createElement('div');
-            node.className = 'preview-node';
-            node.innerHTML = `
-                <div class="preview-dot"></div>
-                <div class="preview-text">${value}</div>
-                <div style="font-size: 10px; color: rgba(245,245,245,0.4); text-transform: uppercase;">${label}</div>
-            `;
-            previewContainer.appendChild(node);
-            
-            // Scroll to bottom of preview
-            const previewArea = document.getElementById('wizard-preview-area');
-            previewArea.scrollTop = previewArea.scrollHeight;
-        }
-
-        // --- WIZARD EVENT LISTENERS ---
-        document.getElementById('btn-wizard-next-1').addEventListener('click', () => {
+        // --- WIZARD EVENT PROCESSORS ---
+        function processStep0() {
             const nameInput = document.getElementById('f-name-initial').value.trim();
             if (!nameInput) {
                 alert("Please enter a name first.");
@@ -3325,8 +3395,6 @@
             }
             
             document.getElementById('f-name').value = nameInput;
-            document.getElementById('live-network-preview').innerHTML = ''; // reset preview
-            addNodeToPreview('Name', nameInput);
             
             goToWizardStep(2);
             
@@ -3344,7 +3412,7 @@
                     goToWizardStep(4);
                 }
             }, 1500);
-        });
+        }
 
         document.getElementById('btn-match-yes').addEventListener('click', (e) => {
             const matchIndex = parseInt(e.currentTarget.dataset.matchIndex);
@@ -3360,66 +3428,18 @@
             goToWizardStep(4);
         });
 
-        document.getElementById('btn-wizard-back-4').addEventListener('click', () => goToWizardStep(1));
-        document.getElementById('btn-wizard-next-4').addEventListener('click', () => {
-            const birthYear = document.getElementById('f-birth-year').value;
-            if (birthYear) {
-                const currentYear = new Date().getFullYear();
-                document.getElementById('f-age').value = currentYear - parseInt(birthYear);
-            }
-            const country = document.getElementById('f-country').value.trim().toLowerCase();
+        function processStep4() {
             const city = document.getElementById('f-city').value.trim();
             const originCity = document.getElementById('f-origin-city').value.trim();
             
-            if (city) addNodeToPreview('City', city);
-            if (originCity && originCity !== city) addNodeToPreview('Origin', originCity);
-            
-            // Conditional Israel logic
-            if (country === 'israel' || country === 'il' || country === 'ישראל') {
-                document.getElementById('israel-military-section').style.display = 'block';
-                document.getElementById('israel-extra-section').style.display = 'block';
-            } else {
-                document.getElementById('israel-military-section').style.display = 'none';
-                document.getElementById('israel-extra-section').style.display = 'none';
-            }
-            
             goToWizardStep(5);
-        });
+        }
 
-        document.getElementById('btn-wizard-back-5').addEventListener('click', () => goToWizardStep(4));
-        document.getElementById('btn-wizard-next-5').addEventListener('click', () => {
-            const role = document.getElementById('f-role').value.trim();
-            const workplace = document.getElementById('f-workplace').value.trim();
-            if (role) addNodeToPreview('Role', role);
-            if (workplace) addNodeToPreview('Workplace', workplace);
+        function processStep5() {
             goToWizardStep(6);
-        });
+        }
 
-        document.getElementById('btn-wizard-back-6').addEventListener('click', () => goToWizardStep(5));
-        document.getElementById('btn-wizard-next-6').addEventListener('click', () => {
-            const highschool = document.getElementById('f-highschool').value.trim();
-            const military = document.getElementById('f-military').value.trim();
-            const education = document.getElementById('f-education').value.trim();
-            const prevWork = document.getElementById('f-prev-work').value.trim();
-            
-            if (highschool) addNodeToPreview('High School', highschool);
-            if (military) addNodeToPreview('Military', military);
-            if (education) addNodeToPreview('Education', education);
-            if (prevWork) addNodeToPreview('Previous Work', prevWork);
-            
-            goToWizardStep(7);
-        });
-
-        document.getElementById('btn-wizard-back-7').addEventListener('click', () => goToWizardStep(6));
-        document.getElementById('btn-wizard-next-7').addEventListener('click', () => {
-            const youth = document.getElementById('f-youth').value.trim();
-            const community = document.getElementById('f-community').value.trim();
-            const other = document.getElementById('f-other').value.trim();
-            
-            if (youth) addNodeToPreview('Youth Movement', youth);
-            if (community) addNodeToPreview('Community', community);
-            if (other) addNodeToPreview('Other', other);
-            
+        function processStep6() {
             // Serialize chapters into tags and description
             let generatedTags = [];
             let generatedDesc = [];
@@ -3436,39 +3456,36 @@
             addField(document.getElementById('f-military').value.trim(), 'military');
             addField(document.getElementById('f-education').value.trim(), 'education');
             addField(document.getElementById('f-prev-work').value.trim(), 'prevwork');
-            addField(document.getElementById('f-youth').value.trim(), 'youth');
-            addField(document.getElementById('f-community').value.trim(), 'community');
-            addField(document.getElementById('f-other').value.trim(), 'other');
+            
+            const otherVal = document.getElementById('f-other-value').value.trim();
+            if (otherVal) {
+                const otherCat = document.getElementById('f-other-category').value;
+                addField(otherVal, otherCat);
+            }
             
             document.getElementById('f-tags').value = generatedTags.join(', ');
             document.getElementById('f-desc').value = generatedDesc.join('\n');
             
-            // Generate Recommendations based on these new tags
-            generateRecommendations();
-            
-            goToWizardStep(8);
-        });
+            const hasRecs = generateRecommendations();
+            if (hasRecs) {
+                goToWizardStep(8);
+            } else {
+                goToWizardStep(9);
+            }
+        }
 
-        document.getElementById('btn-wizard-back-8').addEventListener('click', () => goToWizardStep(7));
-        document.getElementById('btn-wizard-next-8').addEventListener('click', () => {
-            goToWizardStep(9);
-        });
-
-        document.getElementById('btn-wizard-back-9').addEventListener('click', () => goToWizardStep(8));
-        document.getElementById('btn-wizard-next-9').addEventListener('click', () => {
+        function processStep9() {
             goToWizardStep(10);
-            
             setTimeout(() => {
-                // Trigger form submission
                 const addForm = document.getElementById('add-form');
                 if (addForm) {
                     addForm.dispatchEvent(new Event('submit', { cancelable: true, bubbles: true }));
                 }
             }, 1500);
-        });
+        }
 
         // --- AUTOCOMPLETE LOGIC ---
-        function setupAutocomplete(inputId, prefix) {
+        function setupAutocomplete(inputId, staticPrefix) {
             const input = document.getElementById(inputId);
             const dropdown = document.getElementById('dropdown-' + inputId);
             const stats = document.getElementById('stats-' + inputId);
@@ -3482,6 +3499,14 @@
                 if (!val) {
                     dropdown.style.display = 'none';
                     return;
+                }
+
+                // Determine actual prefix
+                let prefix = staticPrefix;
+                if (staticPrefix === 'dynamic:other-category') {
+                    const catSelect = document.getElementById('f-other-category');
+                    if (catSelect) prefix = catSelect.value;
+                    else prefix = 'other';
                 }
                 
                 // Count occurrences from people array
@@ -3551,11 +3576,20 @@
         setupAutocomplete('f-military', 'military');
         setupAutocomplete('f-education', 'education');
         setupAutocomplete('f-prev-work', 'prevwork');
-        setupAutocomplete('f-youth', 'youth');
-        setupAutocomplete('f-community', 'community');
-        setupAutocomplete('f-other', 'other');
+        setupAutocomplete('f-other-value', 'dynamic:other-category');
 
-
+        // Typing Reaction: Subtle network movement
+        document.getElementById('add-modal').addEventListener('input', (e) => {
+            if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') {
+                if (window.scene) {
+                    window.scene.rotation.y += 0.03;
+                    window.scene.rotation.x += (Math.random() - 0.5) * 0.02;
+                } else if (typeof scene !== 'undefined') {
+                    scene.rotation.y += 0.03;
+                    scene.rotation.x += (Math.random() - 0.5) * 0.02;
+                }
+            }
+        });
 
         const discoverModal = document.getElementById('discover-modal');
         const discoverList = document.getElementById('discover-list');
@@ -3834,8 +3868,12 @@
                 tags = keywords.map(w => '#' + w.replace(/[^a-zA-Zא-ת]/g, ''));
             }
 
+            let calculatedAge = '';
+            const byStr = document.getElementById('f-birth-year') ? document.getElementById('f-birth-year').value.trim() : '';
+            if (byStr) calculatedAge = (new Date().getFullYear() - parseInt(byStr)).toString();
+
             const p1 = {
-                age: document.getElementById('f-age') ? document.getElementById('f-age').value.trim() : '',
+                age: calculatedAge,
                 city: document.getElementById('f-city') ? document.getElementById('f-city').value.trim() : '',
                 role: document.getElementById('f-role') ? document.getElementById('f-role').value.trim() : '',
                 description: desc,
@@ -3857,9 +3895,7 @@
             recList.innerHTML = '';
             
             if (pendingRecs.length === 0) {
-                document.getElementById('wizard-step-8').style.display = 'none'; // skip
-                goToWizardStep(9);
-                return;
+                return false;
             }
             
             const recsToRender = pendingRecs.slice(0, 5);
@@ -3867,11 +3903,11 @@
                 const p = rec.person;
                 const sharedConcepts = rec.shared || [];
                 const div = document.createElement('div');
-                div.style.cssText = 'background: rgba(245,245,245,0.05); border: 1px solid rgba(245,245,245,0.2); border-radius: 10px; padding: 15px; margin-bottom: 15px; display: flex; justify-content: space-between; align-items: center; transition: 0.3s; flex-direction: column; gap: 10px; align-items: stretch;';
+                div.style.cssText = 'background: rgba(245,245,245,0.02); border: 1px solid rgba(245,245,245,0.1); border-radius: 12px; padding: 20px; margin-bottom: 15px; display: flex; justify-content: space-between; align-items: center; transition: 0.3s; flex-direction: column; gap: 15px; align-items: stretch;';
                 
                 let sharedHTML = '';
                 if (sharedConcepts.length > 0) {
-                    sharedHTML = `<div style="font-size: 11px; color: #4CAF50; background: rgba(76, 175, 80, 0.1); padding: 4px 8px; border-radius: 4px; display: inline-block;">Shared: ${sharedConcepts.join(', ')}</div>`;
+                    sharedHTML = `<div style="font-size: 11px; color: rgba(245,245,245,0.8); background: rgba(245,245,245,0.1); padding: 6px 10px; border-radius: 6px; display: inline-block;">Why suggested: ${sharedConcepts.join(', ')}</div>`;
                 }
 
                 div.innerHTML = `
@@ -3895,6 +3931,7 @@
                     e.target.disabled = true;
                 });
             });
+            return true;
         }
 
         function openModal(mode, personData = null, defaultConnectionNodeId = null) {
@@ -3907,7 +3944,6 @@
                 const instr = document.getElementById('add-person-instructions');
                 if (instr) instr.style.display = 'block';
                 document.getElementById('modal-title').textContent = 'Add Person';
-                document.getElementById('btn-wizard-submit').textContent = 'Save to Network';
                 document.getElementById('form-person-id').value = '';
                 document.getElementById('edit-name-group').style.display = 'none';
                 form.reset();
@@ -3927,11 +3963,13 @@
                 const instr = document.getElementById('add-person-instructions');
                 if (instr) instr.style.display = 'none';
                 document.getElementById('modal-title').textContent = 'Edit Person';
-                document.getElementById('btn-wizard-submit').textContent = 'Update Network';
                 document.getElementById('form-person-id').value = personData.id;
                 document.getElementById('edit-name-group').style.display = 'block';
                 document.getElementById('f-name').value = personData.name || '';
-                document.getElementById('f-age').value = personData.age || '';
+                const byField = document.getElementById('f-birth-year');
+                if (byField && personData.age) {
+                    byField.value = new Date().getFullYear() - parseInt(personData.age);
+                }
                 document.getElementById('f-role').value = personData.role || '';
                 document.getElementById('f-city').value = personData.city || '';
                 document.getElementById('f-country').value = personData.country || '';
@@ -3957,20 +3995,28 @@
                     el.classList.remove('active');
                     el.style.display = 'none';
                 });
-                // We only show step 4, 4b and step 6 footer. Step 6 content is now inside step 4b!
-                ['wizard-step-4', 'wizard-step-4b', 'wizard-step-6-footer'].forEach(id => {
+                // We show all form sections at once for Edit mode
+                ['wizard-step-4', 'wizard-step-5', 'wizard-step-6', 'wizard-step-9'].forEach(id => {
                     const el = document.getElementById(id);
                     if (el) {
-                        el.style.display = id.includes('footer') ? 'flex' : 'block';
+                        el.style.display = 'block';
                         void el.offsetWidth;
                         el.classList.add('active');
                     }
                 });
                 
-                // Hide back buttons in edit mode
-                document.getElementById('btn-wizard-back-6').style.display = 'none';
-                const backBtn = document.getElementById('btn-wizard-back');
-                if (backBtn) backBtn.style.display = 'none';
+                // Show global footer and configure for edit mode
+                const globalFooter = document.getElementById('global-wizard-footer');
+                if (globalFooter) {
+                    globalFooter.style.display = 'flex';
+                    const btnBack = document.getElementById('btn-wizard-global-back');
+                    if (btnBack) btnBack.style.visibility = 'hidden';
+                    const btnNext = document.getElementById('btn-wizard-global-next');
+                    if (btnNext) {
+                        btnNext.textContent = 'Update Network';
+                        btnNext.onclick = () => { processStep9(); };
+                    }
+                }
             }
         }
         
@@ -4075,12 +4121,22 @@
         form.addEventListener('submit', async (e) => {
             e.preventDefault();
             const mode = document.getElementById('form-mode').value;
+            let calcAge = '';
+            const by = document.getElementById('f-birth-year').value;
+            if (by) calcAge = (new Date().getFullYear() - parseInt(by)).toString();
+
+            let cityVal = document.getElementById('f-city').value.trim();
+            const lowerCity = cityVal.toLowerCase();
+            if (['ilaniya', 'moshav ilaniya', 'moshav ilania', 'אילניה', 'מושב אילניה'].includes(lowerCity)) {
+                cityVal = 'ilania';
+            }
+
             const data = {
                 name: document.getElementById('f-name').value,
-                age: document.getElementById('f-age').value,
+                age: calcAge,
                 role: document.getElementById('f-role').value,
-                city: document.getElementById('f-city').value,
-                country: document.getElementById('f-country').value,
+                city: cityVal,
+                country: document.getElementById('f-country').value || 'Israel',
                 description: document.getElementById('f-desc').value,
                 tags: document.getElementById('f-tags').value,
             };
@@ -4099,9 +4155,11 @@
                 document.getElementById('f-tags').value = data.tags;
             }
 
-            const submitBtn = document.getElementById('btn-wizard-submit');
-            submitBtn.textContent = 'SAVING...';
-            submitBtn.disabled = true;
+            const submitBtn = document.getElementById('btn-wizard-global-next');
+            if (submitBtn) {
+                submitBtn.textContent = 'SAVING...';
+                submitBtn.disabled = true;
+            }
 
             try {
                 // Collect connections for BOTH add and edit modes
@@ -4319,6 +4377,15 @@
                 openModal('add', null, selectedNodeId);
             }
         });
-    </script>
+    
+        // Expose to window for inline HTML handlers
+        window.goToWizardStep = goToWizardStep;
+        window.setPersonType = setPersonType;
+        window.openModal = openModal;
+        window.addConnectionEntry = addConnectionEntry;
+        window.removeConnectionEntry = removeConnectionEntry;
+        window.selectNode = selectNode;
+
+</script>
 </body>
 </html>
