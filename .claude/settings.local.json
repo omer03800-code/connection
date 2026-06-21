@@ -11,7 +11,10 @@
       "Bash(pkill -f \"python3 -m http.server 8080\")",
       "Bash(curl -s -I http://localhost:8080/index.html)",
       "Bash(node -c index.html)",
-      "Bash(python3)"
+      "Bash(python3)",
+      "mcp__Claude_Preview__preview_start",
+      "Bash(node -c public/index.html)",
+      "mcp__Control_Chrome__open_url"
     ]
   }
 }

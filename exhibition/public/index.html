@@ -3907,7 +3907,7 @@
                 const instr = document.getElementById('add-person-instructions');
                 if (instr) instr.style.display = 'block';
                 document.getElementById('modal-title').textContent = 'Add Person';
-                document.getElementById('btn-submit-form').textContent = 'SAVE TO NETWORK';
+                document.getElementById('btn-wizard-submit').textContent = 'Save to Network';
                 document.getElementById('form-person-id').value = '';
                 document.getElementById('edit-name-group').style.display = 'none';
                 form.reset();
@@ -3927,7 +3927,7 @@
                 const instr = document.getElementById('add-person-instructions');
                 if (instr) instr.style.display = 'none';
                 document.getElementById('modal-title').textContent = 'Edit Person';
-                document.getElementById('btn-submit-form').textContent = 'UPDATE NETWORK';
+                document.getElementById('btn-wizard-submit').textContent = 'Update Network';
                 document.getElementById('form-person-id').value = personData.id;
                 document.getElementById('edit-name-group').style.display = 'block';
                 document.getElementById('f-name').value = personData.name || '';
@@ -4099,7 +4099,7 @@
                 document.getElementById('f-tags').value = data.tags;
             }
 
-            const submitBtn = document.getElementById('btn-submit-form');
+            const submitBtn = document.getElementById('btn-wizard-submit');
             submitBtn.textContent = 'SAVING...';
             submitBtn.disabled = true;
 

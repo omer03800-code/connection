@@ -11,9 +11,24 @@ router.get('/search/query', (req, res) => {
     // Fetch all and filter in JS to allow proper word-boundary regex (so "ono" doesn't match "Economics")
     const allPeople = db.prepare(`SELECT id, name, city, role, tags, description FROM people`).all();
     
-    // \b means word boundary, so it only matches if the word STARTS with the term
+    let searchTerms = [term];
+    
+    // Search Aliases (Hebrew to English / Typos)
+    const aliases = {
+        'אילניה': ['ilaniya', 'ilania', 'אילניה'],
+        'איניה': ['ilaniya', 'ilania', 'אילניה', 'איניה'],
+        'ilaniya': ['ilaniya', 'ilania', 'אילניה'],
+        'ilania': ['ilaniya', 'ilania', 'אילניה']
+    };
+    
+    if (aliases[term]) {
+        searchTerms = aliases[term];
+    }
+
+    // Use start of string or space/punctuation (including # for tags) to allow prefix matching
     const escapeRegExp = (string) => string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-    const regex = new RegExp(`\\b${escapeRegExp(term)}`, 'i');
+    const escapedTerms = searchTerms.map(escapeRegExp).join('|');
+    const regex = new RegExp(`(^|[\\s,.\\-/'"#+&()])[\\s]*(?:${escapedTerms})`, 'i');
     
     const filtered = allPeople.filter(p => {
         return regex.test(p.name) || 
@@ -28,8 +43,33 @@ router.get('/search/query', (req, res) => {
         const { description, ...rest } = p;
         return rest;
     });
+
+    // Extract metadata suggestions
+    const metadataSet = new Map();
+    const addMeta = (type, val) => {
+        if (!val) return;
+        const v = val.trim();
+        if (!v) return;
+        const key = type + ':' + v.toLowerCase();
+        if (!metadataSet.has(key)) {
+            metadataSet.set(key, { type, value: v });
+        }
+    };
+
+    allPeople.forEach(p => {
+        if (p.city && regex.test(p.city)) addMeta('LOCATION', p.city);
+        if (p.role && regex.test(p.role)) addMeta('ROLE', p.role);
+        if (p.tags) {
+            const tList = p.tags.split(/[\s,]+/);
+            tList.forEach(t => {
+                if (regex.test(t)) addMeta('TAG', t.replace(/^#/, ''));
+            });
+        }
+    });
+
+    const metadataMatches = Array.from(metadataSet.values()).slice(0, 5);
     
-    res.json(cleanFiltered);
+    res.json({ people: cleanFiltered, metadata: metadataMatches });
 });
 
 // GET /api/people/suggest/name?name=term
@@ -108,15 +148,15 @@ router.post('/', (req, res) => {
 // PUT /api/people/:id
 router.put('/:id', (req, res) => {
     const db = getDb();
-    const { age, city, country, role, description, tags, connections: conns } = req.body;
+    const { name, age, city, country, role, description, tags, connections: conns } = req.body;
 
     const person = db.prepare('SELECT id FROM people WHERE id = ?').get(req.params.id);
     if (!person) return res.status(404).json({ error: 'Person not found' });
 
     db.prepare(`
-        UPDATE people SET age = ?, city = ?, country = ?, role = ?, description = ?, tags = ?
+        UPDATE people SET name = ?, age = ?, city = ?, country = ?, role = ?, description = ?, tags = ?
         WHERE id = ?
-    `).run(age||null, city||null, country||null, role||null, description||null, tags||null, req.params.id);
+    `).run(name||person.name, age||null, city||null, country||null, role||null, description||null, tags||null, req.params.id);
 
     db.exec('BEGIN');
     
