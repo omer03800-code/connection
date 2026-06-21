@@ -533,7 +533,7 @@
             </div>
 
             <div id="search-wrapper" style="position: relative; display: flex; align-items: center; margin: 0; width: auto;">
-                <input type="text" id="search-input" class="info-action-btn" placeholder="[ WHAT YOU LOOKIN FOR ]" autocomplete="off" style="margin: 0; width: 220px; cursor: text; border-radius: 10px;">
+                <input type="text" id="search-input" class="info-action-btn" placeholder="[ WHAT YOU LOOKIN FOR ]" autocomplete="off" style="margin: 0; width: 250px; cursor: text; border-radius: 10px;">
                 <div id="search-dropdown" style="display: none; position: absolute; top: 100%; left: 0; min-width: 280px; background: rgba(0,0,0,0.3); backdrop-filter: blur(25px); border: 1px solid rgba(245,245,245,0.2); border-radius: 10px; z-index: 1000; margin-top: 8px; max-height: 400px; overflow-y: auto; overflow-x: hidden; padding: 8px 0; box-shadow: 0 4px 20px rgba(0,0,0,0.5);">
                 </div>
             </div>
@@ -541,6 +541,8 @@
             <button id="btn-pause" class="info-action-btn" style="margin: 0;">[ FREEZE ]</button>
         </div>
     </div>
+    
+    <button id="btn-add-connection" class="info-action-btn" style="position: absolute; top: 20px; left: 50%; transform: translateX(-50%); margin: 0; z-index: 100;">[ FEED THE BEAST ]</button>
 
     <div id="info-panel-container">
         <div id="info-card">
@@ -570,6 +572,9 @@
 
             <!-- About -->
             <div id="info-description" style="font-size: 13px; color: rgba(245,245,245,0.7); line-height: 1.5; margin-bottom: 25px; font-weight: 200;"></div>
+            
+            <!-- Chapters -->
+            <div id="info-chapters" style="margin-bottom: 25px;"></div>
             
             <!-- Primary Actions -->
             <div style="display: flex; flex-direction: row; justify-content: center; gap: 15px; margin-bottom: 25px;">
@@ -628,9 +633,7 @@
     <button id="btn-discover-connections" style="display: none;">
         <span style="font-size: 14px; font-weight: lighter; width: 14px; display: inline-block;"></span> DISCOVER CONNECTIONS
     </button>
-    <button id="btn-add-connection" class="info-action-btn" style="position: absolute; bottom: 30px; left: 30px; margin: 0; z-index: 100;">
-        [ FEED THE BEAST ]
-    </button>
+
     <div style="position: absolute; bottom: 30px; right: 30px; display: flex; align-items: center; gap: 15px; z-index: 100;">
         <button id="btn-info" class="info-action-btn" onclick="document.getElementById('about-modal').classList.add('visible'); document.getElementById('modal-overlay').classList.add('visible');" style="margin: 0;">[ ABOUT THE BEAST ]</button>
         <button id="btn-theme" class="info-action-btn" style="margin: 0;" title="Toggle Day/Night Mode">[ night ]</button>
@@ -664,180 +667,388 @@
         <span class="close-btn" id="btn-close-modal" style="position: absolute; top: 15px; right: 20px; font-size: 28px; cursor: pointer; color: #F5F5F5; opacity: 0.6; transition: 0.2s; z-index: 10;">&times;</span>
         <h2 id="modal-title" style="display: none;">Add Person</h2>
         
-        <div id="form-progress-bar" style="display: flex; justify-content: center; align-items: center; gap: 8px; margin-top: 25px; margin-bottom: 20px;">
-            <div class="progress-step active" id="prog-1">1</div>
-            <div class="progress-line" id="prog-line-1"></div>
-            <div class="progress-step" id="prog-2">2</div>
-            <div class="progress-line" id="prog-line-2"></div>
-            <div class="progress-step" id="prog-3">3</div>
-            <div class="progress-line" id="prog-line-3"></div>
-            <div class="progress-step" id="prog-4">4</div>
-        </div>
-
         <form id="add-form" style="display: flex; flex-direction: column; flex: 1; overflow: hidden; margin: 0;">
-            <div style="padding: 20px; overflow-y: auto; flex: 1;">
+        <!-- NEW UI WIZARD CONTAINER -->
+        <style>
+            .editorial-input {
+                background: transparent;
+                border: none;
+                border-bottom: 1px solid rgba(245,245,245,0.4);
+                color: #F5F5F5;
+                font-size: 16px;
+                padding: 10px 0;
+                width: 100%;
+                outline: none;
+                font-family: inherit;
+                transition: border-color 0.3s;
+                letter-spacing: 1px;
+            }
+            .editorial-input:focus {
+                border-bottom-color: #F5F5F5;
+            }
+            .editorial-label {
+                font-size: 11px;
+                text-transform: uppercase;
+                letter-spacing: 1px;
+                color: rgba(245,245,245,0.6);
+                margin-bottom: 5px;
+                display: block;
+            }
+            .wizard-layout {
+                display: flex; 
+                flex-direction: row;
+                height: 100%; 
+                overflow: hidden;
+            }
+            .wizard-form-area {
+                flex: 1.5; 
+                padding: 30px; 
+                overflow-y: auto; 
+                display: flex; 
+                flex-direction: column;
+            }
+            .wizard-preview-area {
+                flex: 1; 
+                background: rgba(0,0,0,0.2); 
+                border-left: 1px solid rgba(245,245,245,0.1); 
+                padding: 30px; 
+                display: flex; 
+                flex-direction: column; 
+                align-items: center; 
+                justify-content: flex-start;
+                overflow-y: auto;
+            }
+            .preview-node {
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                animation: fadeInNode 0.5s ease forwards;
+            }
+            .preview-dot {
+                width: 12px;
+                height: 12px;
+                border-radius: 50%;
+                background: #F5F5F5;
+                box-shadow: 0 0 10px rgba(245,245,245,0.8);
+                margin-bottom: 8px;
+            }
+            .preview-line {
+                width: 2px;
+                height: 40px;
+                background: rgba(245,245,245,0.3);
+                margin-bottom: 8px;
+            }
+            .preview-text {
+                font-size: 12px;
+                color: rgba(245,245,245,0.8);
+                text-transform: uppercase;
+                letter-spacing: 1px;
+                text-align: center;
+                margin-bottom: 8px;
+            }
+            @keyframes fadeInNode {
+                from { opacity: 0; transform: translateY(10px); }
+                to { opacity: 1; transform: translateY(0); }
+            }
+            .footer-buttons {
+                margin-top: 40px;
+                display: flex;
+                gap: 15px;
+            }
+            .chapter-block {
+                margin-bottom: 30px;
+            }
+            .autocomplete-wrapper {
+                position: relative;
+            }
+            .autocomplete-dropdown {
+                position: absolute;
+                top: 100%;
+                left: 0;
+                width: 100%;
+                background: #111;
+                border: 1px solid rgba(245,245,245,0.2);
+                border-top: none;
+                z-index: 50;
+                max-height: 200px;
+                overflow-y: auto;
+                display: none;
+            }
+            .autocomplete-item {
+                padding: 12px 15px;
+                font-size: 13px;
+                cursor: pointer;
+                border-bottom: 1px solid rgba(245,245,245,0.1);
+                color: #F5F5F5;
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+            }
+            .autocomplete-item:hover {
+                background: rgba(245,245,245,0.1);
+            }
+            .autocomplete-count {
+                font-size: 11px;
+                color: rgba(245,245,245,0.5);
+            }
+            .dynamic-stats {
+                font-size: 12px;
+                color: rgba(245,245,245,0.5);
+                margin-top: 8px;
+                min-height: 18px;
+            }
+        </style>
+
+        <div class="wizard-layout">
+            <div class="wizard-form-area" id="wizard-form-area">
                 <input type="hidden" id="form-mode" value="add">
                 <input type="hidden" id="form-person-id" value="">
+                <input type="hidden" id="form-is-myself" value="no">
                 
-                <!-- STEP 1: IDENTIFY -->
-                <div id="wizard-step-1" class="wizard-step active">
-                    <div style="text-align: center; margin-bottom: 20px;">
-                        <h2 style="font-weight: 300; margin-bottom: 10px;">What's your name?</h2>
-                        <p style="color: rgba(245,245,245,0.6); font-size: 12px;">Enter your full name to begin.</p>
-                    </div>
-                    <div class="form-group">
-                        <input type="text" id="f-name-initial" placeholder="e.g., John Doe" style="font-size: 16px; padding: 0 15px; height: 44px; text-align: center; border-radius: 10px; box-sizing: border-box;">
+                <!-- STEP 0 -->
+                <div id="wizard-step-0" class="wizard-step active">
+                    <h2 style="font-weight: 300; margin-bottom: 40px; font-size: 28px; text-align: center;">Who are you adding?</h2>
+                    <div style="display: flex; gap: 20px; justify-content: center;">
+                        <button type="button" class="btn-apple-secondary" onclick="document.getElementById('form-is-myself').value='yes'; goToWizardStep(0);" style="flex: 1; max-width: 180px; padding: 20px; font-size: 16px;">Myself</button>
+                        <button type="button" class="btn-apple-secondary" onclick="document.getElementById('form-is-myself').value='no'; goToWizardStep(0);" style="flex: 1; max-width: 180px; padding: 20px; font-size: 16px;">Someone Else</button>
                     </div>
                 </div>
 
-                <!-- STEP 2: SYSTEM SCAN -->
+                <!-- STEP 1 -->
+                <div id="wizard-step-1" class="wizard-step">
+                    <h2 id="step-1-title" style="font-weight: 300; margin-bottom: 40px; font-size: 28px;">What's the name?</h2>
+                    <div class="chapter-block">
+                        <label class="editorial-label">Full Name</label>
+                        <input type="text" id="f-name-initial" class="editorial-input" placeholder="e.g. John Doe" autocomplete="off">
+                    </div>
+                    <div class="footer-buttons">
+                        <button type="button" class="btn-apple-secondary" onclick="goToWizardStep(0)">Back</button>
+                        <button type="button" class="btn-apple-primary" id="btn-wizard-next-1">Continue</button>
+                    </div>
+                </div>
+
+                <!-- STEP 2 -->
                 <div id="wizard-step-2" class="wizard-step" style="text-align: center; padding: 40px 0;">
                     <div class="scan-spinner"></div>
-                    <h3 style="font-weight: 300; margin-top: 20px; letter-spacing: 1px;">Scanning Network...</h3>
-                    <p style="color: rgba(245,245,245,0.5); font-size: 11px; margin-top: 10px;">Checking for existing connections</p>
+                    <h3 style="font-weight: 300; margin-top: 30px; letter-spacing: 1px; font-size: 24px;">Looking for existing traces...</h3>
+                    <p style="color: rgba(245,245,245,0.5); font-size: 13px; margin-top: 10px;">Searching the network</p>
                 </div>
 
-                <!-- STEP 3: MATCH FOUND -->
-                <div id="wizard-step-3" class="wizard-step" style="text-align: center;">
-                    <div style="margin-bottom: 20px;">
-                        <h2 style="font-weight: 300; margin-bottom: 10px; color: #aaffaa;">Match Found!</h2>
-                        <p style="color: rgba(245,245,245,0.6); font-size: 12px;">Someone with a similar name is already in the network.</p>
+                <!-- STEP 3 MATCH FOUND -->
+                <div id="wizard-step-3" class="wizard-step">
+                    <h2 style="font-weight: 300; margin-bottom: 10px; font-size: 24px;">Matches Found</h2>
+                    <p style="color: rgba(245,245,245,0.6); font-size: 14px; margin-bottom: 30px;">We found people with the same name already connected to the network.</p>
+                    
+                    <div id="match-profile-card" style="background: rgba(245,245,245,0.05); border: 1px solid rgba(245,245,245,0.2); border-radius: 10px; padding: 20px; margin-bottom: 30px;">
+                        <div id="match-name" style="font-size: 18px; font-weight: 600; margin-bottom: 8px;"></div>
+                        <div id="match-role" style="font-size: 14px; color: rgba(245,245,245,0.7); margin-bottom: 4px;"></div>
+                        <div id="match-city" style="font-size: 14px; color: rgba(245,245,245,0.7);"></div>
                     </div>
                     
-                    <div id="match-profile-card" style="background: rgba(245,245,245,0.05); border: 1px solid rgba(245,245,245,0.2); border-radius: 10px; padding: 15px; margin-bottom: 20px;">
-                        <div id="match-name" style="font-size: 16px; font-weight: bold; margin-bottom: 5px;"></div>
-                        <div id="match-role" style="font-size: 12px; color: rgba(245,245,245,0.6);"></div>
-                        <div id="match-city" style="font-size: 12px; color: rgba(245,245,245,0.6);"></div>
-                    </div>
-                    
-                    <h3 style="font-weight: 300; margin-bottom: 15px;">Is this you?</h3>
-                    <div style="display: flex; gap: 10px;">
-                        <button type="button" id="btn-match-yes" class="btn-submit" style="flex: 1; background: white; color: black;">Yes, that's me!</button>
-                        <button type="button" id="btn-match-no" class="btn-submit" style="flex: 1; background: transparent; border: 1px solid rgba(245,245,245,0.2); color: #F5F5F5;">Not Me</button>
+                    <div class="footer-buttons" style="margin-top: 0;">
+                        <button type="button" id="btn-match-yes" class="btn-apple-primary" style="flex: 1;">This Is The Person</button>
+                        <button type="button" id="btn-match-no" class="btn-apple-secondary" style="flex: 1;">Different Person</button>
                     </div>
                 </div>
 
-                <!-- STEP 4: DEMOGRAPHICS -->
+                <!-- STEP 4 BASICS -->
                 <div id="wizard-step-4" class="wizard-step">
-                    <div style="text-align: center; margin-bottom: 20px;">
-                        <h2 style="font-weight: 300; margin-bottom: 10px;">Background</h2>
-                    </div>
-                    <div class="form-group" id="edit-name-group" style="display: none;">
-                        <label>Full Name</label>
-                        <input type="text" id="f-name" required>
-                    </div>
-                    <div style="display:flex; gap:10px;">
-                        <div class="form-group" style="flex:1;">
-                            <label>Birth Year</label>
-                            <select id="f-birth-year" style="width: 100%; padding: 10px; background-color: rgba(245,245,245,0.05); color: inherit; border: 1px solid rgba(245,245,245,0.2); border-radius: 10px; font-family: inherit; font-size: 12px;">
-                                <option value="" style="color: black;">Select Year</option>
-                            </select>
-                            <input type="hidden" id="f-age">
-                        </div>
-                        <div class="form-group" style="flex:1;">
-                            <label>Country</label>
-                            <input type="text" id="f-country" placeholder="e.g. Israel">
-                        </div>
-                    </div>
-                    <div class="form-group">
-                        <label>Where do you live?</label>
-                        <input type="text" id="f-city" placeholder="Current city">
-                    </div>
-                    <div class="form-group">
-                        <label style="display: flex; justify-content: space-between; align-items: center;">
-                            Where are you originally from?
-                            <label style="font-size: 10px; font-weight: normal; display: flex; align-items: center; gap: 5px; cursor: pointer; color: rgba(245,245,245,0.7);">
-                                <input type="checkbox" id="f-same-city" style="width: auto; margin: 0;"> Same as current
-                            </label>
-                        </label>
-                        <input type="text" id="f-origin-city" placeholder="Origin city">
-                    </div>
-                </div>
-
-                <!-- STEP 4b: PROFESSION & DESCRIPTION -->
-                <div id="wizard-step-4b" class="wizard-step">
-                    <div style="text-align: center; margin-bottom: 20px;">
-                            <h2 style="font-weight: 300; margin-bottom: 10px;">Profession & Details</h2>
-                            <p style="color: rgba(245,245,245,0.6); font-size: 12px;">The more details you write, the better!</p>
-                    </div>
-                    <div class="form-group">
-                        <label>Role / Profession</label>
-                        <input type="text" id="f-role" placeholder="e.g. Software Engineer">
-                    </div>
-                    <div class="form-group">
-                        <label style="display: flex; align-items: center; gap: 5px;">
-                            Description
-                            <div class="tooltip-icon">?
-                                <div class="tooltip-text">
-                                    Details you should include: High School, Mechina, Army unit, Degree, University, Company, Work, etc.
-                                </div>
-                            </div>
-                        </label>
-                        <textarea id="f-desc" rows="4" placeholder="Write freely about work, schools, army unit, hobbies..."></textarea>
-                    </div>
-                    <input type="hidden" id="f-tags">
+                    <h2 style="font-weight: 300; margin-bottom: 40px; font-size: 28px;">Basic Information</h2>
                     
-                    <!-- Accordion for Edit Mode Connections -->
-                    <div id="edit-connections-accordion" style="display: none; margin-top: 20px; border-top: 1px solid rgba(245,245,245,0.2); padding-top: 15px;">
-                        <div id="btn-toggle-edit-conns" style="cursor: pointer; display: flex; justify-content: space-between; align-items: center; font-weight: bold; font-size: 14px; color: rgba(245,245,245,0.8);">
-                            <span>Edit Connections</span>
-                            <span id="edit-conns-arrow" style="transition: transform 0.3s; font-size: 12px;">▼</span>
+                    <div class="chapter-block" id="edit-name-group" style="display: none;">
+                        <label class="editorial-label">Full Name</label>
+                        <input type="text" id="f-name" class="editorial-input" required>
+                    </div>
+
+                    <div style="display:flex; gap:20px; margin-bottom: 30px;">
+                        <div style="flex:1;">
+                            <label class="editorial-label">Birth Year</label>
+                            <input type="number" id="f-birth-year" class="editorial-input" placeholder="YYYY" min="1900" max="2026">
                         </div>
-                        <div id="edit-connections-content" style="display: none; margin-top: 15px;">
-                            <!-- In edit mode, connections-section is moved here -->
+                        <div style="flex:1;">
+                            <label class="editorial-label">Country</label>
+                            <input type="text" id="f-country" class="editorial-input" placeholder="e.g. Israel">
                         </div>
+                    </div>
+
+                    <div class="chapter-block autocomplete-wrapper">
+                        <label class="editorial-label">Current City</label>
+                        <input type="text" id="f-city" class="editorial-input auto-location" placeholder="Where do they live?">
+                        <div class="autocomplete-dropdown" id="dropdown-f-city"></div>
+                        <div class="dynamic-stats" id="stats-f-city"></div>
+                    </div>
+
+                    <div class="chapter-block autocomplete-wrapper">
+                        <label class="editorial-label">Originally From</label>
+                        <input type="text" id="f-origin-city" class="editorial-input auto-location" placeholder="Hometown">
+                        <div class="autocomplete-dropdown" id="dropdown-f-origin-city"></div>
+                        <div class="dynamic-stats" id="stats-f-origin-city"></div>
+                    </div>
+
+                    <div class="footer-buttons">
+                        <button type="button" class="btn-apple-secondary" id="btn-wizard-back-4">Back</button>
+                        <button type="button" class="btn-apple-primary" id="btn-wizard-next-4">Continue</button>
                     </div>
                 </div>
 
-                <!-- STEP 5: RECOMMENDATIONS -->
+                <!-- STEP 5 CURRENT POSITION -->
                 <div id="wizard-step-5" class="wizard-step">
-                    <div style="text-align: center; margin-bottom: 20px;">
-                        <h2 style="font-weight: 300; margin-bottom: 10px;">People you may know</h2>
-                        <p style="color: rgba(245,245,245,0.6); font-size: 12px;">Based on your details, you might know these people.</p>
+                    <h2 style="font-weight: 300; margin-bottom: 40px; font-size: 28px;">What do they do today?</h2>
+                    
+                    <div class="chapter-block autocomplete-wrapper">
+                        <label class="editorial-label">Current Role</label>
+                        <input type="text" id="f-role" class="editorial-input auto-role" placeholder="e.g. Designer, Developer, Student">
+                        <div class="autocomplete-dropdown" id="dropdown-f-role"></div>
+                        <div class="dynamic-stats" id="stats-f-role"></div>
                     </div>
+
+                    <div class="chapter-block autocomplete-wrapper">
+                        <label class="editorial-label">Current Workplace</label>
+                        <input type="text" id="f-workplace" class="editorial-input auto-work" placeholder="Company or Institution">
+                        <div class="autocomplete-dropdown" id="dropdown-f-workplace"></div>
+                        <div class="dynamic-stats" id="stats-f-workplace"></div>
+                    </div>
+
+                    <div class="footer-buttons">
+                        <button type="button" class="btn-apple-secondary" id="btn-wizard-back-5">Back</button>
+                        <button type="button" class="btn-apple-primary" id="btn-wizard-next-5">Continue</button>
+                    </div>
+                </div>
+
+                <!-- STEP 6 LIFE CHAPTERS -->
+                <div id="wizard-step-6" class="wizard-step">
+                    <h2 style="font-weight: 300; margin-bottom: 10px; font-size: 28px;">Life Chapters</h2>
+                    <p style="color: rgba(245,245,245,0.6); font-size: 14px; margin-bottom: 40px;">Where might people know them from? (Optional)</p>
+                    
+                    <div class="chapter-block autocomplete-wrapper">
+                        <label class="editorial-label">High School</label>
+                        <input type="text" id="f-highschool" class="editorial-input auto-highschool" placeholder="School Name">
+                        <div class="autocomplete-dropdown" id="dropdown-f-highschool"></div>
+                        <div class="dynamic-stats" id="stats-f-highschool"></div>
+                    </div>
+
+                    <div id="israel-military-section" style="display: none;">
+                        <div class="chapter-block autocomplete-wrapper">
+                            <label class="editorial-label">Military Service</label>
+                            <input type="text" id="f-military" class="editorial-input auto-military" placeholder="Unit, Base, or Role">
+                            <div class="autocomplete-dropdown" id="dropdown-f-military"></div>
+                            <div class="dynamic-stats" id="stats-f-military"></div>
+                        </div>
+                    </div>
+
+                    <div class="chapter-block autocomplete-wrapper">
+                        <label class="editorial-label">Higher Education</label>
+                        <input type="text" id="f-education" class="editorial-input auto-education" placeholder="University, College, Course">
+                        <div class="autocomplete-dropdown" id="dropdown-f-education"></div>
+                        <div class="dynamic-stats" id="stats-f-education"></div>
+                    </div>
+
+                    <div class="chapter-block autocomplete-wrapper">
+                        <label class="editorial-label">Previous Work History</label>
+                        <input type="text" id="f-prev-work" class="editorial-input auto-work" placeholder="Previous Company">
+                        <div class="autocomplete-dropdown" id="dropdown-f-prev-work"></div>
+                        <div class="dynamic-stats" id="stats-f-prev-work"></div>
+                    </div>
+
+                    <div class="footer-buttons">
+                        <button type="button" class="btn-apple-secondary" id="btn-wizard-back-6">Back</button>
+                        <button type="button" class="btn-apple-primary" id="btn-wizard-next-6">Continue</button>
+                    </div>
+                </div>
+
+                <!-- STEP 7 ANYTHING ELSE -->
+                <div id="wizard-step-7" class="wizard-step">
+                    <h2 style="font-weight: 300; margin-bottom: 10px; font-size: 28px;">Anything else?</h2>
+                    <p style="color: rgba(245,245,245,0.6); font-size: 14px; margin-bottom: 40px;">What else shaped their path? (Optional)</p>
+                    
+                    <div id="israel-extra-section" style="display: none;">
+                        <div class="chapter-block autocomplete-wrapper">
+                            <label class="editorial-label">Mechina / Gap Year / Youth Movement</label>
+                            <input type="text" id="f-youth" class="editorial-input auto-youth" placeholder="Movement or Program">
+                            <div class="autocomplete-dropdown" id="dropdown-f-youth"></div>
+                            <div class="dynamic-stats" id="stats-f-youth"></div>
+                        </div>
+                    </div>
+
+                    <div class="chapter-block autocomplete-wrapper">
+                        <label class="editorial-label">Community / Volunteer Work</label>
+                        <input type="text" id="f-community" class="editorial-input auto-community" placeholder="Organization or Community">
+                        <div class="autocomplete-dropdown" id="dropdown-f-community"></div>
+                        <div class="dynamic-stats" id="stats-f-community"></div>
+                    </div>
+
+                    <div class="chapter-block autocomplete-wrapper">
+                        <label class="editorial-label">Other Chapter</label>
+                        <input type="text" id="f-other" class="editorial-input auto-other" placeholder="Anything else?">
+                        <div class="autocomplete-dropdown" id="dropdown-f-other"></div>
+                        <div class="dynamic-stats" id="stats-f-other"></div>
+                    </div>
+
+                    <div class="footer-buttons">
+                        <button type="button" class="btn-apple-secondary" id="btn-wizard-back-7">Back</button>
+                        <button type="button" class="btn-apple-primary" id="btn-wizard-next-7">Continue</button>
+                    </div>
+                </div>
+
+                <!-- STEP 8 SHARED PATHS (Suggested Connections) -->
+                <div id="wizard-step-8" class="wizard-step">
+                    <h2 style="font-weight: 300; margin-bottom: 10px; font-size: 28px;">Shared Paths Found</h2>
+                    <p style="color: rgba(245,245,245,0.6); font-size: 14px; margin-bottom: 30px;">Based on these chapters, they might know these people.</p>
                     
                     <div id="recommendation-list"></div>
+
+                    <div class="footer-buttons">
+                        <button type="button" class="btn-apple-secondary" id="btn-wizard-back-8">Back</button>
+                        <button type="button" class="btn-apple-primary" id="btn-wizard-next-8">Continue</button>
+                    </div>
                 </div>
 
-                <!-- STEP 6: CONNECTIONS -->
-                <div id="wizard-step-6" class="wizard-step">
-                    <div style="text-align: center; margin-bottom: 20px;">
-                        <h2 style="font-weight: 300; margin-bottom: 10px;">Add Connections</h2>
-                        <p style="color: rgba(245,245,245,0.6); font-size: 12px;">Add anyone else you know in the network.</p>
-                    </div>
+                <!-- STEP 9 ADD CONNECTIONS -->
+                <div id="wizard-step-9" class="wizard-step">
+                    <h2 style="font-weight: 300; margin-bottom: 10px; font-size: 28px;">Who is already connected to them?</h2>
+                    <p style="color: rgba(245,245,245,0.6); font-size: 14px; margin-bottom: 30px;">Search and add people to link them directly.</p>
                     
-                    <div id="wizard-step-6-original-parent">
+                    <div id="wizard-step-9-original-parent">
                         <div id="connections-section">
                             <div id="connections-list"></div>
-                            <button type="button" class="btn-add-more-conn" id="btn-add-conn-entry">+ Add a connection</button>
+                            <button type="button" class="btn-add-more-conn" id="btn-add-conn-entry" style="width:100%; border:1px dashed rgba(245,245,245,0.3); background:transparent; color:#F5F5F5; padding:15px; border-radius:10px; cursor:pointer;">+ Add a connection</button>
                         </div>
                     </div>
+
+                    <!-- Accordion for Edit Mode Connections -->
+                    <div id="edit-connections-accordion" style="display: none; margin-top: 30px; border-top: 1px solid rgba(245,245,245,0.2); padding-top: 20px;">
+                        <div id="btn-toggle-edit-conns" style="cursor: pointer; display: flex; justify-content: space-between; align-items: center; font-weight: 600; font-size: 16px; color: rgba(245,245,245,0.9);">
+                            <span>Edit Existing Connections</span>
+                            <span id="edit-conns-arrow" style="transition: transform 0.3s; font-size: 12px;">▼</span>
+                        </div>
+                        <div id="edit-connections-content" style="display: none; margin-top: 20px;">
+                        </div>
+                    </div>
+
+                    <div class="footer-buttons">
+                        <button type="button" class="btn-apple-secondary" id="btn-wizard-back-9">Back</button>
+                        <button type="button" class="btn-apple-primary" id="btn-wizard-next-9">Join Network</button>
+                    </div>
                 </div>
-            </div> <!-- End of scrollable wrapper -->
 
-            <div id="wizard-step-1-footer" class="wizard-step active" style="padding: 20px; border-top: 1px solid rgba(245,245,245,0.2); display: flex;">
-                <button type="button" id="btn-wizard-next-1" class="btn-apple-primary">Continue</button>
+                <!-- STEP 10 JOINING ANIMATION -->
+                <div id="wizard-step-10" class="wizard-step" style="text-align: center; padding: 60px 0;">
+                    <div class="scan-spinner" style="border-top-color: #4CAF50;"></div>
+                    <h3 style="font-weight: 300; margin-top: 30px; letter-spacing: 1px; font-size: 24px;" id="join-network-text">A new thread has entered the network.</h3>
+                    <p style="color: rgba(245,245,245,0.5); font-size: 13px; margin-top: 10px;">The Beast has grown.</p>
+                </div>
+
             </div>
 
-            <div id="wizard-step-4-footer" class="wizard-step" style="padding: 20px; border-top: 1px solid rgba(245,245,245,0.2); display: flex; gap: 10px;">
-                <button type="button" class="btn-apple-secondary" id="btn-wizard-back-4">Back</button>
-                <button type="button" class="btn-apple-primary" id="btn-wizard-next-4">Next</button>
+            <!-- NETWORK PREVIEW -->
+            <div class="wizard-preview-area" id="wizard-preview-area" style="display: none;">
+                <h4 style="font-weight: 300; font-size: 14px; letter-spacing: 2px; color: rgba(245,245,245,0.4); margin-bottom: 40px; text-transform: uppercase;">Path</h4>
+                <div id="live-network-preview">
+                    <!-- Nodes added here -->
+                </div>
             </div>
+        </div>
 
-            <div id="wizard-step-4b-footer" class="wizard-step" style="padding: 20px; border-top: 1px solid rgba(245,245,245,0.2); display: flex; gap: 10px;">
-                <button type="button" class="btn-apple-secondary" id="btn-wizard-back-4b">Back</button>
-                <button type="button" class="btn-apple-primary" id="btn-wizard-next-4b">Next</button>
-            </div>
-
-            <div id="wizard-step-5-footer" class="wizard-step" style="padding: 20px; border-top: 1px solid rgba(245,245,245,0.2); display: flex; gap: 10px;">
-                <button type="button" class="btn-apple-secondary" id="btn-wizard-back-5">Back</button>
-                <button type="button" class="btn-apple-primary" id="btn-wizard-next-5">Continue</button>
-            </div>
-
-            <div id="wizard-step-6-footer" class="wizard-step" style="padding: 20px; border-top: 1px solid rgba(245,245,245,0.2); display: flex; gap: 10px;">
-                <button type="button" class="btn-apple-secondary" id="btn-wizard-back-6">Back</button>
-                <button type="submit" class="btn-apple-primary" id="btn-submit-form">SAVE TO NETWORK</button>
-            </div>
         </form>
     </div>
 
@@ -2333,7 +2544,47 @@
             }
             document.getElementById('info-description').innerHTML = descText;
             
-            // Tags are handled internally and are no longer displayed on the info card
+            // Extract chapters from tags
+            const chaptersContainer = document.getElementById('info-chapters');
+            if (chaptersContainer) {
+                chaptersContainer.innerHTML = '';
+                let chaptersHTML = '';
+                
+                const prefixMap = {
+                    'workplace': 'Current Workplace',
+                    'highschool': 'High School',
+                    'military': 'Military Service',
+                    'education': 'Higher Education',
+                    'prevwork': 'Previous Work',
+                    'youth': 'Youth Movement / Mechina',
+                    'community': 'Community',
+                    'other': 'Other'
+                };
+                
+                if (person.tags) {
+                    const tArr = Array.isArray(person.tags) ? person.tags : person.tags.split(',');
+                    tArr.forEach(t => {
+                        t = t.trim();
+                        if (t.includes(':')) {
+                            const parts = t.split(':');
+                            const prefix = parts[0].trim().toLowerCase();
+                            const val = parts.slice(1).join(':').trim();
+                            if (prefixMap[prefix] && val) {
+                                chaptersHTML += `
+                                    <div style="margin-bottom: 15px;">
+                                        <div style="font-size: 10px; color: rgba(245,245,245,0.4); text-transform: uppercase; letter-spacing: 1.5px; margin-bottom: 4px; font-weight: 200;">${prefixMap[prefix]}</div>
+                                        <div style="font-size: 14px; color: rgba(245,245,245,0.9); font-weight: 300; letter-spacing: 0.5px;">${val}</div>
+                                    </div>
+                                `;
+                            }
+                        }
+                    });
+                }
+                
+                if (chaptersHTML) {
+                    chaptersContainer.innerHTML = `<div style="border-top: 1px solid rgba(245,245,245,0.2); padding-top: 15px;">${chaptersHTML}</div>`;
+                }
+            }
             
             const connListDiv = document.getElementById('info-connections-list');
             const connSecCard = document.getElementById('conn-secondary-card');
@@ -3016,6 +3267,8 @@
             }
         }
 
+
+        // --- NEW WIZARD LOGIC ---
         function goToWizardStep(step) {
             currentWizardStep = step;
             document.querySelectorAll('.wizard-step').forEach(el => {
@@ -3023,35 +3276,287 @@
                 el.style.display = 'none';
             });
             
-            const targets = document.querySelectorAll(`#wizard-step-${step}, #wizard-step-${step}-footer`);
-            targets.forEach(target => {
-                if (target.id.includes('footer')) {
-                    target.style.display = 'flex';
-                } else {
-                    target.style.display = 'block';
-                }
-                // Trigger reflow
-                void target.offsetWidth;
-                target.classList.add('active');
-            });
-
-            // Ensure Back button in step 6 footer is visible in wizard mode
-            const backBtn6 = document.getElementById('btn-wizard-back-6');
-            if (backBtn6) backBtn6.style.display = 'block';
+            const stepEl = document.getElementById(`wizard-step-${step}`);
+            if (stepEl) {
+                stepEl.style.display = 'block';
+                void stepEl.offsetWidth; // reflow
+                stepEl.classList.add('active');
+            }
             
-            updateProgressBar(step);
-            
-            const backBtn = document.getElementById('btn-wizard-back');
-            if (backBtn) {
-                if (step === 1 || step === 2 || step === 3) {
-                    backBtn.style.display = 'none';
-                } else {
-                    backBtn.style.display = 'block';
-                }
+            const previewArea = document.getElementById('wizard-preview-area');
+            if (step >= 4 && step <= 9) {
+                previewArea.style.display = 'flex';
+            } else {
+                previewArea.style.display = 'none';
             }
         }
-        
-        
+
+        function addNodeToPreview(label, value) {
+            if (!value) return;
+            const previewContainer = document.getElementById('live-network-preview');
+            
+            // Add line if not first node
+            if (previewContainer.children.length > 0) {
+                const line = document.createElement('div');
+                line.className = 'preview-line';
+                previewContainer.appendChild(line);
+            }
+            
+            const node = document.createElement('div');
+            node.className = 'preview-node';
+            node.innerHTML = `
+                <div class="preview-dot"></div>
+                <div class="preview-text">${value}</div>
+                <div style="font-size: 10px; color: rgba(245,245,245,0.4); text-transform: uppercase;">${label}</div>
+            `;
+            previewContainer.appendChild(node);
+            
+            // Scroll to bottom of preview
+            const previewArea = document.getElementById('wizard-preview-area');
+            previewArea.scrollTop = previewArea.scrollHeight;
+        }
+
+        // --- WIZARD EVENT LISTENERS ---
+        document.getElementById('btn-wizard-next-1').addEventListener('click', () => {
+            const nameInput = document.getElementById('f-name-initial').value.trim();
+            if (!nameInput) {
+                alert("Please enter a name first.");
+                return;
+            }
+            
+            document.getElementById('f-name').value = nameInput;
+            document.getElementById('live-network-preview').innerHTML = ''; // reset preview
+            addNodeToPreview('Name', nameInput);
+            
+            goToWizardStep(2);
+            
+            setTimeout(() => {
+                const matchIndex = people.findIndex(p => p.name.toLowerCase() === nameInput.toLowerCase());
+                if (matchIndex !== -1) {
+                    const match = people[matchIndex];
+                    document.getElementById('match-name').textContent = match.name;
+                    document.getElementById('match-role').textContent = match.role || 'Unknown Role';
+                    document.getElementById('match-city').textContent = match.city || 'Unknown City';
+                    document.getElementById('btn-match-yes').dataset.matchIndex = matchIndex;
+                    goToWizardStep(3);
+                } else {
+                    document.getElementById('form-mode').value = 'add';
+                    goToWizardStep(4);
+                }
+            }, 1500);
+        });
+
+        document.getElementById('btn-match-yes').addEventListener('click', (e) => {
+            const matchIndex = parseInt(e.currentTarget.dataset.matchIndex);
+            closeModal();
+            setTimeout(() => {
+                selectNode(matchIndex, true);
+            }, 300);
+        });
+
+        document.getElementById('btn-match-no').addEventListener('click', () => {
+            document.getElementById('form-mode').value = 'add';
+            document.getElementById('form-person-id').value = '';
+            goToWizardStep(4);
+        });
+
+        document.getElementById('btn-wizard-back-4').addEventListener('click', () => goToWizardStep(1));
+        document.getElementById('btn-wizard-next-4').addEventListener('click', () => {
+            const birthYear = document.getElementById('f-birth-year').value;
+            if (birthYear) {
+                const currentYear = new Date().getFullYear();
+                document.getElementById('f-age').value = currentYear - parseInt(birthYear);
+            }
+            const country = document.getElementById('f-country').value.trim().toLowerCase();
+            const city = document.getElementById('f-city').value.trim();
+            const originCity = document.getElementById('f-origin-city').value.trim();
+            
+            if (city) addNodeToPreview('City', city);
+            if (originCity && originCity !== city) addNodeToPreview('Origin', originCity);
+            
+            // Conditional Israel logic
+            if (country === 'israel' || country === 'il' || country === 'ישראל') {
+                document.getElementById('israel-military-section').style.display = 'block';
+                document.getElementById('israel-extra-section').style.display = 'block';
+            } else {
+                document.getElementById('israel-military-section').style.display = 'none';
+                document.getElementById('israel-extra-section').style.display = 'none';
+            }
+            
+            goToWizardStep(5);
+        });
+
+        document.getElementById('btn-wizard-back-5').addEventListener('click', () => goToWizardStep(4));
+        document.getElementById('btn-wizard-next-5').addEventListener('click', () => {
+            const role = document.getElementById('f-role').value.trim();
+            const workplace = document.getElementById('f-workplace').value.trim();
+            if (role) addNodeToPreview('Role', role);
+            if (workplace) addNodeToPreview('Workplace', workplace);
+            goToWizardStep(6);
+        });
+
+        document.getElementById('btn-wizard-back-6').addEventListener('click', () => goToWizardStep(5));
+        document.getElementById('btn-wizard-next-6').addEventListener('click', () => {
+            const highschool = document.getElementById('f-highschool').value.trim();
+            const military = document.getElementById('f-military').value.trim();
+            const education = document.getElementById('f-education').value.trim();
+            const prevWork = document.getElementById('f-prev-work').value.trim();
+            
+            if (highschool) addNodeToPreview('High School', highschool);
+            if (military) addNodeToPreview('Military', military);
+            if (education) addNodeToPreview('Education', education);
+            if (prevWork) addNodeToPreview('Previous Work', prevWork);
+            
+            goToWizardStep(7);
+        });
+
+        document.getElementById('btn-wizard-back-7').addEventListener('click', () => goToWizardStep(6));
+        document.getElementById('btn-wizard-next-7').addEventListener('click', () => {
+            const youth = document.getElementById('f-youth').value.trim();
+            const community = document.getElementById('f-community').value.trim();
+            const other = document.getElementById('f-other').value.trim();
+            
+            if (youth) addNodeToPreview('Youth Movement', youth);
+            if (community) addNodeToPreview('Community', community);
+            if (other) addNodeToPreview('Other', other);
+            
+            // Serialize chapters into tags and description
+            let generatedTags = [];
+            let generatedDesc = [];
+            
+            const addField = (val, prefix, isTag=true) => {
+                if (val) {
+                    if (isTag) generatedTags.push(`${prefix}:${val}`);
+                    generatedDesc.push(`${prefix}: ${val}`);
+                }
+            };
+            
+            addField(document.getElementById('f-workplace').value.trim(), 'workplace');
+            addField(document.getElementById('f-highschool').value.trim(), 'highschool');
+            addField(document.getElementById('f-military').value.trim(), 'military');
+            addField(document.getElementById('f-education').value.trim(), 'education');
+            addField(document.getElementById('f-prev-work').value.trim(), 'prevwork');
+            addField(document.getElementById('f-youth').value.trim(), 'youth');
+            addField(document.getElementById('f-community').value.trim(), 'community');
+            addField(document.getElementById('f-other').value.trim(), 'other');
+            
+            document.getElementById('f-tags').value = generatedTags.join(', ');
+            document.getElementById('f-desc').value = generatedDesc.join('\n');
+            
+            // Generate Recommendations based on these new tags
+            generateRecommendations();
+            
+            goToWizardStep(8);
+        });
+
+        document.getElementById('btn-wizard-back-8').addEventListener('click', () => goToWizardStep(7));
+        document.getElementById('btn-wizard-next-8').addEventListener('click', () => {
+            goToWizardStep(9);
+        });
+
+        document.getElementById('btn-wizard-back-9').addEventListener('click', () => goToWizardStep(8));
+        document.getElementById('btn-wizard-next-9').addEventListener('click', () => {
+            goToWizardStep(10);
+            
+            setTimeout(() => {
+                // Trigger form submission
+                const addForm = document.getElementById('add-form');
+                if (addForm) {
+                    addForm.dispatchEvent(new Event('submit', { cancelable: true, bubbles: true }));
+                }
+            }, 1500);
+        });
+
+        // --- AUTOCOMPLETE LOGIC ---
+        function setupAutocomplete(inputId, prefix) {
+            const input = document.getElementById(inputId);
+            const dropdown = document.getElementById('dropdown-' + inputId);
+            const stats = document.getElementById('stats-' + inputId);
+            if (!input || !dropdown || !stats) return;
+
+            input.addEventListener('input', () => {
+                const val = input.value.trim().toLowerCase();
+                dropdown.innerHTML = '';
+                stats.innerHTML = '';
+                
+                if (!val) {
+                    dropdown.style.display = 'none';
+                    return;
+                }
+                
+                // Count occurrences from people array
+                let counts = {};
+                people.forEach(p => {
+                    // Check direct fields
+                    if (prefix === 'city' && p.city) {
+                        const c = p.city.trim();
+                        counts[c] = (counts[c] || 0) + 1;
+                    } else if (prefix === 'role' && p.role) {
+                        const r = p.role.trim();
+                        counts[r] = (counts[r] || 0) + 1;
+                    }
+                    
+                    // Check tags
+                    if (p.tags) {
+                        const tArr = Array.isArray(p.tags) ? p.tags : p.tags.split(',');
+                        tArr.forEach(t => {
+                            t = t.trim();
+                            if (t.toLowerCase().startsWith(prefix + ':')) {
+                                const cleanVal = t.substring(prefix.length + 1).trim();
+                                counts[cleanVal] = (counts[cleanVal] || 0) + 1;
+                            }
+                        });
+                    }
+                });
+                
+                // Filter and sort
+                const suggestions = Object.keys(counts)
+                    .filter(k => k.toLowerCase().includes(val))
+                    .sort((a, b) => counts[b] - counts[a])
+                    .slice(0, 5);
+                
+                if (suggestions.length > 0) {
+                    suggestions.forEach(s => {
+                        const div = document.createElement('div');
+                        div.className = 'autocomplete-item';
+                        div.innerHTML = `<span>${s}</span> <span class="autocomplete-count">${counts[s]} people</span>`;
+                        div.onclick = () => {
+                            input.value = s;
+                            dropdown.style.display = 'none';
+                            stats.innerHTML = `${counts[s]} people in the network are connected to this.`;
+                        };
+                        dropdown.appendChild(div);
+                    });
+                    dropdown.style.display = 'block';
+                } else {
+                    dropdown.style.display = 'none';
+                    stats.innerHTML = `You are the first one in the network to add this!`;
+                }
+            });
+
+            // Close dropdown when clicking outside
+            document.addEventListener('click', (e) => {
+                if (e.target !== input && e.target !== dropdown) {
+                    dropdown.style.display = 'none';
+                }
+            });
+        }
+
+        // Initialize autocompletes
+        setupAutocomplete('f-city', 'city');
+        setupAutocomplete('f-origin-city', 'city');
+        setupAutocomplete('f-role', 'role');
+        setupAutocomplete('f-workplace', 'workplace');
+        setupAutocomplete('f-highschool', 'highschool');
+        setupAutocomplete('f-military', 'military');
+        setupAutocomplete('f-education', 'education');
+        setupAutocomplete('f-prev-work', 'prevwork');
+        setupAutocomplete('f-youth', 'youth');
+        setupAutocomplete('f-community', 'community');
+        setupAutocomplete('f-other', 'other');
+
+
+
         const discoverModal = document.getElementById('discover-modal');
         const discoverList = document.getElementById('discover-list');
         
@@ -3161,152 +3666,6 @@
             overlay.style.display = 'none';
         });
 
-        document.getElementById('btn-wizard-back-4').addEventListener('click', () => goToWizardStep(1));
-        document.getElementById('btn-wizard-back-4b').addEventListener('click', () => goToWizardStep(4));
-        document.getElementById('btn-wizard-back-5').addEventListener('click', () => goToWizardStep('4b'));
-        document.getElementById('btn-wizard-back-6').addEventListener('click', () => goToWizardStep(5));
-
-        // --- Real-time Auto-Tagging on Blur ---
-        function updateAutoTags() {
-            const fCity = document.getElementById('f-city').value.trim();
-            const fRole = document.getElementById('f-role').value.trim();
-            const fDesc = document.getElementById('f-desc').value.trim();
-            let currentTags = document.getElementById('f-tags').value.split(',').map(t => t.trim()).filter(Boolean);
-            
-            // Remove previous auto-tags so they don't pile up while editing
-            currentTags = currentTags.filter(t => !t.startsWith('#auto_'));
-            
-            if (fCity) {
-                const cityTag = '#' + fCity.replace(/\s+/g, '');
-                if (!currentTags.some(t => t.toLowerCase() === cityTag.toLowerCase())) {
-                    currentTags.push(cityTag); // Add visually
-                }
-            }
-            if (fRole) {
-                const roleTag = '#' + fRole.replace(/\s+/g, '');
-                if (!currentTags.some(t => t.toLowerCase() === roleTag.toLowerCase())) {
-                    currentTags.push(roleTag);
-                }
-            }
-            
-            if (fDesc) {
-                // 1. Gather all known tags, cities, and roles from the network
-                let allKnownTags = new Set();
-                people.forEach(p => {
-                    if (p.city) allKnownTags.add(p.city.trim().toLowerCase());
-                    if (p.role) allKnownTags.add(p.role.trim().toLowerCase());
-                    const pTags = p.tags ? (Array.isArray(p.tags) ? p.tags : p.tags.split(',').map(t=>t.trim().replace(/^#/, ''))).filter(Boolean) : [];
-                    pTags.forEach(t => allKnownTags.add(t.toLowerCase()));
-                });
-                
-                // 2. Add our synonym dictionary
-                const synonymWords = [
-                    'עיצוב', 'תקשורת חזותית', 'visual communication', 'designer', 'מעצבת', 'מעצב', 'design', 'ux', 'ui',
-                    'אוניברסיטת חיפה', 'haifa university', 'university of haifa', 'ויצו חיפה', 'wizo',
-                    'אילניה', 'ilaniya', 'ilania', 'מושב אילניה',
-                    'haifa', 'kfar saba', 'pardes hanna karkur', 'zikhron ya\'akov', 'kiryat tiv\'on', 'ramat yishai', 'nazareth', 'nof hagalil', 'afula', 'migdal haemek', 'yokneam', 'karmiel', 'acre', 'akko', 'nahariya', 'safed', 'tzfat', 'tiberias', 'rosh pinna', 'kfar vradim', 'shlomi', 'binyamina', 'pardes hanna-karkur', 'kfar tavor', 'nahalal', 'yavne\'el', 'yesud hama\'ala', 'beit hillel', 'sde nehemia', 'amirim', 'ramot naftali', 'alonei abba', 'tzippori', 'sharona', 'moledet', 'givat avni',
-                    'computer science', 'מדעי המחשב', 'cs', 'software engineering', 'הנדסת תוכנה', 'electrical engineering', 'הנדסת חשמל', 'ee', 'industrial engineering', 'הנדסת תעשייה וניהול', 'תעשייה וניהול', 'business administration', 'מנהל עסקים', 'economics', 'כלכלה', 'psychology', 'פסיכולוגיה', 'law', 'משפטים', 'עריכת דין', 'medicine', 'רפואה', 'nursing', 'סיעוד', 'education', 'חינוך', 'הוראה', 'accounting', 'ראיית חשבון', 'חשבונאות', 'architecture', 'אדריכלות', 'ארכיטקטורה', 'marketing', 'שיווק', 'communications', 'תקשורת', 'data science', 'מדע הנתונים', 'דאטה סיינס', 'political science', 'מדעי המדינה', 'social work', 'עבודה סוציאלית', 'biology', 'ביולוגיה', 'mechanical engineering', 'הנדסת מכונות',
-                    'tel aviv university', 'tau', 'אוניברסיטת תל אביב', 'hebrew university', 'huji', 'האוניברסיטה העברית', 'technion', 'הטכניון', 'weizmann institute of science', 'מכון ויצמן', 'weizmann', 'ben gurion university', 'bgu', 'אוניברסיטת בן גוריון', 'בן גוריון', 'bar ilan university', 'biu', 'בר אילן', 'bar ilan', 'reichman university', 'idc', 'רייכמן', 'הבינתחומי', 'shenkar', 'שנקר', 'bezalel', 'בצלאל', 'colman', 'המכללה למינהל', 'מכללה למנהל', 'the college of management', 'open university', 'האוניברסיטה הפתוחה', 'holon institute of technology', 'hit', 'מכון טכנולוגי חולון',
-                    'software engineer', 'full stack developer', 'frontend developer', 'backend developer', 'mobile developer', 'ios developer', 'android developer', 'web developer', 'game developer', 'devops engineer', 'site reliability engineer', 'sre', 'cloud engineer', 'cloud architect', 'solutions architect', 'data engineer', 'data analyst', 'data scientist', 'machine learning engineer', 'ai engineer', 'ai researcher', 'prompt engineer', 'cybersecurity analyst', 'cybersecurity engineer', 'information security manager', 'penetration tester', 'soc analyst', 'qa engineer', 'automation engineer', 'test engineer', 'product manager', 'technical product manager', 'project manager', 'program manager', 'scrum master', 'business analyst', 'systems analyst', 'ux designer', 'ui designer', 'ux researcher', 'product designer', 'service designer', 'interaction designer', 'technical writer', 'solutions consultant', 'customer success manager', 'technical support engineer', 'sales engineer', 'presales engineer', 'it manager', 'it administrator', 'database administrator', 'dba', 'network engineer', 'embedded systems engineer', 'hardware engineer', 'electronics engineer', 'robotics engineer', 'computer vision engineer', 'blockchain developer', 'ar/vr developer', 'marketing manager', 'digital marketing manager', 'brand manager', 'marketing director', 'chief marketing officer', 'cmo', 'performance marketing manager', 'growth marketing manager', 'product marketing manager', 'content marketing manager', 'social media manager', 'community manager', 'influencer marketing manager', 'email marketing specialist', 'seo specialist', 'sem specialist', 'ppc specialist', 'marketing specialist', 'marketing coordinator', 'marketing analyst', 'market research analyst', 'brand strategist', 'creative strategist', 'communications manager', 'public relations manager', 'pr manager', 'pr specialist', 'media planner', 'media buyer', 'campaign manager', 'advertising manager', 'copywriter', 'content creator', 'content manager', 'content strategist', 'creative director', 'art director', 'graphic designer', 'ux writer', 'crm manager', 'partnership manager', 'business development manager', 'event manager', 'event producer', 'e-commerce manager', 'affiliate marketing manager', 'influencer relations manager', 'marketing consultant', 'freelancer',
-                    'google', 'microsoft', 'apple', 'amazon', 'nvidia', 'intel', 'meta', 'facebook', 'ibm', 'salesforce', 'monday.com', 'monday', 'wix', 'fiverr', 'check point', 'checkpoint', 'cyberark', 'nice', 'amdocs', 'playtika', 'etoro', 'taboola', 'outbrain',
-                    'golani', 'givati', 'nahal', 'paratroopers', 'tzanhanim', 'kfir', 'armored corps', 'shiryon', 'artillery', 'totchanim', 'combat engineering', 'handasa kravit', 'air force', 'heil haavir', 'navy', 'heil hayam', 'home front command', 'pikud haoref', 'border police', 'magav', 'intelligence', 'aman', 'general staff reconnaissance', 'sayeret matkal', 'naval commandos', 'shayetet 13', 'air force commandos', 'shaldag', 'special forces', 'maglan', 'undercover unit', 'duvdevan', 'reconnaissance unit', 'egoz', 'combat engineering special forces', 'yahalom', 'k9 unit', 'oketz', 'combat search and rescue', 'unit 669', 'signals intelligence', 'unit 8200', '8200', 'counter-terror', 'lotar',
-                    'welfare nco', 'mashakit tash', 'combat soldier', 'lochem', 'lochemet', 'education nco', 'mashakit chinuch', 'operations room controller', 'sambatzit', 'commander', 'mefaked', 'mefakedet', 'intelligence analyst', 'modiin', 'infantry instructor', 'madrichat chir', 'combat instructor', 'madrichat krav', 'training instructor', 'madricha', 'operations nco', 'mashak mivtzaim', 'human resources nco', 'mashakit koach adam',
-                    'bahad 1', 'bahad 7', 'bahad 12', 'glilot', 'kirya', 'tel hashomer', 'ir habahadim', 'tzrifin', 'nevatim', 'hatzerim', 'ramat david', 'palmachim', 'ramon', 'ovda', 'ze\'elim', 'zeelim', 're\'im', 'reim', 'urim', 'nafah', 'saar 474', 'barak 188', 'golani 1', 'givati 84', 'nahal 933', 'tzanhanim 35', 'kfir 900', 'harel 10', 'alexandroni 3', 'carmeli 2',
-                    'reali', 'alliance', 'gymnasia herzliya', 'gymnasia', 'leo baeck', 'thelma yellin', 'kfar hayarok', 'mosinson', 'hadassim', 'ben shemen', 'kadoorie', 'wizo nahalal', 'shevach mofet', 'boyar', 'leyada', 'harel', 'ort', 'ort singalovski', 'ort bialik', 'ort motzkin', 'ort ginzburg', 'amal', 'atid', 'darca', 'branco weiss', 'ironi alef', 'ironi bet', 'ironi gimel', 'ironi dalet', 'ironi hey', 'ironi vav', 'makif alef', 'makif bet', 'makif gimel', 'makif dalet', 'makif hey', 'makif vav', 'makif zayin', 'makif het', 'rabin', 'begin', 'blich', 'בליך', 'misgav', 'משגב', 'yifat', 'יפעת',
-                    'derech eretz', 'nitzana', 'kmehin', 'ein yahav', 'ashalim', 'bnei david', 'ein prat', 'nachshon', 'gal', 'maayan baruch', 'tavor', 'lachish', 'arava', 'yachad', 'hanegev', 'aderet', 'keshet yehuda', 'haruach haisraelit', 'meitar', 'kol ami', 'mechinat rabin'
-                ];
-                synonymWords.forEach(w => allKnownTags.add(w));
-                
-                // 3. Scan description ONLY for these known concepts
-                const descLower = fDesc.toLowerCase();
-                allKnownTags.forEach(word => {
-                    // Only add if the description contains this exact known concept
-                    if (word && word.length > 2 && descLower.includes(word)) {
-                        const newTag = '#' + word.replace(/\s+/g, '');
-                        if (!currentTags.some(t => t.toLowerCase() === newTag.toLowerCase())) {
-                            currentTags.push(newTag);
-                        }
-                    }
-                });
-            }
-            
-            document.getElementById('f-tags').value = currentTags.join(', ');
-        }
-        
-        document.getElementById('f-city').addEventListener('blur', updateAutoTags);
-        document.getElementById('f-role').addEventListener('blur', updateAutoTags);
-        document.getElementById('f-desc').addEventListener('blur', updateAutoTags);
-
-        document.getElementById('btn-wizard-next-1').addEventListener('click', () => {
-            const nameInput = document.getElementById('f-name-initial').value.trim();
-            if (!nameInput) {
-                alert("Please enter a name first.");
-                return;
-            }
-            
-            document.getElementById('f-name').value = nameInput;
-            goToWizardStep(2);
-            
-            setTimeout(() => {
-                const matchIndex = people.findIndex(p => p.name.toLowerCase() === nameInput.toLowerCase());
-                if (matchIndex !== -1) {
-                    const match = people[matchIndex];
-                    document.getElementById('match-name').textContent = match.name;
-                    document.getElementById('match-role').textContent = match.role || 'Unknown Role';
-                    document.getElementById('match-city').textContent = match.city || 'Unknown City';
-                    document.getElementById('btn-match-yes').dataset.matchIndex = matchIndex;
-                    goToWizardStep(3);
-                } else {
-                    document.getElementById('form-mode').value = 'add';
-                    goToWizardStep(4);
-                }
-            }, 1500);
-        });
-
-        document.getElementById('btn-match-yes').addEventListener('click', (e) => {
-            const matchIndex = parseInt(e.currentTarget.dataset.matchIndex);
-            closeModal();
-            setTimeout(() => {
-                selectNode(matchIndex, true);
-            }, 300);
-        });
-
-        document.getElementById('btn-match-no').addEventListener('click', () => {
-            document.getElementById('form-mode').value = 'add';
-            document.getElementById('form-person-id').value = '';
-            goToWizardStep(4);
-        });
-
-        document.getElementById('f-same-city').addEventListener('change', (e) => {
-            const originCityInput = document.getElementById('f-origin-city');
-            if (e.target.checked) {
-                originCityInput.value = document.getElementById('f-city').value;
-                originCityInput.disabled = true;
-                originCityInput.style.opacity = '0.5';
-            } else {
-                originCityInput.disabled = false;
-                originCityInput.style.opacity = '1';
-                originCityInput.value = '';
-            }
-        });
-
-        document.getElementById('btn-wizard-next-4').addEventListener('click', () => {
-            const birthYear = document.getElementById('f-birth-year').value;
-            if (birthYear) {
-                const currentYear = new Date().getFullYear();
-                document.getElementById('f-age').value = currentYear - parseInt(birthYear);
-            }
-            goToWizardStep('4b');
-        });
-        
-        document.getElementById('btn-wizard-next-4b').addEventListener('click', () => {
-            // Generate Recommendations
-            generateRecommendations();
-        });
-
-        document.getElementById('btn-wizard-next-5').addEventListener('click', () => {
-            goToWizardStep(6);
-        });
 
 
         function calculateMatchScore(p1, p2) {
@@ -3476,9 +3835,9 @@
             }
 
             const p1 = {
-                age: document.getElementById('f-age').value.trim(),
-                city: document.getElementById('f-city').value.trim(),
-                role: document.getElementById('f-role').value.trim(),
+                age: document.getElementById('f-age') ? document.getElementById('f-age').value.trim() : '',
+                city: document.getElementById('f-city') ? document.getElementById('f-city').value.trim() : '',
+                role: document.getElementById('f-role') ? document.getElementById('f-role').value.trim() : '',
                 description: desc,
                 tags: tags
             };
@@ -3486,58 +3845,57 @@
             let scores = [];
             people.forEach(p => {
                 const result = calculateMatchScore(p1, p);
-                if (result.score >= 15) { // Reduced threshold back to 15 so single matches (like City) trigger a suggestion
-                    scores.push({ person: p, score: result.score });
+                if (result.score >= 15) {
+                    scores.push({ person: p, score: result.score, shared: result.sharedConcepts });
                 }
             });
             
             scores.sort((a, b) => b.score - a.score);
-            let pendingRecs = scores.map(s => s.person);
+            let pendingRecs = scores.map(s => ({person: s.person, shared: s.shared}));
             
             const recList = document.getElementById('recommendation-list');
             recList.innerHTML = '';
             
             if (pendingRecs.length === 0) {
-                goToWizardStep(6);
+                document.getElementById('wizard-step-8').style.display = 'none'; // skip
+                goToWizardStep(9);
                 return;
             }
             
-            function renderNextRec() {
-                if (pendingRecs.length === 0) {
-                    if (recList.children.length === 0) goToWizardStep(6);
-                    return;
-                }
-                const p = pendingRecs.shift();
+            const recsToRender = pendingRecs.slice(0, 5);
+            recsToRender.forEach(rec => {
+                const p = rec.person;
+                const sharedConcepts = rec.shared || [];
                 const div = document.createElement('div');
-                div.style.cssText = 'background: rgba(245,245,245,0.05); border: 1px solid rgba(245,245,245,0.2); border-radius: 10px; padding: 15px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; transition: 0.3s;';
+                div.style.cssText = 'background: rgba(245,245,245,0.05); border: 1px solid rgba(245,245,245,0.2); border-radius: 10px; padding: 15px; margin-bottom: 15px; display: flex; justify-content: space-between; align-items: center; transition: 0.3s; flex-direction: column; gap: 10px; align-items: stretch;';
+                
+                let sharedHTML = '';
+                if (sharedConcepts.length > 0) {
+                    sharedHTML = `<div style="font-size: 11px; color: #4CAF50; background: rgba(76, 175, 80, 0.1); padding: 4px 8px; border-radius: 4px; display: inline-block;">Shared: ${sharedConcepts.join(', ')}</div>`;
+                }
+
                 div.innerHTML = `
-                    <div>
-                        <div style="font-size: 14px; font-weight: bold;">${p.name}</div>
-                        <div style="font-size: 10px; color: rgba(245,245,245,0.6);">${p.role || ''} • ${p.city || ''}</div>
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                        <div>
+                            <div style="font-size: 16px; font-weight: bold; color: #F5F5F5;">${p.name}</div>
+                            <div style="font-size: 12px; color: rgba(245,245,245,0.6);">${p.role || ''} • ${p.city || ''}</div>
+                        </div>
+                        <button type="button" class="btn-add-rec" data-id="${p.id}" style="background: white; color: black; border: none; padding: 8px 16px; border-radius: 10px; font-weight: bold; font-size: 12px; cursor: pointer;">Connect</button>
                     </div>
-                    <button type="button" class="btn-add-rec" data-id="${p.id}" style="background: white; color: black; border: none; padding: 6px 12px; border-radius: 10px; font-weight: bold; font-size: 10px; cursor: pointer;">Add</button>
+                    ${sharedHTML}
                 `;
                 recList.appendChild(div);
                 
                 div.querySelector('.btn-add-rec').addEventListener('click', (e) => {
                     const id = parseInt(e.target.dataset.id);
                     addConnectionEntry(id, 'acquaintance', 3);
-                    div.style.opacity = '0';
-                    setTimeout(() => {
-                        div.remove();
-                        renderNextRec();
-                    }, 300);
+                    e.target.textContent = 'Added';
+                    e.target.style.background = '#333';
+                    e.target.style.color = '#fff';
+                    e.target.disabled = true;
                 });
-            }
-            
-            // Initial render up to 3
-            for(let i=0; i<3; i++) {
-                if(pendingRecs.length > 0) renderNextRec();
-            }
-            
-            goToWizardStep(5);
+            });
         }
-        
 
         function openModal(mode, personData = null, defaultConnectionNodeId = null) {
             modal.classList.add('visible');
@@ -3556,7 +3914,7 @@
                 document.getElementById('f-name-initial').value = '';
                 document.getElementById('connections-section').style.display = 'block';
                 // Move connections back to step 6 for Add flow
-                document.getElementById('wizard-step-6-original-parent').appendChild(document.getElementById('connections-section'));
+                document.getElementById('wizard-step-9-original-parent').appendChild(document.getElementById('connections-section'));
                 document.getElementById('edit-connections-accordion').style.display = 'none';
 
                 if (defaultConnectionNodeId !== null && people[defaultConnectionNodeId]) {
@@ -3564,7 +3922,7 @@
                 } else {
                     addConnectionEntry();
                 }
-                goToWizardStep(1);
+                goToWizardStep(0);
             } else if (mode === 'edit') {
                 const instr = document.getElementById('add-person-instructions');
                 if (instr) instr.style.display = 'none';
