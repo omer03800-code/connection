@@ -1162,35 +1162,35 @@
                     <h2>Life Chapters</h2>
                     <p class="step-explanation">Where might people know them from? (Optional)</p>
                     
-                    <div class="chapter-block autocomplete-wrapper">
+                    <div class="chapter-block autocomplete-wrapper" style="z-index: 50;">
                         <label class="editorial-label">High School</label>
                         <input type="text" id="f-highschool" class="editorial-input auto-highschool" placeholder="School Name">
                         <div class="autocomplete-dropdown" id="dropdown-f-highschool"></div>
                         <div class="dynamic-stats" id="stats-f-highschool"></div>
                     </div>
 
-                    <div class="chapter-block autocomplete-wrapper">
+                    <div class="chapter-block autocomplete-wrapper" style="z-index: 40;">
                         <label class="editorial-label">Military Service</label>
                         <input type="text" id="f-military" class="editorial-input auto-military" placeholder="Unit, Base, or Role">
                         <div class="autocomplete-dropdown" id="dropdown-f-military"></div>
                         <div class="dynamic-stats" id="stats-f-military"></div>
                     </div>
 
-                    <div class="chapter-block autocomplete-wrapper">
+                    <div class="chapter-block autocomplete-wrapper" style="z-index: 30;">
                         <label class="editorial-label">Higher Education</label>
                         <input type="text" id="f-education" class="editorial-input auto-education" placeholder="University, College, Course">
                         <div class="autocomplete-dropdown" id="dropdown-f-education"></div>
                         <div class="dynamic-stats" id="stats-f-education"></div>
                     </div>
 
-                    <div class="chapter-block autocomplete-wrapper">
+                    <div class="chapter-block autocomplete-wrapper" style="z-index: 20;">
                         <label class="editorial-label">Previous Work History</label>
                         <input type="text" id="f-prev-work" class="editorial-input auto-work" placeholder="Previous Company">
                         <div class="autocomplete-dropdown" id="dropdown-f-prev-work"></div>
                         <div class="dynamic-stats" id="stats-f-prev-work"></div>
                     </div>
 
-                    <div class="chapter-block autocomplete-wrapper" style="display: flex; gap: 10px; align-items: flex-end;">
+                    <div class="chapter-block autocomplete-wrapper" style="display: flex; gap: 10px; align-items: flex-end; z-index: 10;">
                         <div style="flex: 1;">
                             <label class="editorial-label">Anything Else?</label>
                             <select id="f-other-category" class="editorial-input" style="padding: 10px 0; outline: none; background: transparent; color: #F5F5F5; border: none; border-bottom: 1px solid rgba(245,245,245,0.4); font-size: 14px;">
@@ -3715,6 +3715,47 @@
             const stats = document.getElementById('stats-' + inputId);
             if (!input || !dropdown || !stats) return;
 
+            const PREDEFINED = {
+                'highschool': [
+                    'The Hebrew Reali School (Reali)', 'Alliance High School (Alliance)', 'Ironi Alef', 'Ironi Hey', 'Ironi Dalet', 'Gymnasia Herzliya', 
+                    'Lady Davis High School (Lady Davis)', 'Tichon Hadash', 'Ort Bialik', 'Ort Kiryat Motzkin (Ort Motzkin)', 'Ort Yad Leibowitz', 
+                    'Ort Givat Ram', 'Amal Alef', 'Amal Bet', 'Ben Zvi High School (Ben Zvi)', 'Rabin High School (Rabin)', 'Begin High School (Begin)', 
+                    'Sharett High School (Sharett)', 'Leo Baeck Education Center (Leo Baeck)', 'Hof HaSharon High School (Hof HaSharon)', 'Kfar Hayarok', 
+                    'Mosinson High School (Mosinson)', 'Mevo\'ot Iron High School (Mevoot Iron)', 'Hadassim Youth Village (Hadassim)', 'Ben Shemen Youth Village (Ben Shemen)', 
+                    'Kadoorie Agricultural School (Kadoorie)', 'WIZO Nahalal', 'Ort Singalovski (Singalovski)', 'Shevach Mofet', 'Ort Yad Ginzburg (Ort Ginzburg)', 
+                    'Boyar High School (Boyar)', 'Leyada', 'Harel High School (Harel)', 'Makif Alef', 'Makif Gimel', 'Makif Vav', 'Makif Het', 'Beer Tuvia'
+                ],
+                'military': [
+                    'Welfare NCO (Mashakit Tash)', 'Combat Soldier (Lochem / Lochemet)', 'Education NCO (Mashakit Chinuch)', 'Operations Room Controller (Sambatzit)', 
+                    'Commander (Mefaked / Mefakedet)', 'Intelligence Analyst (Modiin)', 'Infantry Instructor (Madrichat Chir)', 'Combat Instructor (Madrichat Krav)', 
+                    'Training Instructor (Madricha)', 'Operations Officer (Katzat Mivtzaim)', 'Operations NCO (Mashak Mivtzaim)', 'Human Resources NCO (Mashakit Koach Adam)', 
+                    'Personnel Coordinator (Rakamit)', 'Recruitment NCO (Mashakit Giyus)', 'Intelligence Officer (Ktzin Modiin)', 'Combat Intelligence Soldier (Isuf Kravi)', 
+                    'Observer (Tatzpitanit)', 'Air Defense Soldier (Lochem Haganah Avirit)', 'Combat Medic (Chovesh Kravi)', 'Medic (Chovesh)', 'Driver (Nahag)', 
+                    'Truck Driver (Nahag Masha)', 'Armored Corps Soldier (Shiryoner)', 'Artillery Soldier (Totchan)', 'Combat Engineer (Handasai Kravi)', 
+                    'Communications Specialist (Tikshuvnik)', 'Cyber Defender (Cyber)', 'Programmer', 'Software Developer (Mefateach Tochna)', 'System Administrator', 
+                    'Logistics Coordinator (Mashak Logistika)', 'Supply Coordinator (Mashak Aspaka)', 'Armory Specialist (Nashak)', 'Military Police Officer (Shoter Tzvai)', 
+                    'Investigator (Hoker)', 'Dog Handler (Oketz Fighter)', 'Search and Rescue Soldier (Hilutz VeHatzala)', 'Naval Officer (Ktzin Yam)', 
+                    'Sailor (Lochem Yam)', 'Pilot (Tayas)', 'Flight Navigator (Navat)', 'Air Traffic Controller (Pakah Tisa)', 'Intelligence Researcher (Hoker Modiin)', 
+                    'Social Media Coordinator (Mashakit Digital)', 'Spokesperson Unit Soldier (Dover Tzahal)', 'Photographer (Tzalam Tzvai)', 'Graphic Designer (Maatzav Grafi)', 
+                    'Psychotechnical Examiner (Me\'avchenet Psychotechnit)', 'Border Police Officer (Magavnik)', 'Paratrooper (Tzanhan)', 'Golani Soldier (Golanchik)', 
+                    'Givati Soldier (Givaton)', 'Nahal Soldier (Nahalawi)', 'Kfir Soldier (Kfirnik)', 'Unit 8200', 'Unit 669',
+                    'Golani', 'Givati', 'Nahal', 'Paratroopers (Tzanhanim)', 'Kfir', 'Armored Corps (Shiryon)', 'Artillery (Totchanim)', 'Combat Engineering (Handasa Kravit)',
+                    'Air Force (Heil HaAvir)', 'Navy (Heil HaYam)', 'Home Front Command (Pikud HaOref)', 'Border Police (Magav)', 'Intelligence (Aman)', 
+                    'General Staff Reconnaissance (Sayeret Matkal)', 'Naval Commandos (Shayetet 13)', 'Air Force Commandos (Shaldag)', 'Special Forces (Maglan)', 
+                    'Undercover Unit (Duvdevan)', 'Reconnaissance Unit (Egoz)', 'Combat Engineering Special Forces (Yahalom)', 'K9 Unit (Oketz)', 
+                    'Combat Search and Rescue (Unit 669)', 'Signals Intelligence (Unit 8200)', 'Counter-Terror (Lotar)'
+                ],
+                'education': [
+                    'Tel Aviv University', 'Hebrew University of Jerusalem', 'Technion – Israel Institute of Technology', 'University of Haifa', 
+                    'Ben-Gurion University of the Negev', 'Bar-Ilan University', 'Reichman University', 'The Open University of Israel', 
+                    'Bezalel Academy of Arts and Design', 'Shenkar College', 'Holon Institute of Technology (HIT)', 'The College of Management Academic Studies', 
+                    'WIZO Haifa Academy of Design', 'Sapir College', 'Hadassah Academic College', 'Ariel University', 'Ono Academic College', 
+                    'Peres Academic Center', 'Academic College of Tel Aviv–Yaffo', 'Ruppin Academic Center', 'Tel Hai University',
+                    'Visual Communication', 'Computer Science', 'Law', 'Engineering', 'Psychology', 'Medicine'
+                ],
+                'role': ['Student', 'Designer', 'Engineer', 'Developer', 'Manager', 'Teacher', 'Self Employed', 'CEO', 'CTO']
+            };
+
             input.addEventListener('input', (e) => {
                 const val = input.value;
                 const lowerVal = val.toLowerCase().trim();
@@ -3753,6 +3794,7 @@
                         const tArr = Array.isArray(p.tags) ? p.tags : p.tags.split(',');
                         tArr.forEach(t => {
                             t = t.trim();
+                            // Check for new format: "category: value"
                             if (t.toLowerCase().startsWith(prefix + ':')) {
                                 const cleanVal = t.substring(prefix.length + 1).trim();
                                 counts[cleanVal] = (counts[cleanVal] || 0) + 1;
@@ -3760,6 +3802,13 @@
                         });
                     }
                 });
+                
+                // Add predefined options
+                if (PREDEFINED[prefix]) {
+                    PREDEFINED[prefix].forEach(val => {
+                        counts[val] = (counts[val] || 0) + 1;
+                    });
+                }
                 
                 // Inline Autofill Logic
                 if (!isDeleting && val.length > 0) {

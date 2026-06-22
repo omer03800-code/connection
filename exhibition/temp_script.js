@@ -1,0 +1,3267 @@
+
+        import * as THREE from 'three';
+        import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+        import { CSS2DRenderer, CSS2DObject } from 'three/addons/renderers/CSS2DRenderer.js';
+
+        const connParams = { depth: 50, freq: 50, resil: 50 };
+
+        const scene = new THREE.Scene();
+        scene.fog = new THREE.FogExp2(0x0a0a0a, 0.0);
+
+        const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 8000);
+        camera.position.set(0, 0, 1800);
+
+        const renderer = new THREE.WebGLRenderer({ antialias: true, logarithmicDepthBuffer: true });
+        renderer.setClearColor(0x0a0a0a);
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        renderer.setPixelRatio(window.devicePixelRatio);
+        document.body.appendChild(renderer.domElement);
+
+        const labelRenderer = new CSS2DRenderer();
+        labelRenderer.setSize(window.innerWidth, window.innerHeight);
+        labelRenderer.domElement.style.position = 'absolute';
+        labelRenderer.domElement.style.top = '0px';
+        labelRenderer.domElement.style.pointerEvents = 'none'; // Keep container none so it doesn't block 3D
+        document.body.appendChild(labelRenderer.domElement);
+
+        const controls = new OrbitControls(camera, renderer.domElement);
+        controls.enableDamping = true;
+        controls.dampingFactor = 0.08;
+        controls.minDistance = 150;
+        controls.maxDistance = 6000;
+        controls.zoomSpeed = 0.4; // Extremely slow zoom for a very gradual and smooth building effect
+        controls.rotateSpeed = 1.2; // Make roaming faster
+        controls.panSpeed = 1.2;
+        controls.autoRotate = true;
+        controls.autoRotateSpeed = 0.5;
+        controls.enableKeys = false; // Disable keyboard controls
+        controls.enablePan = true;   // Enable panning so users can navigate to off-center nodes
+        
+        // Cancel automated camera animations if the user manually interacts with the controls
+        controls.addEventListener('start', () => {
+            isCameraAnimating = false;
+        });
+        
+        // Swap controls so Left Click (or 1 finger touch) PANS, and Right Click (or 2 fingers) ROTATES
+        controls.mouseButtons = {
+            LEFT: THREE.MOUSE.PAN,
+            MIDDLE: THREE.MOUSE.DOLLY,
+            RIGHT: THREE.MOUSE.ROTATE
+        };
+        controls.touches = {
+            ONE: THREE.TOUCH.PAN,
+            TWO: THREE.TOUCH.DOLLY_ROTATE
+        };
+        // Removed listenToKeyEvents(null) because it causes a TypeError in older three.js versions
+
+        let masterGroup = new THREE.Group();
+        scene.add(masterGroup);
+
+        // --- Data (filled from API) ---
+        let userNames = [];
+        let people = [];
+        let dbIdToIdx = {};
+        let numStrands = 0;
+        let rootIdx = -1;
+
+        let pointData = [];
+        let particleCount = 0;
+        let globalGeometry = null;
+        let shaderUniforms = null;
+        let labelObjects = [];
+        let graphAdjacency = [];
+        let sortedCenters = []; // Global so drawPathLines can access node positions
+
+        const raycaster = new THREE.Raycaster();
+        raycaster.params.Points.threshold = 30.0;
+        const mouse = new THREE.Vector2();
+        let meshPoints = null;
+        let lineSegments = null;
+        let lineSegFamily = null, lineSegFriend = null, lineSegAcq = null;
+        let globalFamilyIndices = [], globalFriendIndices = [], globalAcqIndices = [];
+        let connectionCurves = [];
+        let strandSegs = null;
+        const viewFrustum = new THREE.Frustum();
+        const projScreenMatrix = new THREE.Matrix4();
+        let pathLineSegFamily = null, pathLineSegFriend = null;
+        let connectionMap = new Map(); // Maps "id1-id2" to connection type for fast lookup
+        let lineUniforms = {}; // { family, friend, acquaintance } → shader uniform objects
+        let connectionTubes = []; // Array of {mesh, a, b} for tracking tube visibility
+
+        let isCameraAnimating = false;
+        let camTargetPos = new THREE.Vector3();
+        let camTargetLookAt = new THREE.Vector3();
+        let messiColored = false;
+
+        // --- Shaders ---
+        const vertexShaderPoints = `
+            attribute float size;
+            attribute float strandIndex;
+            attribute float strandRadius;
+            attribute float pointRand;
+            attribute vec3 color;
+            attribute float isRing;
+            varying vec3 vColor;
+            varying float vStrandIndex;
+            varying float vRadiusNormal;
+            varying float vDepthDist;
+            varying float vIsRing;
+            varying float vPointRand;
+            uniform float uFreq;
+            void main() {
+                vPointRand = pointRand;
+                vColor = color; vStrandIndex = strandIndex; vRadiusNormal = strandRadius; vIsRing = isRing;
+                vec4 mvPosition = modelViewMatrix * vec4(position, 1.0);
+                float distScale = (80.0 / -mvPosition.z);
+                float finalSize = size;
+                float freqThresh = (uFreq - 1.0) / 4.0;
+                if (pointRand > freqThresh && pointRand > 0.01) finalSize = 0.0;
+                vDepthDist = -mvPosition.z;
+                gl_PointSize = finalSize > 0.0 ? clamp(finalSize * distScale * 0.9, 2.0, 35.0) : 0.0;
+                gl_Position = projectionMatrix * mvPosition;
+            }
+        `;
+        const fragmentShaderPoints = `
+            varying vec3 vColor; varying float vStrandIndex; varying float vRadiusNormal;
+            varying float vIsRing; varying float vPointRand; uniform float uDepth; varying float vDepthDist;
+            uniform float uZoomLevel;
+            uniform float uIsSearching;
+            void main() {
+                if (uIsSearching > 0.5 && vPointRand > 0.0) discard; // Hide all tail particles during search for a perfectly clean view!
+                
+                float alphaDrop = mix(0.5, 1.0, clamp(uDepth / 40.0, 0.0, 1.0));
+                float fogFactor = clamp(1400.0 / vDepthDist, 0.1, 1.0);
+
+                if (vPointRand == 0.0) {
+                    alphaDrop = 1.0; // Force nucleus to be fully opaque
+                    fogFactor = clamp(1400.0 / vDepthDist, 0.4, 1.0); // Less fog for nucleus so it stays bright
+                } else {
+                    alphaDrop *= (1.0 - smoothstep(0.0, 0.3, uZoomLevel));
+                    if (alphaDrop < 0.02) discard;
+                }
+                
+                vec2 cy = gl_PointCoord - vec2(0.5);
+                float ll = dot(cy, cy);
+                if (ll > 0.25) discard;
+                float alpha = smoothstep(0.25, 0.23, ll);
+                if (vIsRing > 0.5) { float inner = smoothstep(0.18, 0.16, ll); alpha = alpha - inner; if (alpha < 0.05) discard; }
+                
+                // If the color is very dark (set by search highlight or focus), make the particle faint or invisible
+                float finalAlpha = alpha * fogFactor * alphaDrop;
+                if (vColor.r < 0.5) {
+                    finalAlpha *= (uIsSearching > 0.5 ? 0.0 : 0.4); // Invisible in search, faint but visible in focus
+                }
+                
+                gl_FragColor = vec4(vColor, finalAlpha);
+            }
+        `;
+        const vertexShaderLines = `
+            attribute float strandIndex; attribute float strandRadius; varying float vDepthDist;
+            attribute vec3 color; varying vec3 vColor;
+            varying vec2 vScreenPos;
+            varying vec3 vWorldPos;
+            void main() {
+                vColor = color;
+                vec4 worldPosition = modelMatrix * vec4(position, 1.0);
+                vWorldPos = worldPosition.xyz;
+                vec4 mvPosition = viewMatrix * worldPosition;
+                vDepthDist = -mvPosition.z;
+                gl_Position = projectionMatrix * mvPosition;
+                vScreenPos = gl_Position.xy / gl_Position.w;
+            }
+        `;
+
+        // Family: solid bright white
+        const fragmentShaderFamily = `
+            varying float vDepthDist; varying vec2 vScreenPos;
+            uniform float uCamDist;
+            uniform float uOpacity;
+            void main() {
+                float fogFactor = clamp(1400.0 / vDepthDist, 0.05, 1.0);
+                gl_FragColor = vec4(1.0, 1.0, 1.0, 0.9 * fogFactor * uOpacity);
+            }
+        `;
+
+        // Friend: dashed (world-space) white
+        const fragmentShaderFriend = `
+            varying float vDepthDist; varying vec3 vWorldPos;
+            uniform float uCamDist;
+            uniform float uOpacity;
+            void main() {
+                float dash = fract((vWorldPos.x + vWorldPos.y + vWorldPos.z) * 0.1);
+                if (dash > 0.55) discard;
+                float fogFactor = clamp(1400.0 / vDepthDist, 0.05, 1.0);
+                gl_FragColor = vec4(1.0, 1.0, 1.0, 0.6 * fogFactor * uOpacity);
+            }
+        `;
+
+        // Acquaintance: widely spaced faint dots
+        const fragmentShaderAcq = `
+            varying float vDepthDist; varying vec3 vWorldPos;
+            uniform float uCamDist;
+            uniform float uOpacity;
+            void main() {
+                float dotPattern = fract((vWorldPos.x + vWorldPos.y + vWorldPos.z) * 0.03);
+                if (dotPattern > 0.2) discard; // Small dots, large gaps
+                float fogFactor = clamp(1400.0 / vDepthDist, 0.05, 1.0);
+                gl_FragColor = vec4(1.0, 1.0, 1.0, 0.5 * fogFactor * uOpacity);
+            }
+        `;
+
+        // --- Helpers ---
+        function addEdge(a, b, familyIdx, friendIdx, acqIdx, type, strength, connectionsData) {
+            graphAdjacency[a].push(b);
+            graphAdjacency[b].push(a);
+            const arr = type.startsWith('family') ? familyIdx : type === 'friend' ? friendIdx : acqIdx;
+            arr.push(a * pPerStrand, b * pPerStrand);
+            if (connectionsData) connectionsData.push({a, b, type, strength});
+        }
+
+        function colorNode(nodeId, r, g, b) {
+            if (nodeId === undefined || nodeId === null || nodeId < 0) return;
+            const colors = globalGeometry.attributes.color.array;
+            const startIdx = nodeId * pPerStrand;
+            for(let j = 0; j < 9; j++) {
+                const idx = startIdx + j;
+                colors[idx * 3] = r; colors[idx * 3 + 1] = g; colors[idx * 3 + 2] = b;
+            }
+            globalGeometry.attributes.color.needsUpdate = true;
+        }
+
+        function getConnectionInfo(nodeIdA, nodeIdB) {
+            const key = nodeIdA + '-' + nodeIdB;
+            return connectionMap.get(key) || { type: 'acquaintance', strength: 3 };
+        }
+
+        const pPerStrand = 50;
+        let positionCache = {}; // { id: {r, theta, phi, axis, phase, speed, amplitude, curlX, curlY, curlZ} }
+
+        // --- Build Structure from real connection data ---
+        function buildStructure(apiConnections) {
+            while (masterGroup.children.length > 0) {
+                const child = masterGroup.children[0];
+                masterGroup.remove(child);
+                if (child.geometry) child.geometry.dispose();
+                if (child.material) child.material.dispose();
+            }
+            labelObjects = [];
+            pointData = [];
+            graphAdjacency = Array.from({ length: numStrands }, () => []);
+
+            const maxSpread = 300.0 + (numStrands * 3.5); // Grows dynamically with people count
+            masterGroup.scale.set(1, 1, 1);
+
+            particleCount = numStrands * pPerStrand;
+            const positions       = new Float32Array(particleCount * 3);
+            const sizes           = new Float32Array(particleCount);
+            const strandIndices   = new Float32Array(particleCount);
+            const strandRadiusArr = new Float32Array(particleCount);
+            const pointRandArr    = new Float32Array(particleCount);
+            const isRingArr       = new Float32Array(particleCount);
+            const colors          = new Float32Array(particleCount * 3);
+            const lineIndices = [], familyIndices = [], friendIndices = [], acqIndices = [];
+            const connectionsData = [];
+            sortedCenters = []; // Use global sortedCenters so drawPathLines can access it
+
+            // All nodes scattered randomly — no fixed center
+            for (let i = 0; i < numStrands; i++) {
+                const personId = people[i].id;
+                if (!positionCache[personId]) {
+                    positionCache[personId] = {
+                        r: maxSpread * Math.pow(Math.random(), 0.55),
+                        theta: Math.random() * 2 * Math.PI,
+                        phi: Math.acos((Math.random() * 2) - 1),
+                        axis: new THREE.Vector3(Math.random()-0.5, Math.random()-0.5, Math.random()-0.5).normalize(),
+                        phase: Math.random() * Math.PI * 2,
+                        speed: 0.2 + Math.random() * 0.4,
+                        amplitude: i < 4 ? 1.0 : (Math.random() > 0.6 ? Math.random() * 2 + 1 : 0.05),
+                        curlFreqX: Math.random() * 1.5 + 0.5,
+                        curlFreqY: Math.random() * 1.5 + 0.5,
+                        curlFreqZ: Math.random() * 1.5 + 0.5
+                    };
+                }
+            }
+
+            // --- SPHERICAL FORCE-DIRECTED LAYOUT ---
+            // Pull connected individuals closer together in the 3D space
+            const layoutAdjacency = new Map();
+            people.forEach(p => layoutAdjacency.set(p.id, []));
+            apiConnections.forEach(c => {
+                if (layoutAdjacency.has(c.source) && layoutAdjacency.has(c.target)) {
+                    let weight = c.strength || 1;
+                    if (c.type === 'family' || c.type === 'family_core' || c.type === 'family_extended') weight = 5;
+                    layoutAdjacency.get(c.source).push({ target: c.target, weight });
+                    layoutAdjacency.get(c.target).push({ target: c.source, weight });
+                }
+            });
+
+            let layoutNodes = people.map(p => {
+                const pc = positionCache[p.id];
+                const vec = new THREE.Vector3().setFromSphericalCoords(pc.r, pc.phi, pc.theta);
+                return { id: p.id, pos: vec, pc: pc };
+            });
+
+            const iterations = 50;
+            const k = maxSpread * 0.35; // Optimal resting distance
+            
+            for (let iter = 0; iter < iterations; iter++) {
+                const cooling = 1.0 - (iter / iterations);
+                let displacements = new Map();
+                layoutNodes.forEach(n => displacements.set(n.id, new THREE.Vector3()));
+
+                // Repulsive forces
+                for (let i = 0; i < layoutNodes.length; i++) {
+                    for (let j = i + 1; j < layoutNodes.length; j++) {
+                        const n1 = layoutNodes[i];
+                        const n2 = layoutNodes[j];
+                        const diff = new THREE.Vector3().subVectors(n1.pos, n2.pos);
+                        let dist = diff.length();
+                        if (dist === 0) { diff.set(Math.random()-0.5, Math.random()-0.5, Math.random()-0.5); dist = 1; }
+                        const repulse = (k * k) / dist;
+                        diff.normalize().multiplyScalar(repulse);
+                        displacements.get(n1.id).add(diff);
+                        displacements.get(n2.id).sub(diff);
+                    }
+                }
+
+                // Attractive forces
+                layoutNodes.forEach(n1 => {
+                    const edges = layoutAdjacency.get(n1.id);
+                    edges.forEach(edge => {
+                        const n2 = layoutNodes.find(n => n.id === edge.target);
+                        if (!n2) return;
+                        const diff = new THREE.Vector3().subVectors(n1.pos, n2.pos);
+                        let dist = diff.length();
+                        if (dist === 0) dist = 1;
+                        // Higher weight = stronger attraction = closer resting distance
+                        const attract = (dist * dist) / (k * (6 - edge.weight)); 
+                        diff.normalize().multiplyScalar(-attract);
+                        displacements.get(n1.id).add(diff);
+                    });
+                });
+
+                // Apply displacements and constrain to sphere
+                layoutNodes.forEach(n => {
+                    const disp = displacements.get(n.id);
+                    const length = disp.length();
+                    const maxDisp = 50 * cooling;
+                    if (length > maxDisp) disp.multiplyScalar(maxDisp / length);
+                    
+                    n.pos.add(disp);
+                    
+                    const distFromCenter = n.pos.length();
+                    // Smooth volume constraint (not a hard shell)
+                    if (distFromCenter > maxSpread) {
+                        n.pos.normalize().multiplyScalar(maxSpread);
+                    } else if (distFromCenter < maxSpread * 0.3) {
+                        n.pos.normalize().multiplyScalar(maxSpread * 0.3);
+                    }
+                });
+            }
+
+            // Write back updated coordinates
+            layoutNodes.forEach(n => {
+                const sph = new THREE.Spherical().setFromVector3(n.pos);
+                n.pc.r = sph.radius;
+                n.pc.phi = sph.phi;
+                n.pc.theta = sph.theta;
+            });
+            // --- END FORCE-DIRECTED LAYOUT ---
+            
+            for (let i = 0; i < numStrands; i++) {
+                const c = positionCache[people[i].id];
+                sortedCenters.push(new THREE.Vector3(
+                    c.r * Math.sin(c.phi) * Math.cos(c.theta),
+                    c.r * Math.sin(c.phi) * Math.sin(c.theta),
+                    c.r * Math.cos(c.phi)
+                ));
+            }
+
+            let pIdx = 0;
+            for (let i = 0; i < numStrands; i++) {
+                const centerTarget  = sortedCenters[i];
+                const startNormal   = centerTarget.lengthSq() > 0.001
+                    ? centerTarget.clone().normalize()
+                    : new THREE.Vector3(0, 1, 0);
+                const c          = positionCache[people[i].id];
+                const axis       = c.axis;
+                const phase      = c.phase;
+                const speed      = c.speed;
+                const amplitude  = c.amplitude;
+                const curlFreqX  = c.curlFreqX;
+                const curlFreqY  = c.curlFreqY;
+                const curlFreqZ  = c.curlFreqZ;
+                const nucIdxStart = pIdx;
+                const isMolecule = i < 4;
+                const progressT  = i / numStrands;
+                const nucleusSize = 80.0; // 20% smaller than previous
+
+                const div = document.createElement('div');
+                div.className = 'node-label';
+                div.textContent = userNames[i];
+                // Removed pointerEvents and onclick from here so CSS pointer-events: none works properly!
+                const labelObj = new CSS2DObject(div);
+                labelObj.position.copy(centerTarget);
+                masterGroup.add(labelObj);
+                labelObjects[i] = labelObj;
+
+                for (let j = 0; j < pPerStrand; j++) {
+                    const restingNormal = startNormal.clone().applyAxisAngle(axis, j * 0.05);
+                    const tJ = j / (pPerStrand - 1);
+
+                    pointData.push({
+                        strandId: i, t: tJ,
+                        baseCx: centerTarget.x, baseCy: centerTarget.y, baseCz: centerTarget.z,
+                        targetCx: centerTarget.x, targetCy: centerTarget.y, targetCz: centerTarget.z,
+                        cx: centerTarget.x, cy: centerTarget.y, cz: centerTarget.z,
+                        vx: 0, vy: 0, vz: 0,
+                        nx: restingNormal.x, ny: restingNormal.y, nz: restingNormal.z,
+                        phase, speed, amplitude, curlFreqX, curlFreqY, curlFreqZ,
+                        isMolecule, globalT: progressT
+                    });
+
+                    strandIndices[pIdx]   = i;
+                    strandRadiusArr[pIdx] = centerTarget.length() / maxSpread;
+                    colors[pIdx*3] = 1; colors[pIdx*3+1] = 1; colors[pIdx*3+2] = 1;
+
+                    if (j === 0) {
+                        sizes[pIdx] = nucleusSize * 2.2; pointRandArr[pIdx] = 0; isRingArr[pIdx] = 0;
+                    } else {
+                        // Only ~10% of strands (tails) get particles, so it looks clean but retains shape
+                        if (i % 10 === 0) {
+                            sizes[pIdx] = Math.random() * 4.0 + 1.0; 
+                            pointRandArr[pIdx] = Math.random() + 0.01; 
+                        } else {
+                            sizes[pIdx] = 0.0;
+                            pointRandArr[pIdx] = 0.0;
+                        }
+                        isRingArr[pIdx] = 0;
+                    }
+
+                    if (j > 9) {
+                        if (j === 10) lineIndices.push(nucIdxStart, pIdx);
+                        else lineIndices.push(pIdx - 1, pIdx);
+                    }
+                    pIdx++;
+                }
+            }
+
+            // Add real connections from database — split by type
+            for (const conn of apiConnections) {
+                const idxA = dbIdToIdx[conn.source];
+                const idxB = dbIdToIdx[conn.target];
+                if (idxA !== undefined && idxB !== undefined) {
+                    addEdge(idxA, idxB, familyIndices, friendIndices, acqIndices, conn.type, conn.strength, connectionsData);
+                }
+            }
+
+            // Build connection lookup map for fast retrieval
+            for (const conn of connectionsData) {
+                const key1 = conn.a + '-' + conn.b;
+                const key2 = conn.b + '-' + conn.a;
+                connectionMap.set(key1, { type: conn.type, strength: conn.strength });
+                connectionMap.set(key2, { type: conn.type, strength: conn.strength });
+            }
+
+            globalGeometry = new THREE.BufferGeometry();
+            const sharedPos = new THREE.BufferAttribute(positions, 3);
+            globalGeometry.setAttribute('position',    sharedPos);
+            globalGeometry.setAttribute('size',        new THREE.BufferAttribute(sizes, 1));
+            globalGeometry.setAttribute('strandIndex', new THREE.BufferAttribute(strandIndices, 1));
+            globalGeometry.setAttribute('strandRadius',new THREE.BufferAttribute(strandRadiusArr, 1));
+            globalGeometry.setAttribute('pointRand',   new THREE.BufferAttribute(pointRandArr, 1));
+            globalGeometry.setAttribute('color',       new THREE.BufferAttribute(colors, 3));
+            globalGeometry.setAttribute('isRing',      new THREE.BufferAttribute(isRingArr, 1));
+            globalGeometry.boundingSphere = new THREE.Sphere(new THREE.Vector3(), 10000);
+
+            shaderUniforms = { 
+                uDepth: { value: connParams.depth }, 
+                uFreq: { value: connParams.freq }, 
+                uResil: { value: connParams.resil },
+                uZoomLevel: { value: 0.0 },
+                uIsSearching: { value: 0.0 }
+            };
+
+            // Three separate line geometries sharing the same position buffer
+            function makeLineGeo(indices) {
+                const g = new THREE.BufferGeometry();
+                g.setAttribute('position', sharedPos);
+                g.setAttribute('color', globalGeometry.attributes.color);
+                g.setAttribute('strandIndex', globalGeometry.attributes.strandIndex);
+                g.setAttribute('strandRadius', globalGeometry.attributes.strandRadius);
+                g.setIndex(indices);
+                g.boundingSphere = new THREE.Sphere(new THREE.Vector3(), 10000);
+                return g;
+            }
+
+            lineUniforms = {
+                family:  { uCamDist: { value: 9999 } },
+                friend:  { uCamDist: { value: 9999 } },
+                acq:     { uCamDist: { value: 9999 } },
+            };
+
+            globalFamilyIndices = familyIndices;
+            globalFriendIndices = friendIndices;
+            globalAcqIndices = acqIndices;
+
+            connectionCurves = [];
+            for (const conn of connectionsData) {
+                const aIdx = conn.a * pPerStrand;
+                const bIdx = conn.b * pPerStrand;
+                const curveGeo = new THREE.BufferGeometry();
+                let curveMat;
+                if (conn.type === 'family' || conn.type === 'family_core' || conn.type === 'family_extended') {
+                    curveMat = new THREE.ShaderMaterial({
+                        uniforms: { uCamDist: { value: 9999 }, uOpacity: { value: 1.0 } },
+                        vertexShader: vertexShaderLines, fragmentShader: fragmentShaderFamily,
+                        transparent: true, depthWrite: false, blending: THREE.AdditiveBlending
+                    });
+                } else if (conn.type === 'friend') {
+                    curveMat = new THREE.ShaderMaterial({
+                        uniforms: { uCamDist: { value: 9999 }, uOpacity: { value: 1.0 } },
+                        vertexShader: vertexShaderLines, fragmentShader: fragmentShaderFriend,
+                        transparent: true, depthWrite: false, blending: THREE.AdditiveBlending
+                    });
+                } else {
+                    curveMat = new THREE.ShaderMaterial({
+                        uniforms: { uCamDist: { value: 9999 }, uOpacity: { value: 1.0 } },
+                        vertexShader: vertexShaderLines, fragmentShader: fragmentShaderAcq,
+                        transparent: true, depthWrite: false, blending: THREE.AdditiveBlending
+                    });
+                }
+                const lineMesh = new THREE.Line(curveGeo, curveMat);
+                lineMesh.frustumCulled = false;
+                masterGroup.add(lineMesh);
+                connectionCurves.push({ mesh: lineMesh, aIdx, bIdx, type: conn.type });
+
+                // Add a second parallel line for acquaintances/professionals (double thin line)
+                if (conn.type === 'acquaintance') {
+                    const secondGeo = new THREE.BufferGeometry();
+                    const secondMesh = new THREE.Line(secondGeo, curveMat);
+                    secondMesh.frustumCulled = false;
+                    masterGroup.add(secondMesh);
+                    connectionCurves.push({ mesh: secondMesh, aIdx, bIdx, type: conn.type, isDouble: true });
+                }
+            }
+
+            // Create organic curved connections using TubeGeometry
+            const connectionColors = {
+                family: new THREE.Color(0xFF6B9D),
+                friend: new THREE.Color(0x4ECDC4),
+                acquaintance: new THREE.Color(0x95E1D3)
+            };
+
+            // Create organic curved connections using TubeGeometry
+            connectionTubes = [];
+            /*
+            try {
+                for (const conn of connectionsData) {
+                    const posA = sortedCenters[conn.a];
+                    const posB = sortedCenters[conn.b];
+
+                    // Create intermediate control points for an organic curve
+                    const midpoint = new THREE.Vector3().addVectors(posA, posB).multiplyScalar(0.5);
+                    const towardOrigin = new THREE.Vector3(0, 0, 0).sub(midpoint).normalize();
+
+                    const controlPt1 = new THREE.Vector3().copy(posA).add(towardOrigin.clone().multiplyScalar(50));
+                    const controlPt2 = new THREE.Vector3().copy(posB).add(towardOrigin.clone().multiplyScalar(50));
+
+                    // Create curve with more segments for better quality
+                    const curve = new THREE.CatmullRomCurve3([posA, controlPt1, controlPt2, posB]);
+                    const points = curve.getPoints(20);
+
+                    // Create simple line instead of tube for better compatibility
+                    const lineGeo = new THREE.BufferGeometry().setFromPoints(points);
+                    const lineMat = new THREE.LineBasicMaterial({
+                        color: connectionColors[conn.type] || connectionColors.acquaintance,
+                        linewidth: 2,
+                        transparent: true,
+                        opacity: 0.4
+                    });
+
+                    const lineMesh = new THREE.Line(lineGeo, lineMat);
+                    lineMesh.renderOrder = 1;
+                    lineMesh.frustumCulled = false;
+                    masterGroup.add(lineMesh);
+
+                    connectionTubes.push({ mesh: lineMesh, a: conn.a, b: conn.b });
+                }
+            } catch (e) {
+                console.error('Error creating connection tubes:', e);
+            }
+            */
+
+            // Organic strand internal connections (always visible, no proximity fade)
+            if (lineIndices.length) {
+                const strandLineMat = new THREE.ShaderMaterial({
+                    uniforms: {}, vertexShader: vertexShaderLines,
+                    fragmentShader: `
+                        varying float vDepthDist;
+                        varying vec3 vColor;
+                        void main() {
+                            float fog = clamp(1400.0 / vDepthDist, 0.05, 1.0);
+                            float alpha = vColor.r < 0.1 ? 0.02 : 0.65; // Hide lines of non-searched nodes
+                            gl_FragColor = vec4(vColor, alpha * fog);
+                        }
+                    `,
+                    transparent: true, depthWrite: false, blending: THREE.AdditiveBlending
+                });
+                const strandSegs = new THREE.LineSegments(makeLineGeo(lineIndices), strandLineMat);
+                strandSegs.frustumCulled = false;
+                masterGroup.add(strandSegs);
+            }
+
+            const pointMat = new THREE.ShaderMaterial({
+                uniforms: shaderUniforms, vertexShader: vertexShaderPoints, fragmentShader: fragmentShaderPoints,
+                transparent: true, depthWrite: false, blending: THREE.NormalBlending
+            });
+            meshPoints = new THREE.Points(globalGeometry, pointMat);
+            meshPoints.renderOrder = 1;
+            meshPoints.frustumCulled = false;
+            masterGroup.add(meshPoints);
+        }
+
+        // --- UI Setup (called after data loads) ---
+        let isUISetup = false;
+        function setupUI() {
+            let datalist = document.getElementById('people-list');
+            if (!datalist) {
+                datalist = document.createElement('datalist');
+                datalist.id = 'people-list';
+                document.body.appendChild(datalist);
+            }
+            updateDatalist(); // Populate and sort datalist
+
+            document.getElementById('loading').style.display = 'none';
+            document.getElementById('top-bar').style.display = 'flex';
+
+            if (isUISetup) return;
+            isUISetup = true;
+
+
+            const sStart = document.getElementById('start-node');
+            const sEnd   = document.getElementById('end-node');
+            rootIdx = userNames.indexOf("Omer Barak");
+
+            document.getElementById('path-header').addEventListener('click', () => {
+                document.getElementById('path-panel').classList.toggle('collapsed');
+            });
+            window.addEventListener('pointerdown', (e) => {
+                const pathPanel = document.getElementById('path-panel');
+                if (!pathPanel.classList.contains('collapsed') && !pathPanel.contains(e.target)) {
+                    pathPanel.classList.add('collapsed');
+                }
+            });
+            // (Controls panel removed)
+
+            // Search — queries API and populates dropdown
+            const searchInput = document.getElementById('search-input');
+            const searchDropdown = document.getElementById('search-dropdown');
+            let searchDebounce = null;
+            searchInput.addEventListener('input', (e) => {
+                const term = e.target.value.trim();
+                clearTimeout(searchDebounce);
+                if (!term) { 
+                    resetSearch(); 
+                    searchDropdown.style.display = 'none';
+                    return; 
+                }
+                searchDebounce = setTimeout(async () => {
+                    try {
+                        const res = await fetch(`/api/people/search/query?q=${encodeURIComponent(term)}`);
+                        const data = await res.json();
+                        
+                        const matches = Array.isArray(data) ? data : (data.people || []);
+                        const metadata = data.metadata || [];
+                        
+                        searchDropdown.innerHTML = '';
+                        let hasResults = false;
+                        
+                        if (metadata.length > 0) {
+                            hasResults = true;
+                            metadata.forEach(m => {
+                                const item = document.createElement('div');
+                                item.className = 'search-dropdown-item';
+                                item.style.borderBottom = '1px solid rgba(245,245,245,0.05)';
+                                item.style.background = 'rgba(245,245,245,0.02)';
+                                
+                                const nameDiv = document.createElement('div');
+                                nameDiv.className = 'search-item-name';
+                                nameDiv.innerHTML = `<span style="opacity:0.4; font-size:9px; margin-right:8px; letter-spacing:1px;">[ ${m.type} ]</span>${m.value}`;
+                                
+                                item.appendChild(nameDiv);
+                                
+                                item.addEventListener('click', () => {
+                                    searchInput.value = m.value;
+                                    searchDropdown.style.display = 'none';
+                                    
+                                    // Highlight matching nodes based on this specific metadata value
+                                    const lVal = m.value.toLowerCase();
+                                    const matchedNames = new Set(matches.filter(p => {
+                                        return (p.city && p.city.toLowerCase().includes(lVal)) ||
+                                               (p.role && p.role.toLowerCase().includes(lVal)) ||
+                                               (p.tags && p.tags.toLowerCase().includes(lVal));
+                                    }).map(p => p.name));
+                                    
+                                    applySearchHighlight(matchedNames);
+                                });
+                                
+                                searchDropdown.appendChild(item);
+                            });
+                        }
+                        
+                        if (matches.length > 0) {
+                            hasResults = true;
+                            matches.forEach(m => {
+                                const item = document.createElement('div');
+                                item.className = 'search-dropdown-item';
+                                
+                                const nameDiv = document.createElement('div');
+                                nameDiv.className = 'search-item-name';
+                                nameDiv.textContent = m.name;
+                                
+                                const contextDiv = document.createElement('div');
+                                contextDiv.className = 'search-item-context';
+                                const contextParts = [];
+                                if (m.city) contextParts.push(m.city);
+                                if (m.role) contextParts.push(m.role);
+                                if (m.tags) contextParts.push(m.tags);
+                                contextDiv.textContent = contextParts.join(' • ');
+                                
+                                item.appendChild(nameDiv);
+                                if (contextParts.length > 0) item.appendChild(contextDiv);
+                                
+                                item.addEventListener('click', () => {
+                                    searchInput.value = m.name;
+                                    searchDropdown.style.display = 'none';
+                                    const nodeIdx = userNames.indexOf(m.name);
+                                    if (nodeIdx !== -1) {
+                                        currentSearchNodes.clear(); // Clear search mode so connections appear!
+                                        selectNode(nodeIdx, true);
+                                    }
+                                });
+                                
+                                searchDropdown.appendChild(item);
+                            });
+                        }
+                        
+                        searchDropdown.style.display = hasResults ? 'block' : 'none';
+                        
+                        const matchNames = new Set(matches.map(m => m.name));
+                        applySearchHighlight(matchNames);
+                    } catch (err) { console.error(err); }
+                }, 200);
+            });
+
+            // Close dropdown when clicking outside
+            document.addEventListener('click', (e) => {
+                if (!e.target.closest('#search-wrapper')) {
+                    searchDropdown.style.display = 'none';
+                }
+            });
+
+            document.getElementById('btn-pause').addEventListener('click', () => {
+                isPaused = !isPaused;
+                document.getElementById('btn-pause').textContent = isPaused ? "[ AWAKEN ]" : "[ FREEZE ]";
+            });
+
+            document.getElementById('btn-find').onclick = () => {
+                const sVal = sStart.value.toLowerCase().trim();
+                const eVal = sEnd.value.toLowerCase().trim();
+                
+                const sIdx = userNames.findIndex(n => n.toLowerCase() === sVal);
+                const eIdx = userNames.findIndex(n => n.toLowerCase() === eVal);
+                
+                if (sIdx === -1) return alert("Could not find start person. Please select from the list.");
+                if (eIdx === -1) return alert("Could not find end person. Please select from the list.");
+                
+                const path = findPath(sIdx, eIdx);
+                if (path) { 
+                    initiatePathReveal(path); 
+                    selectNode(eIdx, false); 
+                } else {
+                    alert("No connection path exists between these two people in the current network.");
+                }
+            };
+
+            document.getElementById('btn-reset').onclick = resetView;
+            document.getElementById('btn-path-dest').onclick = () => {
+                if (pathTargetMode) { disablePathTargetMode(); }
+                else {
+                    pathTargetMode = true;
+                    const btn = document.getElementById('btn-path-dest');
+                    btn.textContent = "Click destination node on canvas...";
+                    btn.classList.add('active');
+                }
+            };
+
+            let clickStartPos = { x: 0, y: 0 };
+            window.addEventListener('pointerdown', (e) => {
+                clickStartPos.x = e.clientX;
+                clickStartPos.y = e.clientY;
+            });
+
+            window.addEventListener('click', (event) => {
+                const dx = Math.abs(event.clientX - clickStartPos.x);
+                const dy = Math.abs(event.clientY - clickStartPos.y);
+                if (dx > 20 || dy > 20) return; // Ignore drag/pan (increased threshold for touchscreens)
+
+                if (event.target.closest('#top-bar') || event.target.closest('#info-panel-container') || event.target.closest('#modal-overlay') || event.target.closest('#connection-modal')) return;
+                mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
+                mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
+                raycaster.setFromCamera(mouse, camera);
+                raycaster.params.Points.threshold = 8.0; // Increase hit area significantly!
+                if (meshPoints) {
+                    const intersects = raycaster.intersectObject(meshPoints);
+                    // Filter hits: only select if user clicked a nucleus particle (index % pPerStrand === 0)
+                    const validHits = intersects.filter(hit => hit.index % pPerStrand === 0);
+                    
+                    if (validHits.length > 0) {
+                        const strandId = Math.floor(validHits[0].index / pPerStrand);
+                        
+                        let isValidTarget = true;
+                        
+                        if (isValidTarget) {
+                            if (pathTargetMode) {
+                                const endId = strandId;
+                                const startId = selectedNodeId;
+                                disablePathTargetMode();
+                                
+                                if (startId !== null && startId !== endId) {
+                                    const path = findPath(startId, endId);
+                                    if (path) {
+                                        initiatePathReveal(path);
+                                        selectNode(endId, true);
+                                    } else {
+                                        alert("No connection path exists between these two people in the current network.");
+                                    }
+                                } else {
+                                    selectNode(strandId, true);
+                                }
+                            } else {
+                                selectNode(strandId, true);
+                            }
+                        } else {
+                            if (pathTargetMode) disablePathTargetMode();
+                            resetView();
+                        }
+                    } else {
+                        if (pathTargetMode) disablePathTargetMode();
+                        resetView();
+                    }
+                }
+            });
+
+            // Hover state for points
+            window.addEventListener('mousemove', (event) => {
+                if (!meshPoints || event.target.closest('#top-bar') || event.target.closest('#info-panel-container') || event.target.closest('#modal-overlay')) {
+                    document.body.style.cursor = 'default';
+                    return;
+                }
+                mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
+                mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
+                raycaster.setFromCamera(mouse, camera);
+                // Dynamic threshold: smaller when zoomed out, slightly larger when zoomed in
+                const camDist = camera.position.length();
+                raycaster.params.Points.threshold = camDist > 800 ? 1.0 : (camDist < 300 ? 4.0 : 2.0);
+                
+                const intersects = raycaster.intersectObject(meshPoints);
+                const validHits = intersects.filter(hit => hit.index % pPerStrand === 0);
+                document.body.style.cursor = validHits.length > 0 ? 'pointer' : 'default';
+            });
+
+        }
+
+        // --- Search helpers ---
+        let currentSearchNodes = new Set();
+        
+        function applySearchHighlight(matchNames) {
+            if (!globalGeometry) return;
+            currentSearchNodes.clear();
+            const colors = globalGeometry.attributes.color.array;
+            for (let i = 0; i < colors.length; i++) colors[i] = 0.05; // Make non-matches extremely dark (transparent)
+            
+            // Hide all labels initially
+            labelObjects.forEach(l => {
+                l.element.style.color = 'rgba(245, 245, 245, 0.95)';
+                l.element.style.transform = 'translateY(60px) scale(1)';
+                l.element.style.fontWeight = '300';
+                l.element.style.textShadow = 'none';
+                l.element.style.border = 'none';
+                l.element.classList.remove('searched');
+            });
+            
+            userNames.forEach((name, idx) => {
+                if (matchNames.has(name)) {
+                    currentSearchNodes.add(idx);
+                    colorNode(idx, 1, 1, 1);
+                    if (labelObjects[idx]) {
+                        labelObjects[idx].element.style.color = 'rgba(245, 245, 245, 1)';
+                        labelObjects[idx].element.style.transform = 'translateY(60px) scale(1.3)';
+                        labelObjects[idx].element.style.fontWeight = '500';
+                    }
+                }
+            });
+            globalGeometry.attributes.color.needsUpdate = true;
+        }
+
+        function resetSearch() {
+            if (!globalGeometry) return;
+            currentSearchNodes.clear();
+            const colors = globalGeometry.attributes.color.array;
+            for (let i = 0; i < colors.length; i++) colors[i] = 1.0;
+            labelObjects.forEach(l => {
+                l.element.style.color = 'rgba(245,245,245,0.95)';
+                l.element.style.fontWeight = '300';
+                l.element.style.textShadow = '0 0 4px rgba(0,0,0,1)';
+                l.element.classList.remove('searched');
+            });
+            globalGeometry.attributes.color.needsUpdate = true;
+        }
+
+        // --- Interaction state ---
+        let introAnimationNode = null;
+        let introAnimationPhase = 0;
+        let introAnimationStart = 0;
+        let isPaused = false;
+        let layoutMode = 'sphere'; // 'sphere', 'path', 'focus'
+        let focusedNodeId = null;
+        let focusedNeighbors = new Set();
+        let currentPath = [];
+        let pathRevealState = 0;
+        let pathRevealTimer = 0;
+        let selectedNodeId = null;
+        let pathTargetMode = false;
+
+        function findPath(startId, endId) {
+            if (startId === endId) return [startId];
+            
+            // Cost function: Base 1000 ensures path with fewer hops ALWAYS wins.
+            // Bonuses ensure that among paths of the same length, stronger connections win.
+            function getEdgeCost(u, v) {
+                const conn = getConnectionInfo(u, v);
+                let typeBonus = 0;
+                if (conn.type === 'family_core') typeBonus = 50;
+                else if (conn.type === 'family_extended') typeBonus = 40;
+                else if (conn.type === 'friend') typeBonus = 30;
+                else if (conn.type === 'acquaintance') typeBonus = 10;
+                
+                const strengthBonus = (conn.strength || 1) * 5;
+                return 1000 - typeBonus - strengthBonus;
+            }
+
+            const dist = new Map();
+            const prev = new Map();
+            const pq = []; 
+            
+            for (let i = 0; i < numStrands; i++) {
+                dist.set(i, Infinity);
+            }
+            dist.set(startId, 0);
+            pq.push({ id: startId, d: 0 });
+            
+            while (pq.length > 0) {
+                // Find min element (faster than sorting the whole array every time)
+                let minIdx = 0;
+                let minD = pq[0].d;
+                for (let i = 1; i < pq.length; i++) {
+                    if (pq[i].d < minD) {
+                        minD = pq[i].d;
+                        minIdx = i;
+                    }
+                }
+                const current = pq[minIdx];
+                pq.splice(minIdx, 1);
+                
+                const u = current.id;
+                
+                if (u === endId) break;
+                if (current.d > dist.get(u)) continue;
+                
+                for (const neighbor of (graphAdjacency[u] || [])) {
+                    const cost = getEdgeCost(u, neighbor);
+                    const alt = dist.get(u) + cost;
+                    
+                    if (alt < dist.get(neighbor)) {
+                        dist.set(neighbor, alt);
+                        prev.set(neighbor, u);
+                        pq.push({ id: neighbor, d: alt });
+                    }
+                }
+            }
+            
+            if (!prev.has(endId)) return null; 
+            
+            const path = [];
+            let curr = endId;
+            while (curr !== undefined) {
+                path.unshift(curr);
+                if (curr === startId) break;
+                curr = prev.get(curr);
+            }
+            return path;
+        }
+
+        let isTouringPath = false;
+
+        async function initiatePathReveal(path) {
+            if (!path) return;
+            currentPath = path;
+            layoutMode = 'path'; // Triggers linear layout in animate()
+            isTouringPath = true;
+            isCameraAnimating = true;
+            messiColored = false;
+            pathRevealState = 1;
+            
+            // Clean up old visuals
+            const colors = globalGeometry.attributes.color.array;
+            const sizes = globalGeometry.attributes.size.array;
+            for (let i = 0; i < colors.length; i += 3) {
+                colors[i] = 0.4; colors[i+1] = 0.4; colors[i+2] = 0.4;
+            }
+            for (let i = 0; i < numStrands; i++) {
+                sizes[i * pPerStrand] = 176.0; // Default nucleus
+            }
+            for (const pathNodeId of path) {
+                sizes[pathNodeId * pPerStrand] = 400.0; // HUGE nucleus for path nodes!
+                for (let j = 0; j < pPerStrand; j++) {
+                    const idx = (pathNodeId * pPerStrand + j) * 3;
+                    colors[idx] = 1.0; colors[idx+1] = 1.0; colors[idx+2] = 1.0;
+                }
+            }
+            globalGeometry.attributes.color.needsUpdate = true;
+            globalGeometry.attributes.size.needsUpdate = true;
+            Object.values(labelObjects).forEach(l => {
+                l.element.style.color = 'rgba(245,245,245,0.2)';
+                l.element.style.transform = 'translateY(60px) scale(1)';
+                l.element.style.fontWeight = '300';
+            });
+            path.forEach(idx => {
+                if (labelObjects[idx]) {
+                    labelObjects[idx].element.style.color = 'rgba(245, 245, 245, 1)';
+                    labelObjects[idx].element.style.transform = 'translateY(60px) scale(1.3)';
+                    labelObjects[idx].element.style.fontWeight = '500';
+                }
+            });
+            
+            renderPathChain(path);
+            drawPathLines(path);
+
+            // Lay them out linearly
+            const pathSpacing = 500;
+            const offsetX = -((path.length - 1) * pathSpacing) / 2;
+            for (let i = 0; i < numStrands; i++) {
+                const p = pointData[i * pPerStrand];
+                const pathIdx = path.indexOf(i);
+                p.vx = 0; p.vy = 0; p.vz = 0;
+                if (pathIdx !== -1) {
+                    p.targetCx = offsetX + pathIdx * pathSpacing; p.targetCy = 0; p.targetCz = 0;
+                } else {
+                    // Push all non-path points outward like a magnet, forming a background shell
+                    const d = Math.hypot(p.baseCx, p.baseCy, p.baseCz);
+                    const pushR = Math.max(d, 2000); // Push to at least radius 2000 to clear the long path
+                    const scale = (d > 0.1) ? (pushR / d) : 1.0;
+                    p.targetCx = p.baseCx * scale;
+                    p.targetCy = p.baseCy * scale;
+                    p.targetCz = p.baseCz * scale;
+                }
+            }
+
+            // Background connections will be dimmed in animate(), no need to hide them completely
+
+            // Lock camera to view the path correctly from the front
+            const flatAngle = Math.PI / 2;
+            controls.maxPolarAngle = flatAngle;
+            controls.minPolarAngle = flatAngle;
+            controls.autoRotate = false;
+
+            // Fly camera to see the whole path perfectly from the front (2D view), much closer
+            camTargetLookAt.set(0, 0, 0);
+            camTargetPos.set(0, 0, Math.max(800, path.length * 280));
+            
+            // Let the points fly to their new positions
+            setTimeout(() => {
+                isCameraAnimating = false;
+            }, 3000);
+        }
+
+        function renderPathChain(path) {
+            const container = document.getElementById('info-path');
+            container.innerHTML = '';
+            const chainDiv = document.createElement('div');
+            chainDiv.className = 'path-chain';
+            path.forEach((nodeId, idx) => {
+                const span = document.createElement('span');
+                span.className = 'path-node';
+                span.textContent = userNames[nodeId];
+                span.onclick = (e) => { e.stopPropagation(); selectNode(nodeId, true); }; span.onpointerdown = (e) => e.stopPropagation();
+                chainDiv.appendChild(span);
+                if (idx < path.length - 1) {
+                    const arrow = document.createElement('span');
+                    arrow.className = 'path-arrow';
+                    arrow.textContent = '→';
+                    chainDiv.appendChild(arrow);
+                }
+            });
+            container.appendChild(chainDiv);
+        }
+
+        function drawPathLines(path) {
+            // Clean up existing path lines
+            if (pathLineSegFamily) { masterGroup.remove(pathLineSegFamily); pathLineSegFamily = null; }
+            if (pathLineSegFriend) { masterGroup.remove(pathLineSegFriend); pathLineSegFriend = null; }
+
+            if (path.length < 2) return;
+
+            // Collect family and friend path segments
+            const familyPoints = [], friendPoints = [];
+
+            for (let i = 0; i < path.length - 1; i++) {
+                const nodeA = path[i];
+                const nodeB = path[i + 1];
+                const connInfo = getConnectionInfo(nodeA, nodeB);
+                const connType = connInfo.type;
+
+                const posA = sortedCenters[nodeA];
+                const posB = sortedCenters[nodeB];
+
+                if (connType === 'family') {
+                    familyPoints.push(posA.clone());
+                    familyPoints.push(posB.clone());
+                } else {
+                    // Friend or acquaintance
+                    friendPoints.push(posA.clone());
+                    friendPoints.push(posB.clone());
+                }
+            }
+
+            // Create family path line (solid white) using Cylinders for real thickness
+            if (familyPoints.length > 0) {
+                const group = new THREE.Group();
+                const mat = new THREE.MeshBasicMaterial({ color: 0xFFFFFF, transparent: true, opacity: 0.95 });
+                for (let i = 0; i < familyPoints.length; i += 2) {
+                    const p1 = familyPoints[i];
+                    const p2 = familyPoints[i+1];
+                    const dist = p1.distanceTo(p2);
+                    const geo = new THREE.CylinderGeometry(4, 4, dist, 6);
+                    geo.translate(0, dist / 2, 0);
+                    const cyl = new THREE.Mesh(geo, mat);
+                    cyl.position.copy(p1);
+                    cyl.lookAt(p2);
+                    cyl.rotateX(Math.PI / 2);
+                    group.add(cyl);
+                }
+                pathLineSegFamily = group;
+                masterGroup.add(pathLineSegFamily);
+            }
+
+            // Create friend/acquaintance path lines with dashed pattern
+            if (friendPoints.length > 0) {
+                // Create dashed line segments manually
+                const dashedSegments = [];
+                const dashLength = 20;
+                const gapLength = 15;
+
+                for (let i = 0; i < friendPoints.length; i += 2) {
+                    if (i + 1 < friendPoints.length) {
+                        const start = friendPoints[i];
+                        const end = friendPoints[i + 1];
+                        const direction = new THREE.Vector3().subVectors(end, start);
+                        const totalLength = direction.length();
+                        direction.normalize();
+
+                        let currentPos = 0;
+                        while (currentPos < totalLength) {
+                            const segStart = start.clone().addScaledVector(direction, currentPos);
+                            const nextPos = Math.min(currentPos + dashLength, totalLength);
+                            const segEnd = start.clone().addScaledVector(direction, nextPos);
+                            dashedSegments.push(segStart);
+                            dashedSegments.push(segEnd);
+                            currentPos = nextPos + gapLength;
+                        }
+                    }
+                }
+
+                if (dashedSegments.length > 0) {
+                    const group = new THREE.Group();
+                    const mat = new THREE.MeshBasicMaterial({ color: 0xFFFFFF, transparent: true, opacity: 0.8 });
+                    for (let i = 0; i < dashedSegments.length; i += 2) {
+                        const p1 = dashedSegments[i];
+                        const p2 = dashedSegments[i+1];
+                        const dist = p1.distanceTo(p2);
+                        const geo = new THREE.CylinderGeometry(4, 4, dist, 6);
+                        geo.translate(0, dist / 2, 0);
+                        const cyl = new THREE.Mesh(geo, mat);
+                        cyl.position.copy(p1);
+                        cyl.lookAt(p2);
+                        cyl.rotateX(Math.PI / 2);
+                        group.add(cyl);
+                    }
+                    pathLineSegFriend = group;
+                    masterGroup.add(pathLineSegFriend);
+                }
+            }
+        }
+
+        function selectNode(id, triggerFocus = true) {
+            if (pathTargetMode && selectedNodeId !== null && selectedNodeId !== id) {
+                const startId = selectedNodeId;
+                disablePathTargetMode();
+                const path = findPath(startId, id);
+                if (path) { 
+                    initiatePathReveal(path); 
+                    selectNode(id, false); 
+                } else {
+                    alert("No connection path exists between these two people in the current network.");
+                }
+                return;
+            }
+            selectedNodeId = id;
+            
+            if (triggerFocus) {
+                // Enter Focus Mode
+                layoutMode = 'focus';
+                focusedNodeId = id;
+                focusedNeighbors = new Set(graphAdjacency[id] || []);
+            
+                let neighborsArr = Array.from(focusedNeighbors);
+                const numNeighbors = neighborsArr.length;
+                
+                let angularPositions = [];
+                let totalAngularPos = 1;
+
+                // Sort neighbors so mutually connected friends are adjacent
+                if (numNeighbors > 0) {
+                    let localAdj = new Map();
+                    neighborsArr.forEach(n => localAdj.set(n, []));
+                    neighborsArr.forEach(n1 => {
+                        neighborsArr.forEach(n2 => {
+                            if (n1 !== n2 && graphAdjacency[n1].includes(n2)) {
+                                localAdj.get(n1).push(n2);
+                            }
+                        });
+                    });
+
+                    let unvisited = new Set(neighborsArr);
+                    let sortedNeighbors = [];
+                    let current = neighborsArr.reduce((a, b) => localAdj.get(a).length > localAdj.get(b).length ? a : b);
+                    sortedNeighbors.push(current);
+                    unvisited.delete(current);
+
+                    while (unvisited.size > 0) {
+                        let bestNext = null;
+                        let maxScore = -1;
+                        for (let cand of unvisited) {
+                            let isConnectedToCurrent = localAdj.get(current).includes(cand) ? 1 : 0;
+                            let connsToChain = 0;
+                            for (let sn of sortedNeighbors) {
+                                if (localAdj.get(cand).includes(sn)) connsToChain++;
+                            }
+                            let score = isConnectedToCurrent * 100 + connsToChain * 10 + localAdj.get(cand).length;
+                            if (score > maxScore) { maxScore = score; bestNext = cand; }
+                        }
+                        current = bestNext;
+                        sortedNeighbors.push(current);
+                        unvisited.delete(current);
+                    }
+                    neighborsArr = sortedNeighbors;
+                    
+                    let currentPos = 0;
+                    angularPositions.push(currentPos);
+                    for (let k = 1; k < neighborsArr.length; k++) {
+                        let nPrev = neighborsArr[k-1];
+                        let nCurr = neighborsArr[k];
+                        if (graphAdjacency[nPrev].includes(nCurr)) currentPos += 1;
+                        else currentPos += 3.5;
+                        angularPositions.push(currentPos);
+                    }
+                    totalAngularPos = currentPos + 3.5;
+                }
+
+                const targetNode = pointData[id * pPerStrand];
+                const C = new THREE.Vector3(targetNode.baseCx, targetNode.baseCy, targetNode.baseCz);
+                
+                let dir = C.clone().normalize();
+                if (dir.lengthSq() < 0.1) dir.set(0, 0, 1);
+                let viewDir = dir.clone().multiplyScalar(-1); // Camera looks at C from C + dir*650
+                
+                const camUp = camera.up.clone().normalize();
+                let camRight = new THREE.Vector3().crossVectors(viewDir, camUp).normalize();
+                if (camRight.lengthSq() < 0.1) {
+                    camRight = new THREE.Vector3().crossVectors(viewDir, new THREE.Vector3(1,0,0)).normalize();
+                }
+                const trueUp = new THREE.Vector3().crossVectors(camRight, viewDir).normalize();
+                
+                const repelRadius = 800; // Force background nodes outside the 2D planar network
+                
+                for (let i = 0; i < numStrands; i++) {
+                    const p = pointData[i * pPerStrand];
+                    if (i === id) {
+                        p.targetCx = C.x; p.targetCy = C.y; p.targetCz = C.z;
+                    } else if (focusedNeighbors.has(i)) {
+                        const nIdx = neighborsArr.indexOf(i);
+                        const angle = (angularPositions[nIdx] / Math.max(1, totalAngularPos)) * Math.PI * 2;
+                        
+                        const connInfo = getConnectionInfo(id, i);
+                        let r = 300;
+                        if (connInfo.type === 'family_core') r = 120 - ((connInfo.strength - 1) * 12.5);
+                        else if (connInfo.type === 'family_extended') r = 200 - ((connInfo.strength - 1) * 12.5);
+                        else if (connInfo.type === 'friend') r = 350 - ((connInfo.strength - 1) * 25);
+                        else r = 550 - ((connInfo.strength - 1) * 32.5);
+                        
+                        const c = Math.cos(angle) * r;
+                        const s = Math.sin(angle) * r;
+                        p.targetCx = C.x + camRight.x * c + trueUp.x * s;
+                        p.targetCy = C.y + camRight.y * c + trueUp.y * s;
+                        p.targetCz = C.z + camRight.z * c + trueUp.z * s;
+                    } else {
+                        const P = new THREE.Vector3(p.baseCx, p.baseCy, p.baseCz);
+                        const v = P.clone().sub(C);
+                        
+                        const z = v.dot(viewDir); 
+                        const v2d = v.clone().sub(viewDir.clone().multiplyScalar(z));
+                        
+                        let dist2d = v2d.length();
+                        if (dist2d < repelRadius) {
+                            const scale = dist2d > 0.1 ? repelRadius / dist2d : 1;
+                            v2d.multiplyScalar(scale);
+                        }
+                        
+                        let pushedZ = z;
+                        if (pushedZ < 200) pushedZ = 200; // Push safely behind the 2D plane
+                        
+                        const finalP = C.clone().add(v2d).add(viewDir.clone().multiplyScalar(pushedZ));
+                        p.targetCx = finalP.x;
+                        p.targetCy = finalP.y;
+                        p.targetCz = finalP.z;
+                    }
+                }
+                
+                labelObjects.forEach((l, idx) => {
+                    if (labelObjects[idx]) {
+                        let l = labelObjects[idx];
+                        l.element.style.color = idx === id ? 'rgba(245, 245, 245, 1)' : 'rgba(245, 245, 245, 0.95)';
+                        l.element.style.transform = idx === id ? 'translateY(60px) scale(1.3)' : 'translateY(60px) scale(1)';
+                        l.element.style.fontWeight = idx === id ? '600' : '300';
+                        l.element.style.zIndex = idx === id ? '100' : '1';
+                    }
+                    if (idx === id || focusedNeighbors.has(idx)) {
+                        l.element.style.opacity = '1.0';
+                        l.element.style.display = 'block';
+                    } else {
+                        l.element.style.opacity = '0.05';
+                    }
+                });
+
+                if (typeof connectionCurves !== 'undefined') {
+                    connectionCurves.forEach(curve => {
+                        const aNode = curve.aIdx / pPerStrand;
+                        const bNode = curve.bIdx / pPerStrand;
+                        if (aNode === id || bNode === id) {
+                            curve.mesh.material.uniforms.uOpacity.value = 1.0;
+                        } else {
+                            curve.mesh.material.uniforms.uOpacity.value = 0.03;
+                        }
+                    });
+                }
+                
+                const colors = globalGeometry.attributes.color.array;
+                for (let i = 0; i < numStrands; i++) {
+                    if (i === id || focusedNeighbors.has(i)) {
+                        colors[i] = 1.0;
+                    } else {
+                        colors[i] = 0.05;
+                    }
+                }
+                globalGeometry.attributes.color.needsUpdate = true;
+                
+                // Move camera to view the node in its natural environment
+                // camera variables are already defined above (dir)
+                controls.autoRotate = false;
+                camTargetLookAt.copy(C);
+                camTargetPos.copy(C).add(dir.multiplyScalar(650)); // View from outside looking in
+                isCameraAnimating = true;
+            }
+
+            // Always update the UI card when a node is selected
+            if (people && people[id]) {
+                showPersonCard(id, people[id]);
+            } else {
+                document.getElementById('info-panel-container').classList.add('visible');
+                document.getElementById('info-name').textContent = userNames[id] || "Unknown Person";
+            }
+            if (rootIdx !== -1 && rootIdx !== id) {
+                const degPath = findPath(rootIdx, id);
+                document.getElementById('info-badge').textContent = degPath ? (degPath.length - 1) + " Degrees from Omer" : "Disconnected";
+            } else if (rootIdx === id) {
+                document.getElementById('info-badge').textContent = "Root Node";
+            } else {
+                document.getElementById('info-badge').textContent = "Selected Node";
+            }
+            if (pathRevealState === 0) document.getElementById('info-path').innerHTML = '';
+        }
+
+        function disablePathTargetMode() {
+            pathTargetMode = false;
+            const btn = document.getElementById('btn-path-dest');
+            btn.textContent = "[ LOCATE CONNECTION ]";
+            btn.classList.remove('active');
+        }
+
+        function resetView(preserveCamera = false) {
+            layoutMode = 'sphere';
+            pathRevealState = 0;
+            focusedNodeId = null;
+            focusedNeighbors.clear();
+            currentPath = [];
+            
+            // Clear search
+            currentSearchNodes.clear();
+            const searchInput = document.getElementById('search-input');
+            if (searchInput) searchInput.value = '';
+            
+            controls.enabled = true;
+            controls.maxPolarAngle = Math.PI; // Remove path lock
+            controls.minPolarAngle = 0;
+            controls.autoRotate = true; // Resume rotating when reset
+
+            if (!preserveCamera) {
+                camTargetPos.set(0, 0, 1800);
+                camTargetLookAt.set(0, 0, 0);
+                isCameraAnimating = true;
+            }
+            for (let i = 0; i < numStrands; i++) {
+                const p = pointData[i * pPerStrand];
+                p.targetCx = p.baseCx; p.targetCy = p.baseCy; p.targetCz = p.baseCz;
+            }
+            const colors = globalGeometry.attributes.color.array;
+            const sizes = globalGeometry.attributes.size.array;
+            for (let i = 0; i < colors.length; i++) colors[i] = 1.0;
+            for (let i = 0; i < numStrands; i++) sizes[i * pPerStrand] = 176.0; // Reset to default
+            globalGeometry.attributes.color.needsUpdate = true;
+            globalGeometry.attributes.size.needsUpdate = true;
+            
+            if (typeof connectionCurves !== 'undefined') {
+                connectionCurves.forEach(curve => {
+                    curve.mesh.material.uniforms.uOpacity.value = 1.0;
+                });
+            }
+            
+            labelObjects.forEach(l => { 
+                l.element.style.color = 'rgba(245,245,245,0.95)'; 
+                l.element.style.fontWeight = '300'; 
+                l.element.style.opacity = '1.0';
+            });
+            document.getElementById('info-panel-container').classList.remove('visible');
+            document.getElementById('info-path').innerHTML = ''; // Clear path text
+            selectedNodeId = null;
+            disablePathTargetMode();
+            // Clean up path lines
+            if (pathLineSegFamily) { masterGroup.remove(pathLineSegFamily); pathLineSegFamily = null; }
+            if (pathLineSegFriend) { masterGroup.remove(pathLineSegFriend); pathLineSegFriend = null; }
+        }
+
+        function getNodeWorldPos(nodeId) {
+            const p = pointData[nodeId * pPerStrand];
+            const wp = new THREE.Vector3(p.cx, p.cy, p.cz);
+            wp.applyMatrix4(masterGroup.matrixWorld);
+            return wp;
+        }
+
+        function showPersonCard(index, person) {
+            document.getElementById('info-name').textContent = person.name;
+            document.getElementById('info-role').textContent = person.role || '';
+            const currentYear = new Date().getFullYear();
+            const birthYear = person.age ? currentYear - parseInt(person.age) : null;
+            document.getElementById('info-age').textContent = birthYear ? `Birth Year: ${birthYear}` : '';
+            document.getElementById('info-city').textContent = person.city ? `${person.city}, ${person.country}` : '';
+            let descText = (person.description || '').trim();
+            if (descText) {
+                // Prevent orphan words by replacing the last space with a non-breaking space
+                descText = descText.replace(/ ([^ ]+)$/, '&nbsp;$1');
+            }
+            document.getElementById('info-description').innerHTML = descText;
+            
+            // Extract chapters from tags
+            const chaptersContainer = document.getElementById('info-chapters');
+            if (chaptersContainer) {
+                chaptersContainer.innerHTML = '';
+                let chaptersHTML = '';
+                
+                const prefixMap = {
+                    'workplace': 'Current Workplace',
+                    'highschool': 'High School',
+                    'military': 'Military Service',
+                    'education': 'Higher Education',
+                    'prevwork': 'Previous Work',
+                    'youth': 'Youth Movement / Mechina',
+                    'community': 'Community',
+                    'other': 'Other'
+                };
+                
+                if (person.tags) {
+                    const tArr = Array.isArray(person.tags) ? person.tags : person.tags.split(',');
+                    tArr.forEach(t => {
+                        t = t.trim();
+                        if (t.includes(':')) {
+                            const parts = t.split(':');
+                            const prefix = parts[0].trim().toLowerCase();
+                            const val = parts.slice(1).join(':').trim();
+                            if (prefixMap[prefix] && val) {
+                                chaptersHTML += `
+                                    <div style="margin-bottom: 15px;">
+                                        <div style="font-size: 10px; color: rgba(245,245,245,0.4); text-transform: uppercase; letter-spacing: 1.5px; margin-bottom: 4px; font-weight: 200;">${prefixMap[prefix]}</div>
+                                        <div style="font-size: 14px; color: rgba(245,245,245,0.9); font-weight: 300; letter-spacing: 0.5px;">${val}</div>
+                                    </div>
+                                `;
+                            }
+                        }
+                    });
+                }
+                
+                if (chaptersHTML) {
+                    chaptersContainer.innerHTML = `<div style="border-top: 1px solid rgba(245,245,245,0.2); padding-top: 15px;">${chaptersHTML}</div>`;
+                }
+            }
+            
+            const connListDiv = document.getElementById('info-connections-list');
+            const connSecCard = document.getElementById('conn-secondary-card');
+            connSecCard.style.display = 'none'; // reset secondary card
+
+            if (person.connections && person.connections.length > 0) {
+                connListDiv.innerHTML = '';
+                person.connections.forEach(c => {
+                    const targetPerson = people.find(p => p.id === c.id);
+                    if (targetPerson) {
+                        const d = document.createElement('div');
+                        d.style.cssText = 'display: flex; align-items: center; background: transparent; padding: 4px 6px; margin-bottom: 2px; cursor: pointer; transition: 0.2s; border-radius: 10px;';
+                        d.innerHTML = `
+                            <div style="flex: 1; display: flex; justify-content: space-between; align-items: center;">
+                                <span style="font-size: 11px; color: #F5F5F5;">• ${targetPerson.name}</span>
+                            </div>
+                        `;
+                        
+                        d.addEventListener('mouseenter', () => d.style.background = 'rgba(245,245,245,0.05)');
+                        d.addEventListener('mouseleave', () => d.style.background = 'transparent');
+                        
+                        d.addEventListener('click', () => {
+                            connSecCard.style.display = 'block';
+                            document.getElementById('conn-sec-name').textContent = targetPerson.name;
+                            document.getElementById('conn-sec-role').textContent = targetPerson.role || '';
+                            
+                            let details = [];
+                            if (targetPerson.age) details.push(`Age: ${targetPerson.age}`);
+                            if (targetPerson.city) details.push(targetPerson.city);
+                            document.getElementById('conn-sec-details').textContent = details.join(' | ');
+                            
+                            document.getElementById('btn-conn-sec-view').onclick = () => {
+                                const targetIdx = dbIdToIdx[targetPerson.id];
+                                selectNode(targetIdx, true);
+                            };
+                        });
+                        
+                        connListDiv.appendChild(d);
+                    }
+                });
+                connListDiv.style.display = 'block';
+            } else {
+                connListDiv.innerHTML = '<div style="opacity: 0.5; font-style: italic;">No connections recorded.</div>';
+                connListDiv.style.display = 'block';
+            }
+            
+            document.getElementById('btn-close-conn-sec').onclick = () => {
+                connSecCard.style.display = 'none';
+            };
+            
+            const suggDiv = document.getElementById('info-suggestions');
+            const suggList = document.getElementById('info-suggestions-list');
+            const secCard = document.getElementById('info-secondary-card');
+            suggList.innerHTML = '';
+            secCard.style.display = 'none'; // reset secondary card
+            
+            let ignoredMatches = JSON.parse(localStorage.getItem('ignoredMatches') || '[]');
+            
+            let matchScores = [];
+            people.forEach(other => {
+                if (other.id === person.id) return;
+                if (person.connections && person.connections.some(c => c.id === other.id)) return;
+                if (ignoredMatches.includes(person.id + '-' + other.id) || ignoredMatches.includes(other.id + '-' + person.id)) return;
+                
+                const result = calculateMatchScore(person, other);
+                if (result.score >= 25) {
+                    matchScores.push({ person: other, score: result.score, shared: result.sharedConcepts });
+                }
+            });
+            
+            matchScores.sort((a, b) => b.score - a.score);
+            const topScores = matchScores.slice(0, 3);
+            
+            if (topScores.length > 0) {
+                suggDiv.style.display = 'block';
+                topScores.forEach(match => {
+                    const d = document.createElement('div');
+                    d.style.cssText = 'display: flex; align-items: center; background: transparent; padding: 2px 0; margin-bottom: 2px; cursor: pointer; transition: 0.2s;';
+                    let sharedText = match.shared.length > 0 ? match.shared.join(', ') : 'Similar background';
+                    d.innerHTML = `
+                        <div style="width: 6px; height: 6px; border-radius: 50%; background: #4CAF50; margin-right: 8px;"></div>
+                        <div style="flex: 1; display: flex; justify-content: space-between; align-items: center;">
+                            <span style="font-size: 11px; font-weight: bold; color: #F5F5F5;">${match.person.name}</span>
+                            <span style="font-size: 9px; color: #aaa;">${sharedText}</span>
+                        </div>
+                    `;
+                    
+                    d.addEventListener('mouseenter', () => d.style.background = 'rgba(245,245,245,0.05)');
+                    d.addEventListener('mouseleave', () => d.style.background = 'transparent');
+                    
+                    suggList.appendChild(d);
+                    
+                    d.addEventListener('click', () => {
+                        // Show secondary card
+                        secCard.style.display = 'block';
+                        document.getElementById('sec-info-name').textContent = match.person.name;
+                        document.getElementById('sec-info-role').textContent = match.person.role || '';
+                        
+                        let details = [];
+                        if (match.person.age) details.push(`Age: ${match.person.age}`);
+                        if (match.person.city) details.push(match.person.city);
+                        document.getElementById('sec-info-details').textContent = details.join(' | ');
+                        
+                        const btnConnect = document.getElementById('btn-sec-connect');
+                        btnConnect.textContent = 'Connect with ' + match.person.name;
+                        btnConnect.onclick = async () => {
+                            try {
+                                const res = await fetch('/api/connections', {
+                                    method: 'POST',
+                                    headers: { 'Content-Type': 'application/json' },
+                                    body: JSON.stringify({ person_a_id: person.id, person_b_id: match.person.id, type: 'acquaintance', strength: 3 })
+                                });
+                                if (res.ok) {
+                                    btnConnect.textContent = 'Connected!';
+                                    btnConnect.style.background = '#333';
+                                    btnConnect.style.color = 'white';
+                                    btnConnect.disabled = true;
+                                    setTimeout(() => window.location.reload(), 800);
+                                }
+                            } catch (err) {
+                                console.error(err);
+                            }
+                        };
+                        
+                        document.getElementById('btn-sec-ignore').onclick = () => {
+                            let ignored = JSON.parse(localStorage.getItem('ignoredMatches') || '[]');
+                            ignored.push(person.id + '-' + match.person.id);
+                            localStorage.setItem('ignoredMatches', JSON.stringify(ignored));
+                            secCard.style.display = 'none';
+                            d.style.display = 'none';
+                        };
+                    });
+                });
+                
+                document.getElementById('btn-close-sec').onclick = () => {
+                    secCard.style.display = 'none';
+                };
+            } else {
+                suggDiv.style.display = 'none';
+            }
+
+            document.getElementById('info-panel-container').classList.add('visible');
+            selectedNodeId = index;
+        }
+
+        // Remove navigation buttons logic
+        document.getElementById('btn-close-card').onclick = () => {
+            document.getElementById('info-panel-container').classList.remove('visible');
+            selectedNodeId = null;
+        };
+
+        const infoMenuDropdown = document.getElementById('info-menu-dropdown');
+        document.getElementById('btn-info-menu').onclick = (e) => {
+            e.stopPropagation();
+            infoMenuDropdown.style.display = infoMenuDropdown.style.display === 'none' ? 'block' : 'none';
+        };
+        document.addEventListener('click', (e) => {
+            if (!e.target.closest('#info-menu-container')) {
+                infoMenuDropdown.style.display = 'none';
+            }
+        });
+
+        // --- Animation ---
+        const clock = new THREE.Clock();
+        const _worldPos = new THREE.Vector3();
+        let customTime = 0;
+
+        function animate() {
+            requestAnimationFrame(animate);
+            let dt = Math.min(clock.getDelta(), 0.1);
+            if (isPaused) dt = 0;
+            const dist = camera.position.distanceTo(controls.target);
+            scene.fog.density += ((dist < 4.0 ? 0.35 : dist < 15.0 ? 0.02 : 0.0015) - scene.fog.density) * 0.15;
+            const speedFactor = Math.pow(connParams.freq / 100.0, 2.0) * 0.4; // Slower global speed
+            customTime += dt * speedFactor;
+            const elapsedTime = customTime;
+            if (!globalGeometry) return;
+            const posAttr = globalGeometry.attributes.position;
+            const posArray = posAttr.array;
+
+            if (!isPaused) {
+                const camDist = camera.position.distanceTo(controls.target);
+                const zoomLevel = Math.max(0, 1100 - camDist) / 1100;
+                const deepZoom = Math.max(0, (zoomLevel - 0.6) * 2.5); // Reaches 1.0 only at extreme zoom
+                const effectiveRotSpeed = speedFactor * Math.max(0.0, 1.0 - deepZoom); // Drops to 0!
+                
+                if (layoutMode === 'sphere') {
+                    scene.rotation.y += 0.002 * effectiveRotSpeed;
+                    scene.rotation.x += 0.0008 * effectiveRotSpeed;
+                } else {
+                    scene.rotation.y += (0 - scene.rotation.y) * 0.05;
+                    scene.rotation.x += (0 - scene.rotation.x) * 0.05;
+                }
+            }
+            scene.updateMatrixWorld();
+
+            let lerpSpeed = 0.007; // Extraordinarily slow camera pan
+            if (isCameraAnimating) {
+                camera.position.lerp(camTargetPos, lerpSpeed);
+                controls.target.lerp(camTargetLookAt, lerpSpeed);
+                camera.lookAt(controls.target); // Force lookAt since OrbitControls is bypassed
+                
+                // Stop animating if close enough
+                if (camera.position.distanceTo(camTargetPos) < 1.0 && controls.target.distanceTo(camTargetLookAt) < 1.0) {
+                    isCameraAnimating = false;
+                }
+            }
+
+            const camDist = camera.position.distanceTo(controls.target);
+            
+            // Auto-exit focus mode when zooming out fully!
+            if (!isCameraAnimating && layoutMode === 'focus' && camDist > 1500) {
+                resetView(true); // Preserve camera state but transition back to normal sphere logic
+            }
+            
+            const zoomLevel = Math.max(0, 1100 - camDist) / 1100;
+            let speedMult = 1.0 - zoomLevel * 0.9; // Slow down drastically as we zoom in
+            if (currentSearchNodes.size > 0) speedMult = 0.0; // Completely freeze movement during search
+            
+            // SLOW DOWN MOVEMENT WHEN ZOOMED IN
+            controls.autoRotate = !isPaused && !isCameraAnimating; 
+            controls.autoRotateSpeed = 0.15 * speedMult; // Slower auto-rotation
+            
+            // Normal movement speed everywhere
+            controls.rotateSpeed = 1.2; 
+            controls.panSpeed = 1.2;
+
+            // REMOVED FORCED LOCKING - Camera can roam freely!
+            // const flatAngle = Math.PI / 2;
+            // const flatness = Math.min(1.0, Math.max(0, (zoomLevel - 0.2) * 1.5)); // Ramps to 1.0 quickly
+            // controls.maxPolarAngle = THREE.MathUtils.lerp(Math.PI, flatAngle, flatness);
+            // controls.minPolarAngle = THREE.MathUtils.lerp(0, flatAngle, flatness);
+
+            if (shaderUniforms) {
+                shaderUniforms.uZoomLevel.value = zoomLevel; // Fade out tail dots
+                shaderUniforms.uIsSearching.value = currentSearchNodes.size > 0 ? 1.0 : 0.0;
+            }
+
+            const cullThreshold = 0.1; // Hide hairs almost immediately when starting to zoom in!
+            if (strandSegs) strandSegs.visible = (layoutMode !== 'path') && (zoomLevel <= cullThreshold) && (currentSearchNodes.size === 0); // Hide structural tail lines on zoom and in path mode AND during search!
+            
+            // Hide the straight solid lines during search or path mode, relying purely on the curved connection lines!
+            const showSolidLines = (layoutMode !== 'path') && (currentSearchNodes.size === 0);
+            if (lineSegFamily) lineSegFamily.visible = showSolidLines;
+            if (lineSegFriend) lineSegFriend.visible = showSolidLines;
+            if (lineSegAcq) lineSegAcq.visible = showSolidLines;
+
+            const pA = new THREE.Vector3();
+            const pB = new THREE.Vector3();
+            const camDir = new THREE.Vector3();
+            camera.getWorldDirection(camDir);
+            const controlsTarget = controls.target.clone();
+
+            let visibleNodes = null;
+            if (zoomLevel > cullThreshold) {
+                projScreenMatrix.multiplyMatrices(camera.projectionMatrix, camera.matrixWorldInverse);
+                viewFrustum.setFromProjectionMatrix(projScreenMatrix);
+                
+                visibleNodes = new Set();
+                const tempVec = new THREE.Vector3();
+                for (let i = 0; i < numStrands; i++) {
+                    const pIdx = i * pPerStrand;
+                    tempVec.set(posArray[pIdx*3], posArray[pIdx*3+1], posArray[pIdx*3+2]);
+                    tempVec.applyMatrix4(masterGroup.matrixWorld);
+                    if (viewFrustum.containsPoint(tempVec)) {
+                        visibleNodes.add(pIdx);
+                    }
+                }
+            }
+
+            for (const curve of connectionCurves) {
+                const aNode = curve.aIdx/pPerStrand;
+                const bNode = curve.bIdx/pPerStrand;
+
+                // Base visibility from zoom frustum culling
+                if (visibleNodes) {
+                    curve.mesh.visible = visibleNodes.has(curve.aIdx) && visibleNodes.has(curve.bIdx);
+                } else {
+                    curve.mesh.visible = true;
+                }
+                
+                // Mode-specific overrides (hiding)
+                if (currentSearchNodes.size > 0 && !currentSearchNodes.has(aNode) && !currentSearchNodes.has(bNode)) {
+                    curve.mesh.visible = false;
+                }
+                
+                // Emphasize path connections
+                const inPath = layoutMode === 'path' && currentPath.includes(curve.aIdx/pPerStrand) && currentPath.includes(curve.bIdx/pPerStrand);
+                
+                let targetOpacity = 1.0; // Base opacity
+                if (layoutMode === 'path') {
+                    targetOpacity = inPath ? 1.0 : 0.15; // Background network is faint
+                } else if (layoutMode === 'focus') {
+                    if (aNode === focusedNodeId || bNode === focusedNodeId) {
+                        targetOpacity = 1.5; // Connections to center are fully visible (black)
+                    } else if (focusedNeighbors.has(aNode) && focusedNeighbors.has(bNode)) {
+                        targetOpacity = 0.15; // Connections between neighbors are very faint
+                    } else {
+                        const opA = window.nodeRevealOpacities ? window.nodeRevealOpacities[aNode] : 0.0;
+                        const opB = window.nodeRevealOpacities ? window.nodeRevealOpacities[bNode] : 0.0;
+                        targetOpacity = Math.min(opA, opB) * 1.0; // Appear only when both nodes appear
+                    }
+                } else if (currentSearchNodes.size > 0) {
+                    targetOpacity = 0.0; // User requested: NO lines should be visible during search
+                }
+                if (curve.mesh.material.uniforms && curve.mesh.material.uniforms.uOpacity) {
+                    curve.mesh.material.uniforms.uOpacity.value = targetOpacity;
+                }
+                
+                pA.set(posArray[curve.aIdx*3], posArray[curve.aIdx*3+1], posArray[curve.aIdx*3+2]);
+                pB.set(posArray[curve.bIdx*3], posArray[curve.bIdx*3+1], posArray[curve.bIdx*3+2]);
+                
+                const midpoint = new THREE.Vector3().addVectors(pA, pB).multiplyScalar(0.5);
+                const dist = pA.distanceTo(pB);
+                
+                // Curve slightly outward from origin for organic bend
+                const towardOrigin = new THREE.Vector3(0, 0, 0).sub(midpoint).normalize();
+                
+                if (curve.isDouble) {
+                    // Offset the second line slightly sideways
+                    const right = new THREE.Vector3().crossVectors(towardOrigin, new THREE.Vector3(0,1,0)).normalize();
+                    pA.add(right.clone().multiplyScalar(4.0));
+                    pB.add(right.clone().multiplyScalar(4.0));
+                }
+
+                const cp = midpoint.clone().add(towardOrigin.multiplyScalar(dist * 0.25));
+                const bCurve = new THREE.QuadraticBezierCurve3(pA, cp, pB);
+                
+                curve.mesh.geometry.setFromPoints(bCurve.getPoints(12));
+            }
+            
+            // Dynamically update background opacity in focus mode based on zoom distance
+            if (layoutMode === 'focus') {
+                const colors = globalGeometry.attributes.color.array;
+                const revealRadius = (camDist - 650) * 2.5; // Radius expands much slower as you zoom out
+                
+                window.nodeRevealOpacities = window.nodeRevealOpacities || new Float32Array(numStrands);
+                const C_node = pointData[focusedNodeId * pPerStrand];
+                const centerPos = new THREE.Vector3(C_node.baseCx, C_node.baseCy, C_node.baseCz);
+                
+                for (let i = 0; i < numStrands; i++) {
+                    const pIdx = i * pPerStrand;
+                    let opacity = 1.0;
+                    if (i !== focusedNodeId && !focusedNeighbors.has(i)) {
+                        const P = new THREE.Vector3(pointData[pIdx].baseCx, pointData[pIdx].baseCy, pointData[pIdx].baseCz);
+                        const distToCenter = P.distanceTo(centerPos);
+                        opacity = Math.max(0, Math.min(1.0, (revealRadius - distToCenter) / 400.0)); // Very wide fade band (400) for super smooth fade-in
+                    }
+                    window.nodeRevealOpacities[i] = opacity;
+                    
+                    for (let j = 0; j < pPerStrand; j++) {
+                        const idx = (pIdx + j) * 3;
+                        colors[idx] = opacity;
+                        colors[idx+1] = opacity;
+                        colors[idx+2] = opacity;
+                    }
+                }
+                globalGeometry.attributes.color.needsUpdate = true;
+                
+                labelObjects.forEach((l, idx) => {
+                    if (idx !== focusedNodeId && !focusedNeighbors.has(idx)) {
+                        const op = window.nodeRevealOpacities[idx];
+                        l.element.style.opacity = op.toFixed(3);
+                        l.element.style.display = op > 0.05 ? 'block' : 'none'; 
+                    }
+                });
+            }
+
+            let introCamRight, introCamUp;
+            if (introAnimationNode !== null && (introAnimationPhase === 1 || introAnimationPhase === 2)) {
+                introCamRight = new THREE.Vector3();
+                introCamUp = new THREE.Vector3();
+                camera.matrixWorld.extractBasis(introCamRight, introCamUp, new THREE.Vector3());
+                // Transform world directional vectors to local space of the masterGroup
+                const invMatrix = new THREE.Matrix4().copy(masterGroup.matrixWorld).invert();
+                introCamRight.transformDirection(invMatrix).normalize();
+                introCamUp.transformDirection(invMatrix).normalize();
+            }
+
+            for (let idx = 0; idx < particleCount; idx++) {
+                const data = pointData[idx];
+                const isPathNode = layoutMode === 'path' && currentPath.includes(data.strandId);
+                if (data.t === 0) {
+                    if (introAnimationNode !== null) {
+                        const timeSinceStart = (performance.now() - introAnimationStart) / 1000.0; // in seconds
+                        const isTarget = (idx / pPerStrand) === introAnimationNode;
+                        
+                        if (introAnimationPhase === 1 || introAnimationPhase === 2) {
+                            if (isTarget) {
+                                // Force target to center
+                                data.targetCx = 0; data.targetCy = 0; data.targetCz = 0;
+                                
+                                // Zoom camera directly to it
+                                camTargetLookAt.set(0, 0, 0);
+                                const flyProgress = Math.min(1.0, timeSinceStart / 1.5);
+                                const ease = 1 - Math.pow(1 - flyProgress, 3); // easeOutCubic
+                                camTargetPos.set(0, 0, THREE.MathUtils.lerp(1800, 300, ease));
+                                
+                            } else {
+                                // Set target for everyone else into a massive ring facing the camera
+                                const rIdx = idx / pPerStrand;
+                                const totalNodes = numStrands - 1;
+                                const angle = (rIdx / totalNodes) * Math.PI * 2;
+                                const ringR = 1000;
+                                
+                                const c = Math.cos(angle) * ringR;
+                                const s = Math.sin(angle) * ringR;
+                                
+                                data.targetCx = introCamRight.x * c + introCamUp.x * s;
+                                data.targetCy = introCamRight.y * c + introCamUp.y * s;
+                                data.targetCz = introCamRight.z * c + introCamUp.z * s;
+                            }
+                        }
+                    }
+
+                    // Soft, slow spring physics for cinematic node layout transitions
+                    const forceX = (data.targetCx - data.cx) * 0.005;
+                    const forceY = (data.targetCy - data.cy) * 0.005;
+                    const forceZ = (data.targetCz - data.cz) * 0.005;
+                    data.vx = (data.vx + forceX) * 0.92; data.vy = (data.vy + forceY) * 0.92; data.vz = (data.vz + forceZ) * 0.92;
+                    data.cx += data.vx; data.cy += data.vy; data.cz += data.vz;
+
+                    const deepZoom = Math.max(0, (zoomLevel - 0.6) * 2.5);
+                    const squashFactor = Math.min(1.0, deepZoom);
+                    
+                    let finalCx = data.cx;
+                    let finalCy = data.cy;
+                    let finalCz = data.cz;
+
+                    // SQUASH ONTO CAMERA FOCAL PLANE FOR TRUE 2D
+                    if (layoutMode === 'sphere' && squashFactor > 0) {
+                        const vecToNode = new THREE.Vector3(data.cx, data.cy, data.cz).sub(controlsTarget);
+                        const distToPlane = vecToNode.dot(camDir);
+                        const squashedPos = new THREE.Vector3(data.cx, data.cy, data.cz).sub(camDir.clone().multiplyScalar(distToPlane));
+                        finalCx = THREE.MathUtils.lerp(data.cx, squashedPos.x, squashFactor);
+                        finalCy = THREE.MathUtils.lerp(data.cy, squashedPos.y, squashFactor);
+                        finalCz = THREE.MathUtils.lerp(data.cz, squashedPos.z, squashFactor);
+                    }
+                    
+                    // Fixed macro deformation regardless of zoom
+                    const macroDeform = !isPathNode ? 1.0 + (Math.sin(data.cx*0.01+elapsedTime*speedMult*0.6)*0.25 + Math.cos(data.cy*0.015+elapsedTime*speedMult*0.5)*0.25) : 1.0;
+                    
+                    // Fixed drift amplitude regardless of zoom
+                    const driftScale = (!isPathNode ? (layoutMode==='path' ? 250 : 25) : 2.0) * data.amplitude;
+                    const rfX = Math.sin(elapsedTime*data.speed*speedMult*1.5+data.phase)*driftScale;
+                    const rfY = Math.cos(elapsedTime*data.speed*speedMult*1.3+data.phase)*driftScale;
+                    const rfZ = Math.sin(elapsedTime*data.speed*speedMult*1.7+data.phase)*driftScale;
+                    posArray[idx*3]   = finalCx*macroDeform + rfX;
+                    posArray[idx*3+1] = finalCy*macroDeform + rfY;
+                    posArray[idx*3+2] = finalCz*macroDeform + rfZ;
+                    if (labelObjects[data.strandId]) {
+                        const lbl = labelObjects[data.strandId];
+                        lbl.position.set(posArray[idx*3], posArray[idx*3+1], posArray[idx*3+2]);
+                        _worldPos.copy(lbl.position); masterGroup.localToWorld(_worldPos);
+                        const dCam = _worldPos.distanceTo(camera.position);
+                        let op = Math.max(0, Math.min(1.0, 1.0 - ((dCam - 1000) / 600))); // Fade out between distance 1000 and 1600
+                        if (layoutMode === 'path' || currentSearchNodes.has(data.strandId)) op = 1.0;
+                        if (layoutMode === 'focus') {
+                            if (data.strandId === focusedNodeId || focusedNeighbors.has(data.strandId)) {
+                                op = 1.0; // Keep focus nodes visible
+                            } else {
+                                const revealOp = window.nodeRevealOpacities ? window.nodeRevealOpacities[data.strandId] : 0.0;
+                                op = revealOp;
+                                lbl.element.style.display = revealOp > 0.05 ? 'block' : 'none';
+                            }
+                        }
+                        lbl.element.style.opacity = op.toFixed(3);
+                    }
+                    continue;
+                }
+                const rootPosIdx = data.strandId * pPerStrand;
+                const j = idx - rootPosIdx;
+                if (j === 9) { posArray[idx*3]=posArray[rootPosIdx*3]; posArray[idx*3+1]=posArray[rootPosIdx*3+1]; posArray[idx*3+2]=posArray[rootPosIdx*3+2]; continue; }
+
+                // Non-root particles always visible
+
+                if (j > 0 && j < 9) {
+                    const ot = elapsedTime*(1.5+j*0.4)+data.phase*j;
+                    const or_ = 60+(j%3)*20+Math.sin(elapsedTime+j)*15;
+                    posArray[idx*3]   = posArray[rootPosIdx*3]   + Math.sin(ot)*Math.cos(ot*0.5)*or_;
+                    posArray[idx*3+1] = posArray[rootPosIdx*3+1] + Math.cos(ot*1.3)*or_;
+                    posArray[idx*3+2] = posArray[rootPosIdx*3+2] + Math.sin(ot*0.7)*Math.sin(ot)*or_;
+                    continue;
+                }
+                const twX = Math.sin(data.ny*2.5+elapsedTime*speedMult*0.5)*0.4;
+                const twY = Math.cos(data.nx*2.5+elapsedTime*speedMult*0.5)*0.4;
+                const twZ = Math.sin(data.nx*2.0+data.ny*2.0-elapsedTime*speedMult*0.6)*0.4;
+                let tx = data.nx+twX, ty = data.ny+twY, tz = data.nz+twZ;
+                const len = Math.sqrt(tx*tx+ty*ty+tz*tz); tx/=len; ty/=len; tz/=len;
+                const reach = (200+data.globalT*400)*0.5;
+                const curl  = (25+data.globalT*50);
+                const jPh = elapsedTime*(data.speed*speedMult*1.8)+data.phase;
+                const fp = data.isMolecule ? 1.0 : (Math.sin(jPh)*0.4+0.6)*(data.amplitude+1.2);
+                let currentModeReach = 1.0;
+                if (isPathNode) {
+                    currentModeReach = 0.3;
+                } else if (layoutMode === 'path') {
+                    currentModeReach = 1.5;
+                } else if (layoutMode === 'focus') {
+                    if (data.strandId === focusedNodeId) currentModeReach = 0.5; // Center node
+                    else if (focusedNeighbors.has(data.strandId)) currentModeReach = 0.2; // Neighbors
+                    else currentModeReach = 0.0; // Background nodes have NO tendrils!
+                }
+                const outR = fp * Math.pow(data.t,1.2) * (reach*data.amplitude*2.5) * currentModeReach;
+                const curlAmt = fp*data.t*curl*10*currentModeReach;
+                const cx2 = Math.sin(elapsedTime*data.speed*speedMult*3.5+data.t*data.curlFreqX*1.5+data.phase)*curlAmt;
+                const cy2 = Math.cos(elapsedTime*data.speed*speedMult*3.1+data.t*data.curlFreqY*1.2+data.phase)*curlAmt;
+                const cz2 = Math.sin(elapsedTime*data.speed*speedMult*3.8-data.t*data.curlFreqZ*1.5+data.phase)*curlAmt;
+                posArray[idx*3]   = posArray[rootPosIdx*3]   + tx*outR + cx2;
+                posArray[idx*3+1] = posArray[rootPosIdx*3+1] + ty*outR + cy2;
+                posArray[idx*3+2] = posArray[rootPosIdx*3+2] + tz*outR + cz2;
+            }
+
+            posAttr.needsUpdate = true;
+
+            if (!isCameraAnimating) {
+                controls.update(); // Only update OrbitControls when not manually animating
+            }
+
+            // Update line shader uniforms with real camera distance
+            if (lineUniforms.family) lineUniforms.family.uCamDist.value = camDist;
+            if (lineUniforms.friend) lineUniforms.friend.uCamDist.value = camDist;
+            if (lineUniforms.acq)    lineUniforms.acq.uCamDist.value = camDist;
+
+            renderer.render(scene, camera);
+            labelRenderer.render(scene, camera);
+        }
+
+        animate();
+
+        window.addEventListener('resize', () => {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            labelRenderer.setSize(window.innerWidth, window.innerHeight);
+        });
+
+        // Interrupt camera animation on mouse interaction
+        let userTakingControl = false;
+
+        let pointerDownPos = { x: 0, y: 0 };
+        renderer.domElement.addEventListener('pointerdown', (e) => {
+            pointerDownPos.x = e.clientX;
+            pointerDownPos.y = e.clientY;
+            isCameraAnimating = false; // Instantly unlock camera on touch/click
+            controls.enabled = true;
+        });
+
+        renderer.domElement.addEventListener('wheel', (e) => {
+            controls.enabled = true;
+            isCameraAnimating = false;
+        }, { passive: false });
+
+        // Click detection for labels using raycaster
+        renderer.domElement.addEventListener('click', (event) => {
+            const dx = Math.abs(event.clientX - pointerDownPos.x);
+            const dy = Math.abs(event.clientY - pointerDownPos.y);
+            if (dx > 20 || dy > 20) return; // Ignore click if it was a drag (pan/rotate) - increased threshold
+            mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
+            mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
+            raycaster.setFromCamera(mouse, camera);
+
+            // Check intersection with label positions
+            for (let i = 0; i < labelObjects.length; i++) {
+                const lbl = labelObjects[i];
+                const labelScreenPos = new THREE.Vector3();
+                labelScreenPos.copy(lbl.position);
+                labelScreenPos.project(camera);
+                const screenX = (labelScreenPos.x * 0.5 + 0.5) * window.innerWidth;
+                const screenY = (-(labelScreenPos.y) * 0.5 + 0.5) * window.innerHeight;
+                const dist = Math.hypot(screenX - event.clientX, screenY - event.clientY);
+                if (dist < 60) {
+                    if (pathTargetMode) {
+                        const endId = i;
+                        const startId = selectedNodeId;
+                        disablePathTargetMode();
+                        if (startId !== null && startId !== endId) {
+                            const path = findPath(startId, endId);
+                            if (path) {
+                                initiatePathReveal(path);
+                                selectNode(endId, true);
+                            } else {
+                                alert("No connection path exists between these two people in the current network.");
+                            }
+                        } else {
+                            selectNode(i, false);
+                        }
+                    } else {
+                        selectNode(i, true);
+                    }
+                    break;
+                }
+            }
+        });
+
+        // --- Bootstrap: fetch data then build ---
+        async function init() {
+            try {
+                const bySelect = document.getElementById('f-birth-year');
+                if (bySelect) {
+                    const currY = new Date().getFullYear();
+                    for(let y=currY; y>=1930; y--){
+                        const opt = document.createElement('option');
+                        opt.value = y; opt.textContent = y;
+                        opt.style.color = 'black'; // for visibility in native dropdowns
+                        bySelect.appendChild(opt);
+                    }
+                }
+                const [pRes, cRes] = await Promise.all([
+                    fetch('/api/people'),
+                    fetch('/api/connections')
+                ]);
+                people = await pRes.json();
+                const apiConnections = await cRes.json();
+
+                // Attach connections to person objects for the EDIT modal
+                people.forEach(p => p.connections = []);
+                apiConnections.forEach(c => {
+                    const p1 = people.find(p => p.id === c.source);
+                    const p2 = people.find(p => p.id === c.target);
+                    if (p1) p1.connections.push({ id: c.target, type: c.type, strength: c.strength });
+                    if (p2) p2.connections.push({ id: c.source, type: c.type, strength: c.strength });
+                });
+
+                userNames = people.map(p => p.name);
+                dbIdToIdx = Object.fromEntries(people.map((p, i) => [p.id, i]));
+                numStrands = userNames.length;
+
+                buildStructure(apiConnections);
+                setupUI();
+            } catch (err) {
+                document.getElementById('loading').textContent = 'שגיאה בטעינת הנתונים';
+                console.error(err);
+            }
+        }
+
+        init();
+
+        // --- New UI Logic: Add Connection & Edit/Delete ---
+        const modal = document.getElementById('add-modal');
+        const overlay = document.getElementById('modal-overlay');
+        const form = document.getElementById('add-form');
+        const connectionsList = document.getElementById('connections-list');
+        
+        let currentWizardStep = 1;
+        function updateProgressBar(step) {
+            const progBar = document.getElementById('form-progress-bar');
+            
+            let pStep = 0;
+            if (step === 1 || step === 2 || step === 3) pStep = 1;
+            if (step === 4) pStep = 2;
+            if (step === '4b') pStep = 3;
+            if (step === 5 || step === 6) pStep = 4;
+            
+            if (pStep === 0) {
+                progBar.style.display = 'none';
+                return;
+            } else {
+                progBar.style.display = 'flex';
+            }
+            
+            for (let i = 1; i <= 4; i++) {
+                const stepEl = document.getElementById('prog-' + i);
+                const lineEl = document.getElementById('prog-line-' + i);
+                if (!stepEl) continue;
+                
+                if (i < pStep) {
+                    stepEl.className = 'progress-step completed';
+                    stepEl.innerHTML = '✓';
+                    if (lineEl) lineEl.className = 'progress-line active';
+                } else if (i === pStep) {
+                    stepEl.className = 'progress-step active';
+                    stepEl.innerHTML = i;
+                    if (lineEl) lineEl.className = 'progress-line';
+                } else {
+                    stepEl.className = 'progress-step';
+                    stepEl.innerHTML = i;
+                    if (lineEl) lineEl.className = 'progress-line';
+                }
+            }
+        }
+
+
+        // --- NEW WIZARD LOGIC ---
+        function goToWizardStep(step) {
+            currentWizardStep = step;
+            document.querySelectorAll('.wizard-step').forEach(el => {
+                el.classList.remove('active');
+                el.style.display = 'none';
+            });
+            
+            const stepEl = document.getElementById(`wizard-step-${step}`);
+            if (stepEl) {
+                stepEl.style.display = 'block';
+                void stepEl.offsetWidth; // reflow
+                stepEl.classList.add('active');
+            }
+            
+            const previewArea = document.getElementById('wizard-preview-area');
+            if (step >= 4 && step <= 9) {
+                previewArea.style.display = 'flex';
+            } else {
+                previewArea.style.display = 'none';
+            }
+        }
+
+        function addNodeToPreview(label, value) {
+            if (!value) return;
+            const previewContainer = document.getElementById('live-network-preview');
+            
+            // Add line if not first node
+            if (previewContainer.children.length > 0) {
+                const line = document.createElement('div');
+                line.className = 'preview-line';
+                previewContainer.appendChild(line);
+            }
+            
+            const node = document.createElement('div');
+            node.className = 'preview-node';
+            node.innerHTML = `
+                <div class="preview-dot"></div>
+                <div class="preview-text">${value}</div>
+                <div style="font-size: 10px; color: rgba(245,245,245,0.4); text-transform: uppercase;">${label}</div>
+            `;
+            previewContainer.appendChild(node);
+            
+            // Scroll to bottom of preview
+            const previewArea = document.getElementById('wizard-preview-area');
+            previewArea.scrollTop = previewArea.scrollHeight;
+        }
+
+        // --- WIZARD EVENT LISTENERS ---
+        document.getElementById('btn-wizard-next-1').addEventListener('click', () => {
+            const nameInput = document.getElementById('f-name-initial').value.trim();
+            if (!nameInput) {
+                alert("Please enter a name first.");
+                return;
+            }
+            
+            document.getElementById('f-name').value = nameInput;
+            document.getElementById('live-network-preview').innerHTML = ''; // reset preview
+            addNodeToPreview('Name', nameInput);
+            
+            goToWizardStep(2);
+            
+            setTimeout(() => {
+                const matchIndex = people.findIndex(p => p.name.toLowerCase() === nameInput.toLowerCase());
+                if (matchIndex !== -1) {
+                    const match = people[matchIndex];
+                    document.getElementById('match-name').textContent = match.name;
+                    document.getElementById('match-role').textContent = match.role || 'Unknown Role';
+                    document.getElementById('match-city').textContent = match.city || 'Unknown City';
+                    document.getElementById('btn-match-yes').dataset.matchIndex = matchIndex;
+                    goToWizardStep(3);
+                } else {
+                    document.getElementById('form-mode').value = 'add';
+                    goToWizardStep(4);
+                }
+            }, 1500);
+        });
+
+        document.getElementById('btn-match-yes').addEventListener('click', (e) => {
+            const matchIndex = parseInt(e.currentTarget.dataset.matchIndex);
+            closeModal();
+            setTimeout(() => {
+                selectNode(matchIndex, true);
+            }, 300);
+        });
+
+        document.getElementById('btn-match-no').addEventListener('click', () => {
+            document.getElementById('form-mode').value = 'add';
+            document.getElementById('form-person-id').value = '';
+            goToWizardStep(4);
+        });
+
+        document.getElementById('btn-wizard-back-4').addEventListener('click', () => goToWizardStep(1));
+        document.getElementById('btn-wizard-next-4').addEventListener('click', () => {
+            const birthYear = document.getElementById('f-birth-year').value;
+            if (birthYear) {
+                const currentYear = new Date().getFullYear();
+                document.getElementById('f-age').value = currentYear - parseInt(birthYear);
+            }
+            const country = document.getElementById('f-country').value.trim().toLowerCase();
+            const city = document.getElementById('f-city').value.trim();
+            const originCity = document.getElementById('f-origin-city').value.trim();
+            
+            if (city) addNodeToPreview('City', city);
+            if (originCity && originCity !== city) addNodeToPreview('Origin', originCity);
+            
+            // Conditional Israel logic
+            if (country === 'israel' || country === 'il' || country === 'ישראל') {
+                document.getElementById('israel-military-section').style.display = 'block';
+                document.getElementById('israel-extra-section').style.display = 'block';
+            } else {
+                document.getElementById('israel-military-section').style.display = 'none';
+                document.getElementById('israel-extra-section').style.display = 'none';
+            }
+            
+            goToWizardStep(5);
+        });
+
+        document.getElementById('btn-wizard-back-5').addEventListener('click', () => goToWizardStep(4));
+        document.getElementById('btn-wizard-next-5').addEventListener('click', () => {
+            const role = document.getElementById('f-role').value.trim();
+            const workplace = document.getElementById('f-workplace').value.trim();
+            if (role) addNodeToPreview('Role', role);
+            if (workplace) addNodeToPreview('Workplace', workplace);
+            goToWizardStep(6);
+        });
+
+        document.getElementById('btn-wizard-back-6').addEventListener('click', () => goToWizardStep(5));
+        document.getElementById('btn-wizard-next-6').addEventListener('click', () => {
+            const highschool = document.getElementById('f-highschool').value.trim();
+            const military = document.getElementById('f-military').value.trim();
+            const education = document.getElementById('f-education').value.trim();
+            const prevWork = document.getElementById('f-prev-work').value.trim();
+            
+            if (highschool) addNodeToPreview('High School', highschool);
+            if (military) addNodeToPreview('Military', military);
+            if (education) addNodeToPreview('Education', education);
+            if (prevWork) addNodeToPreview('Previous Work', prevWork);
+            
+            goToWizardStep(7);
+        });
+
+        document.getElementById('btn-wizard-back-7').addEventListener('click', () => goToWizardStep(6));
+        document.getElementById('btn-wizard-next-7').addEventListener('click', () => {
+            const youth = document.getElementById('f-youth').value.trim();
+            const community = document.getElementById('f-community').value.trim();
+            const other = document.getElementById('f-other').value.trim();
+            
+            if (youth) addNodeToPreview('Youth Movement', youth);
+            if (community) addNodeToPreview('Community', community);
+            if (other) addNodeToPreview('Other', other);
+            
+            // Serialize chapters into tags and description
+            let generatedTags = [];
+            let generatedDesc = [];
+            
+            const addField = (val, prefix, isTag=true) => {
+                if (val) {
+                    if (isTag) generatedTags.push(`${prefix}:${val}`);
+                    generatedDesc.push(`${prefix}: ${val}`);
+                }
+            };
+            
+            addField(document.getElementById('f-workplace').value.trim(), 'workplace');
+            addField(document.getElementById('f-highschool').value.trim(), 'highschool');
+            addField(document.getElementById('f-military').value.trim(), 'military');
+            addField(document.getElementById('f-education').value.trim(), 'education');
+            addField(document.getElementById('f-prev-work').value.trim(), 'prevwork');
+            addField(document.getElementById('f-youth').value.trim(), 'youth');
+            addField(document.getElementById('f-community').value.trim(), 'community');
+            addField(document.getElementById('f-other').value.trim(), 'other');
+            
+            document.getElementById('f-tags').value = generatedTags.join(', ');
+            document.getElementById('f-desc').value = generatedDesc.join('\n');
+            
+            // Generate Recommendations based on these new tags
+            generateRecommendations();
+            
+            goToWizardStep(8);
+        });
+
+        document.getElementById('btn-wizard-back-8').addEventListener('click', () => goToWizardStep(7));
+        document.getElementById('btn-wizard-next-8').addEventListener('click', () => {
+            goToWizardStep(9);
+        });
+
+        document.getElementById('btn-wizard-back-9').addEventListener('click', () => goToWizardStep(8));
+        document.getElementById('btn-wizard-next-9').addEventListener('click', () => {
+            goToWizardStep(10);
+            
+            setTimeout(() => {
+                // Trigger form submission
+                const addForm = document.getElementById('add-form');
+                if (addForm) {
+                    addForm.dispatchEvent(new Event('submit', { cancelable: true, bubbles: true }));
+                }
+            }, 1500);
+        });
+
+        // --- AUTOCOMPLETE LOGIC ---
+        function setupAutocomplete(inputId, prefix) {
+            const input = document.getElementById(inputId);
+            const dropdown = document.getElementById('dropdown-' + inputId);
+            const stats = document.getElementById('stats-' + inputId);
+            if (!input || !dropdown || !stats) return;
+
+            input.addEventListener('input', () => {
+                const val = input.value.trim().toLowerCase();
+                dropdown.innerHTML = '';
+                stats.innerHTML = '';
+                
+                if (!val) {
+                    dropdown.style.display = 'none';
+                    return;
+                }
+                
+                // Count occurrences from people array
+                let counts = {};
+                people.forEach(p => {
+                    // Check direct fields
+                    if (prefix === 'city' && p.city) {
+                        const c = p.city.trim();
+                        counts[c] = (counts[c] || 0) + 1;
+                    } else if (prefix === 'role' && p.role) {
+                        const r = p.role.trim();
+                        counts[r] = (counts[r] || 0) + 1;
+                    }
+                    
+                    // Check tags
+                    if (p.tags) {
+                        const tArr = Array.isArray(p.tags) ? p.tags : p.tags.split(',');
+                        tArr.forEach(t => {
+                            t = t.trim();
+                            if (t.toLowerCase().startsWith(prefix + ':')) {
+                                const cleanVal = t.substring(prefix.length + 1).trim();
+                                counts[cleanVal] = (counts[cleanVal] || 0) + 1;
+                            }
+                        });
+                    }
+                });
+                
+                // Filter and sort
+                const suggestions = Object.keys(counts)
+                    .filter(k => k.toLowerCase().includes(val))
+                    .sort((a, b) => counts[b] - counts[a])
+                    .slice(0, 5);
+                
+                if (suggestions.length > 0) {
+                    suggestions.forEach(s => {
+                        const div = document.createElement('div');
+                        div.className = 'autocomplete-item';
+                        div.innerHTML = `<span>${s}</span> <span class="autocomplete-count">${counts[s]} people</span>`;
+                        div.onclick = () => {
+                            input.value = s;
+                            dropdown.style.display = 'none';
+                            stats.innerHTML = `${counts[s]} people in the network are connected to this.`;
+                        };
+                        dropdown.appendChild(div);
+                    });
+                    dropdown.style.display = 'block';
+                } else {
+                    dropdown.style.display = 'none';
+                    stats.innerHTML = `You are the first one in the network to add this!`;
+                }
+            });
+
+            // Close dropdown when clicking outside
+            document.addEventListener('click', (e) => {
+                if (e.target !== input && e.target !== dropdown) {
+                    dropdown.style.display = 'none';
+                }
+            });
+        }
+
+        // Initialize autocompletes
+        setupAutocomplete('f-city', 'city');
+        setupAutocomplete('f-origin-city', 'city');
+        setupAutocomplete('f-role', 'role');
+        setupAutocomplete('f-workplace', 'workplace');
+        setupAutocomplete('f-highschool', 'highschool');
+        setupAutocomplete('f-military', 'military');
+        setupAutocomplete('f-education', 'education');
+        setupAutocomplete('f-prev-work', 'prevwork');
+        setupAutocomplete('f-youth', 'youth');
+        setupAutocomplete('f-community', 'community');
+        setupAutocomplete('f-other', 'other');
+
+
+
+        const discoverModal = document.getElementById('discover-modal');
+        const discoverList = document.getElementById('discover-list');
+        
+        document.getElementById('btn-discover-connections').addEventListener('click', () => {
+            overlay.style.display = 'block';
+            discoverModal.style.display = 'flex';
+            
+            discoverList.innerHTML = '<div style="text-align: center; color: #aaa; margin-top: 20px;">Scanning network for potential matches...</div>';
+            
+            // Run scanning async so UI doesn't freeze
+            setTimeout(() => {
+                let allScores = [];
+                let ignoredGlobal = JSON.parse(localStorage.getItem('ignoredMatches') || '[]');
+                
+                // Only scan first N people or take a random sample to avoid O(N^2) lag if N > 1000
+                // For exhibition sizes (e.g. 500), N^2 is 250,000, which takes ~50ms
+                for (let i = 0; i < people.length; i++) {
+                    for (let j = i + 1; j < people.length; j++) {
+                        const p1 = people[i];
+                        const p2 = people[j];
+                        
+                        // Skip if already connected or ignored
+                        if (p1.connections && p1.connections.some(c => c.id === p2.id)) continue;
+                        if (ignoredGlobal.includes(p1.id + '-' + p2.id) || ignoredGlobal.includes(p2.id + '-' + p1.id)) continue;
+                        
+                        const result = calculateMatchScore(p1, p2);
+                        if (result.score >= 25) { // Higher threshold for global suggestions
+                            allScores.push({ p1, p2, score: result.score, shared: result.sharedConcepts });
+                        }
+                    }
+                }
+                
+                allScores.sort((a, b) => b.score - a.score);
+                const topMatches = allScores.slice(0, 20); // Top 20 network-wide
+                
+                discoverList.innerHTML = '';
+                if (topMatches.length === 0) {
+                    discoverList.innerHTML = '<div style="text-align: center; color: #aaa; margin-top: 20px;">No high-probability matches found.</div>';
+                    return;
+                }
+                
+                topMatches.forEach((match, idx) => {
+                    const d = document.createElement('div');
+                    d.style.cssText = 'background: rgba(245,245,245,0.05); border: 1px solid rgba(245,245,245,0.2); border-radius: 10px; padding: 20px; display: flex; flex-direction: column; align-items: center; justify-content: space-between; gap: 15px; box-sizing: border-box; box-shadow: 0 4px 15px rgba(0,0,0,0.2);';
+                    let sharedText = match.shared.length > 0 ? `Shared: ${match.shared.join(', ')}` : 'Similar background';
+                    
+                    const role1 = match.p1.role ? match.p1.role : '';
+                    const role2 = match.p2.role ? match.p2.role : '';
+                    
+                    d.innerHTML = `
+                        <div style="display: flex; justify-content: space-between; width: 100%; align-items: flex-start;">
+                            <div style="text-align: center; flex: 1;">
+                                <div style="font-size: 16px; font-weight: bold; color: #F5F5F5; margin-bottom: 4px;">${match.p1.name}</div>
+                                <div style="font-size: 11px; color: #aaa; line-height: 1.3;">${role1}</div>
+                            </div>
+                            
+                            <div style="width: 30px; text-align: center; color: rgba(245,245,245,0.2); font-size: 20px; font-weight: 300;">&</div>
+                            
+                            <div style="text-align: center; flex: 1;">
+                                <div style="font-size: 16px; font-weight: bold; color: #F5F5F5; margin-bottom: 4px;">${match.p2.name}</div>
+                                <div style="font-size: 11px; color: #aaa; line-height: 1.3;">${role2}</div>
+                            </div>
+                        </div>
+                        
+                        <div style="font-size: 12px; color: #4CAF50; background: rgba(76, 175, 80, 0.1); padding: 6px 12px; border-radius: 10px; border: 1px solid rgba(76, 175, 80, 0.2); text-align: center; width: 90%;">
+                            ${sharedText}
+                        </div>
+                        
+                        <div style="display: flex; gap: 12px; width: 100%; margin-top: 10px;">
+                            <button class="btn-discover-ignore" style="flex: 1; background: transparent; color: #aaa; border: 1px solid rgba(245,245,245,0.2); border-radius: 10px; padding: 12px; font-size: 12px; cursor: pointer; transition: 0.2s;">Not Related</button>
+                            <button class="btn-discover-add" data-idx="${idx}" style="flex: 1; background: white; color: black; border: none; border-radius: 10px; padding: 12px; font-weight: bold; font-size: 12px; cursor: pointer; transition: 0.2s;">CONNECT</button>
+                        </div>
+                    `;
+                    discoverList.appendChild(d);
+                    
+                    d.querySelector('.btn-discover-ignore').addEventListener('click', () => {
+                        let ignored = JSON.parse(localStorage.getItem('ignoredMatches') || '[]');
+                        ignored.push(match.p1.id + '-' + match.p2.id);
+                        localStorage.setItem('ignoredMatches', JSON.stringify(ignored));
+                        d.style.display = 'none';
+                    });
+                    
+                    d.querySelector('.btn-discover-add').addEventListener('click', async (e) => {
+                        try {
+                            const res = await fetch('/api/connections', {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify({ person_a_id: match.p1.id, person_b_id: match.p2.id, type: 'acquaintance', strength: 3 })
+                            });
+                            if (res.ok) {
+                                e.target.textContent = 'Connected!';
+                                e.target.style.background = '#333';
+                                e.target.style.color = 'white';
+                                e.target.disabled = true;
+                                setTimeout(() => window.location.reload(), 1000);
+                            }
+                        } catch (err) {
+                            console.error(err);
+                        }
+                    });
+                });
+            }, 100);
+        });
+        
+        document.getElementById('btn-close-discover').addEventListener('click', () => {
+            discoverModal.style.display = 'none';
+            overlay.style.display = 'none';
+        });
+
+
+
+        function calculateMatchScore(p1, p2) {
+            const ignoreCities = ['tel aviv', 'jerusalem', 'haifa', 'תל אביב', 'ירושלים', 'חיפה'];
+            const synonymGroups = [
+                { type: 'degree', words: ['design', 'visual communication', 'designer', 'ux', 'ui', 'עיצוב', 'תקשורת חזותית', 'מעצבת', 'מעצב'] },
+                { type: 'uni', words: ['haifa university', 'university of haifa', 'wizo', 'אוניברסיטת חיפה', 'ויצו חיפה'] },
+                { type: 'city', words: ['ilaniya', 'ilania', 'אילניה', 'מושב אילניה'] },
+                { type: 'city', words: ['akko', 'acre', 'עכו'] },
+                { type: 'city', words: ['tzfat', 'safed', 'צפת'] },
+                { type: 'city', words: ['pardes hanna', 'pardes hanna karkur', 'pardes hanna-karkur', 'פרדס חנה', 'פרדס חנה כרכור'] },
+                { type: 'city', words: ['zikhron yaakov', 'zikhron ya\'akov', 'זכרון יעקב'] },
+                { type: 'degree', words: ['computer science', 'מדעי המחשב', 'cs', 'software engineering', 'הנדסת תוכנה'] },
+                { type: 'degree', words: ['electrical engineering', 'הנדסת חשמל', 'ee'] },
+                { type: 'degree', words: ['industrial engineering', 'הנדסת תעשייה וניהול', 'תעשייה וניהול'] },
+                { type: 'degree', words: ['business administration', 'מנהל עסקים'] },
+                { type: 'degree', words: ['economics', 'כלכלה'] },
+                { type: 'degree', words: ['psychology', 'פסיכולוגיה'] },
+                { type: 'degree', words: ['law', 'משפטים', 'עריכת דין'] },
+                { type: 'degree', words: ['medicine', 'רפואה'] },
+                { type: 'degree', words: ['nursing', 'סיעוד'] },
+                { type: 'degree', words: ['education', 'חינוך', 'הוראה'] },
+                { type: 'degree', words: ['accounting', 'ראיית חשבון', 'חשבונאות'] },
+                { type: 'degree', words: ['architecture', 'אדריכלות', 'ארכיטקטורה'] },
+                { type: 'degree', words: ['marketing', 'שיווק', 'communications', 'תקשורת'] },
+                { type: 'degree', words: ['data science', 'מדע הנתונים', 'דאטה סיינס'] },
+                { type: 'degree', words: ['political science', 'מדעי המדינה'] },
+                { type: 'degree', words: ['social work', 'עבודה סוציאלית'] },
+                { type: 'degree', words: ['biology', 'ביולוגיה'] },
+                { type: 'degree', words: ['mechanical engineering', 'הנדסת מכונות'] },
+                { type: 'uni', words: ['tel aviv university', 'tau', 'אוניברסיטת תל אביב'] },
+                { type: 'uni', words: ['hebrew university', 'huji', 'האוניברסיטה העברית'] },
+                { type: 'uni', words: ['technion', 'הטכניון'] },
+                { type: 'uni', words: ['weizmann', 'weizmann institute of science', 'מכון ויצמן'] },
+                { type: 'uni', words: ['ben gurion university', 'bgu', 'אוניברסיטת בן גוריון', 'בן גוריון'] },
+                { type: 'uni', words: ['bar ilan university', 'biu', 'בר אילן', 'bar ilan'] },
+                { type: 'uni', words: ['reichman university', 'idc', 'רייכמן', 'הבינתחומי'] },
+                { type: 'uni', words: ['shenkar', 'שנקר'] },
+                { type: 'uni', words: ['bezalel', 'בצלאל', 'bezalel academy'] },
+                { type: 'uni', words: ['colman', 'המכללה למינהל', 'מכללה למנהל', 'the college of management'] },
+                { type: 'uni', words: ['open university', 'האוניברסיטה הפתוחה'] },
+                { type: 'uni', words: ['hit', 'holon institute of technology', 'מכון טכנולוגי חולון'] },
+                { type: 'company', words: ['google'] }, { type: 'company', words: ['microsoft'] }, { type: 'company', words: ['apple'] }, { type: 'company', words: ['amazon'] }, { type: 'company', words: ['nvidia'] }, { type: 'company', words: ['intel'] }, { type: 'company', words: ['meta', 'facebook'] }, { type: 'company', words: ['ibm'] }, { type: 'company', words: ['salesforce'] }, { type: 'company', words: ['monday.com', 'monday'] }, { type: 'company', words: ['wix'] }, { type: 'company', words: ['fiverr'] }, { type: 'company', words: ['check point', 'checkpoint'] }, { type: 'company', words: ['cyberark'] }, { type: 'company', words: ['nice'] }, { type: 'company', words: ['amdocs'] }, { type: 'company', words: ['playtika'] }, { type: 'company', words: ['etoro'] }, { type: 'company', words: ['taboola'] }, { type: 'company', words: ['outbrain'] },
+                { type: 'army_unit', words: ['golani'] }, { type: 'army_unit', words: ['givati'] }, { type: 'army_unit', words: ['nahal'] }, { type: 'army_unit', words: ['paratroopers', 'tzanhanim'] }, { type: 'army_unit', words: ['kfir'] }, { type: 'army_unit', words: ['armored corps', 'shiryon'] }, { type: 'army_unit', words: ['artillery', 'totchanim'] }, { type: 'army_unit', words: ['combat engineering', 'handasa kravit'] }, { type: 'army_unit', words: ['air force', 'heil haavir'] }, { type: 'army_unit', words: ['navy', 'heil hayam'] }, { type: 'army_unit', words: ['home front command', 'pikud haoref'] }, { type: 'army_unit', words: ['border police', 'magav'] }, { type: 'army_unit', words: ['intelligence', 'aman'] }, { type: 'army_unit', words: ['sayeret matkal', 'general staff reconnaissance'] }, { type: 'army_unit', words: ['shayetet 13', 'naval commandos'] }, { type: 'army_unit', words: ['shaldag', 'air force commandos'] }, { type: 'army_unit', words: ['maglan', 'special forces'] }, { type: 'army_unit', words: ['duvdevan', 'undercover unit'] }, { type: 'army_unit', words: ['egoz', 'reconnaissance unit'] }, { type: 'army_unit', words: ['yahalom', 'combat engineering special forces'] }, { type: 'army_unit', words: ['oketz', 'k9 unit'] }, { type: 'army_unit', words: ['unit 669', 'combat search and rescue'] }, { type: 'army_unit', words: ['unit 8200', '8200', 'signals intelligence'] }, { type: 'army_unit', words: ['lotar', 'counter-terror'] },
+                { type: 'army_base', words: ['bahad 1'] }, { type: 'army_base', words: ['bahad 7'] }, { type: 'army_base', words: ['bahad 12'] }, { type: 'army_base', words: ['glilot'] }, { type: 'army_base', words: ['kirya'] }, { type: 'army_base', words: ['tel hashomer'] }, { type: 'army_base', words: ['ir habahadim'] }, { type: 'army_base', words: ['tzrifin'] }, { type: 'army_base', words: ['nevatim'] }, { type: 'army_base', words: ['hatzerim'] }, { type: 'army_base', words: ['ramat david'] }, { type: 'army_base', words: ['palmachim'] }, { type: 'army_base', words: ['ramon'] }, { type: 'army_base', words: ['ovda'] }, { type: 'army_base', words: ['ze\'elim', 'zeelim'] }, { type: 'army_base', words: ['re\'im', 'reim'] }, { type: 'army_base', words: ['urim'] }, { type: 'army_base', words: ['nafah'] }, { type: 'army_base', words: ['saar 474'] }, { type: 'army_base', words: ['barak 188'] }, { type: 'army_base', words: ['golani 1'] }, { type: 'army_base', words: ['givati 84'] }, { type: 'army_base', words: ['nahal 933'] }, { type: 'army_base', words: ['tzanhanim 35'] }, { type: 'army_base', words: ['kfir 900'] }, { type: 'army_base', words: ['harel 10'] }, { type: 'army_base', words: ['alexandroni 3'] }, { type: 'army_base', words: ['carmeli 2'] },
+                { type: 'high_school', words: ['reali'] }, { type: 'high_school', words: ['alliance'] }, { type: 'high_school', words: ['gymnasia herzliya', 'gymnasia'] }, { type: 'high_school', words: ['leo baeck'] }, { type: 'high_school', words: ['thelma yellin'] }, { type: 'high_school', words: ['kfar hayarok'] }, { type: 'high_school', words: ['mosinson'] }, { type: 'high_school', words: ['hadassim'] }, { type: 'high_school', words: ['ben shemen'] }, { type: 'high_school', words: ['kadoorie'] }, { type: 'high_school', words: ['wizo nahalal'] }, { type: 'high_school', words: ['shevach mofet'] }, { type: 'high_school', words: ['boyar'] }, { type: 'high_school', words: ['leyada'] }, { type: 'high_school', words: ['harel'] }, { type: 'high_school', words: ['ort singalovski'] }, { type: 'high_school', words: ['ort bialik'] }, { type: 'high_school', words: ['ort motzkin'] }, { type: 'high_school', words: ['ort ginzburg'] }, { type: 'high_school', words: ['ort'] }, { type: 'high_school', words: ['amal'] }, { type: 'high_school', words: ['atid'] }, { type: 'high_school', words: ['darca'] }, { type: 'high_school', words: ['branco weiss'] }, { type: 'high_school', words: ['ironi alef'] }, { type: 'high_school', words: ['ironi bet'] }, { type: 'high_school', words: ['ironi gimel'] }, { type: 'high_school', words: ['ironi dalet'] }, { type: 'high_school', words: ['ironi hey'] }, { type: 'high_school', words: ['ironi vav'] }, { type: 'high_school', words: ['makif alef'] }, { type: 'high_school', words: ['makif bet'] }, { type: 'high_school', words: ['makif gimel'] }, { type: 'high_school', words: ['makif dalet'] }, { type: 'high_school', words: ['makif hey'] }, { type: 'high_school', words: ['makif vav'] }, { type: 'high_school', words: ['makif zayin'] }, { type: 'high_school', words: ['makif het'] }, { type: 'high_school', words: ['rabin'] }, { type: 'high_school', words: ['begin'] }, { type: 'high_school', words: ['blich', 'בליך'] }, { type: 'high_school', words: ['misgav', 'משגב'] }, { type: 'high_school', words: ['yifat', 'יפעת'] },
+                { type: 'mechina', words: ['derech eretz - nitzana', 'nitzana'] }, { type: 'mechina', words: ['derech eretz - kmehin', 'kmehin'] }, { type: 'mechina', words: ['derech eretz - ein yahav', 'ein yahav'] }, { type: 'mechina', words: ['derech eretz - ashalim', 'ashalim'] }, { type: 'mechina', words: ['bnei david'] }, { type: 'mechina', words: ['ein prat'] }, { type: 'mechina', words: ['nachshon'] }, { type: 'mechina', words: ['mechinat rabin', 'rabin'] }, { type: 'mechina', words: ['gal'] }, { type: 'mechina', words: ['maayan baruch'] }, { type: 'mechina', words: ['tavor'] }, { type: 'mechina', words: ['lachish'] }, { type: 'mechina', words: ['arava'] }, { type: 'mechina', words: ['yachad'] }, { type: 'mechina', words: ['hanegev'] }, { type: 'mechina', words: ['aderet'] }, { type: 'mechina', words: ['keshet yehuda'] }, { type: 'mechina', words: ['haruach haisraelit'] }, { type: 'mechina', words: ['meitar'] }, { type: 'mechina', words: ['kol ami'] }
+            ];
+            const genericRoles = ['softwareengineer', 'fullstackdeveloper', 'frontenddeveloper', 'backenddeveloper', 'mobiledeveloper', 'iosdeveloper', 'androiddeveloper', 'webdeveloper', 'gamedeveloper', 'devopsengineer', 'sitelieliabilityengineer', 'sre', 'cloudengineer', 'cloudarchitect', 'solutionsarchitect', 'dataengineer', 'dataanalyst', 'datascientist', 'machinelearningengineer', 'aiengineer', 'airesearcher', 'promptengineer', 'cybersecurityanalyst', 'cybersecurityengineer', 'informationsecuritymanager', 'penetrationtester', 'socanalyst', 'qaengineer', 'automationengineer', 'testengineer', 'productmanager', 'technicalproductmanager', 'projectmanager', 'programmanager', 'scrummaster', 'businessanalyst', 'systemsanalyst', 'uxdesigner', 'uidesigner', 'uxresearcher', 'productdesigner', 'servicedesigner', 'interactiondesigner', 'technicalwriter', 'solutionsconsultant', 'customersuccessmanager', 'technicalsupportengineer', 'salesengineer', 'presalesengineer', 'itmanager', 'itadministrator', 'databaseadministrator', 'dba', 'networkengineer', 'embeddedsystemsengineer', 'hardwareengineer', 'electronicsengineer', 'roboticsengineer', 'computervisionengineer', 'blockchaindeveloper', 'arvrdeveloper', 'marketingmanager', 'digitalmarketingmanager', 'brandmanager', 'marketingdirector', 'chiefmarketingofficer', 'cmo', 'performancemarketingmanager', 'growthmarketingmanager', 'productmarketingmanager', 'contentmarketingmanager', 'socialmediamanager', 'communitymanager', 'influencermarketingmanager', 'emailmarketingspecialist', 'seospecialist', 'semspecialist', 'ppcspecialist', 'marketingspecialist', 'marketingcoordinator', 'marketinganalyst', 'marketresearchanalyst', 'brandstrategist', 'creativestrategist', 'communicationsmanager', 'publicrelationsmanager', 'prmanager', 'prspecialist', 'mediaplanner', 'mediabuyer', 'campaignmanager', 'advertisingmanager', 'copywriter', 'contentcreator', 'contentmanager', 'contentstrategist', 'creativedirector', 'artdirector', 'graphicdesigner', 'uxwriter', 'crmmanager', 'partnershipmanager', 'businessdevelopmentmanager', 'eventmanager', 'eventproducer', 'ecommercemanager', 'affiliatemarketingmanager', 'influencerrelationsmanager', 'marketingconsultant', 'freelancer', 'welfarenco', 'mashakittash', 'combatsoldier', 'lochem', 'lochemet', 'educationnco', 'mashakitchinuch', 'operationsroomcontroller', 'sambatzit', 'commander', 'mefaked', 'mefakedet', 'intelligenceanalyst', 'modiin', 'infantryinstructor', 'madrichatchir', 'combatinstructor', 'madrichatkrav', 'traininginstructor', 'madricha', 'operationsnco', 'mashakmivtzaim', 'humanresourcesnco', 'mashakitkoachadam', 'הייטק', 'hightech', 'hitech', 'high-tech', 'hi-tech', 'tech', 'טק', 'student', 'סטודנט', 'סטודנטית', 'manager', 'מנהל', 'מנהלת', 'friend', 'friends', 'חבר', 'חברה', 'חברים', 'family', 'משפחה', 'colleague', 'קולגה', 'partner', 'בן זוג', 'בת זוג', 'ex', 'אקס', 'אקסית'];
+            
+            const p1Tags = p1.tags ? (Array.isArray(p1.tags) ? p1.tags : p1.tags.split(',').map(t=>t.trim().toLowerCase()).filter(Boolean)) : [];
+            const p1Text = ' ' + [(p1.city||'').toLowerCase(), (p1.role||'').toLowerCase(), (p1.description||'').toLowerCase(), ...p1Tags].join(' ').replace(/[,.!]/g, ' ') + ' ';
+            const p1Years = p1Tags.map(t => t.replace(/^#/, '')).filter(t => /^(19|20)\d{2}$/.test(t));
+            const p1Age = p1.age ? parseInt(p1.age) : null;
+            const p1CityLower = p1.city ? p1.city.toLowerCase() : '';
+            const p1RoleLower = p1.role ? p1.role.toLowerCase() : '';
+            
+            let activeGroups = [];
+            synonymGroups.forEach((group, idx) => {
+                if (group.words.some(word => p1Text.includes(' ' + word + ' '))) {
+                    activeGroups.push({ idx: idx, type: group.type });
+                }
+            });
+            
+            let score = 0;
+            
+            const p2Tags = p2.tags ? (Array.isArray(p2.tags) ? p2.tags : p2.tags.split(',').map(t=>t.trim().toLowerCase()).filter(Boolean)) : [];
+            const p2Text = ' ' + [(p2.city||'').toLowerCase(), (p2.role||'').toLowerCase(), ...p2Tags].join(' ').replace(/[,.!]/g, ' ') + ' ';
+            const p2Years = p2Tags.map(t => t.replace(/^#/, '')).filter(t => /^(19|20)\d{2}$/.test(t));
+            const p2Age = p2.age ? parseInt(p2.age) : null;
+            const p2CityLower = p2.city ? p2.city.toLowerCase() : '';
+            const p2RoleLower = p2.role ? p2.role.toLowerCase() : '';
+            
+            let shared = { uni: 0, degree: 0, company: 0, city: 0, army_unit: 0, army_base: 0, high_school: 0, mechina: 0 };
+            let genericSchoolMatch = false;
+            let sharedStrings = [];
+            
+            activeGroups.forEach(ag => {
+                if (synonymGroups[ag.idx].words.some(word => p2Text.includes(' ' + word + ' '))) {
+                    shared[ag.type]++;
+                    sharedStrings.push(synonymGroups[ag.idx].words[0]);
+                    if (ag.type === 'high_school') {
+                        const schoolName = synonymGroups[ag.idx].words[0];
+                        if (schoolName.includes('ironi') || schoolName.includes('makif') || ['ort', 'amal', 'atid', 'darca', 'rabin', 'begin'].includes(schoolName)) {
+                            genericSchoolMatch = true;
+                        }
+                    }
+                }
+            });
+            
+            const sharedYear = p1Years.some(y => p2Years.includes(y));
+            const ageDiff = (p1Age !== null && p2Age !== null && !isNaN(p1Age) && !isNaN(p2Age)) ? Math.abs(p1Age - p2Age) : null;
+            const isSimilarAge = (ageDiff !== null && ageDiff <= 3);
+            const isSameCity = (p1CityLower && p2CityLower && (p2CityLower.includes(p1CityLower) || p1CityLower.includes(p2CityLower)));
+            
+            if (shared.company > 0) score += 35;
+            if (shared.city > 0) score += 35;
+            if (shared.high_school > 0) {
+                if (genericSchoolMatch && !isSameCity) score += 5;
+                else if (isSimilarAge) score += 45;
+                else score += 15;
+            }
+            if (shared.mechina > 0 && isSimilarAge) score += 45;
+            else if (shared.mechina > 0) score += 20;
+            if (shared.army_unit > 0 && isSimilarAge) score += 40;
+            else if (shared.army_unit > 0) score += 15;
+            if (shared.army_base > 0 && isSimilarAge) score += 30;
+            else if (shared.army_base > 0) score += 10;
+            if (shared.uni > 0 && shared.degree > 0 && sharedYear) score += 40;
+            else if (shared.uni > 0 && shared.degree > 0) score += 35;
+            else if (shared.uni > 0 && sharedYear) score += 25;
+            else if (shared.uni > 0) score += 10;
+            if (shared.degree > 0 && shared.uni === 0) score += 5;
+            
+            if (p1CityLower && p2CityLower) {
+                if ((p2CityLower.includes(p1CityLower) || p1CityLower.includes(p2CityLower)) && !ignoreCities.includes(p1CityLower) && !ignoreCities.includes(p2CityLower)) {
+                    score += 5; // Reduced from 15 to prevent generic city matches
+                }
+            }
+            if (p1RoleLower && p2RoleLower) {
+                if (p2RoleLower === p1RoleLower) score += 5;
+                else if (p2RoleLower.includes(p1RoleLower) || p1RoleLower.includes(p2RoleLower)) score += 2;
+                else {
+                    const fWords = p1RoleLower.split(/\s+/).filter(w => w.length > 2);
+                    const pWords = p2RoleLower.split(/\s+/).filter(w => w.length > 2);
+                    fWords.forEach(fw => {
+                        if (pWords.some(pw => pw.includes(fw) || fw.includes(pw))) score += 1;
+                    });
+                }
+            }
+            p2Tags.forEach(t => {
+                const cleanTag = t.replace(/^#/, '');
+                const match = p1Tags.find(p1t => {
+                    const cleanP1 = p1t.replace(/^#/, '');
+                    return cleanTag === cleanP1 || 
+                           (cleanTag.length > 3 && cleanP1.includes(cleanTag)) || 
+                           (cleanP1.length > 3 && cleanTag.includes(cleanP1));
+                });
+                
+                if (match) {
+                    if (genericRoles.includes(cleanTag)) {
+                        score += 5;
+                    } else {
+                        score += 15; // Reduced from 30 to prevent weak matches from generic tags
+                        sharedStrings.push(cleanTag);
+                    }
+                }
+            });
+            
+            const finalShared = [...new Set(sharedStrings)];
+            // If they reached score 25 but have NO explicit shared concepts, cap their score at 10
+            if (finalShared.length === 0 && score >= 25) {
+                score = 10;
+            }
+            
+            return { score, sharedConcepts: finalShared };
+        }
+
+        function generateRecommendations() {
+            let tags = document.getElementById('f-tags').value.split(',').map(t => t.trim()).filter(Boolean);
+            const desc = document.getElementById('f-desc').value.trim();
+            if (tags.length === 0 && desc) {
+                const words = desc.split(/[\s,.-]+/);
+                const ignoreWords = ['this','that','with','from','they','the','and','for','was','not','are','but','you','all','any','can','her','him','out'];
+                const keywords = words.filter(w => w.length > 3 && !ignoreWords.includes(w.toLowerCase())).slice(0, 4);
+                tags = keywords.map(w => '#' + w.replace(/[^a-zA-Zא-ת]/g, ''));
+            }
+
+            const p1 = {
+                age: document.getElementById('f-age') ? document.getElementById('f-age').value.trim() : '',
+                city: document.getElementById('f-city') ? document.getElementById('f-city').value.trim() : '',
+                role: document.getElementById('f-role') ? document.getElementById('f-role').value.trim() : '',
+                description: desc,
+                tags: tags
+            };
+            
+            let scores = [];
+            people.forEach(p => {
+                const result = calculateMatchScore(p1, p);
+                if (result.score >= 15) {
+                    scores.push({ person: p, score: result.score, shared: result.sharedConcepts });
+                }
+            });
+            
+            scores.sort((a, b) => b.score - a.score);
+            let pendingRecs = scores.map(s => ({person: s.person, shared: s.shared}));
+            
+            const recList = document.getElementById('recommendation-list');
+            recList.innerHTML = '';
+            
+            if (pendingRecs.length === 0) {
+                document.getElementById('wizard-step-8').style.display = 'none'; // skip
+                goToWizardStep(9);
+                return;
+            }
+            
+            const recsToRender = pendingRecs.slice(0, 5);
+            recsToRender.forEach(rec => {
+                const p = rec.person;
+                const sharedConcepts = rec.shared || [];
+                const div = document.createElement('div');
+                div.style.cssText = 'background: rgba(245,245,245,0.05); border: 1px solid rgba(245,245,245,0.2); border-radius: 10px; padding: 15px; margin-bottom: 15px; display: flex; justify-content: space-between; align-items: center; transition: 0.3s; flex-direction: column; gap: 10px; align-items: stretch;';
+                
+                let sharedHTML = '';
+                if (sharedConcepts.length > 0) {
+                    sharedHTML = `<div style="font-size: 11px; color: #4CAF50; background: rgba(76, 175, 80, 0.1); padding: 4px 8px; border-radius: 4px; display: inline-block;">Shared: ${sharedConcepts.join(', ')}</div>`;
+                }
+
+                div.innerHTML = `
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                        <div>
+                            <div style="font-size: 16px; font-weight: bold; color: #F5F5F5;">${p.name}</div>
+                            <div style="font-size: 12px; color: rgba(245,245,245,0.6);">${p.role || ''} • ${p.city || ''}</div>
+                        </div>
+                        <button type="button" class="btn-add-rec" data-id="${p.id}" style="background: white; color: black; border: none; padding: 8px 16px; border-radius: 10px; font-weight: bold; font-size: 12px; cursor: pointer;">Connect</button>
+                    </div>
+                    ${sharedHTML}
+                `;
+                recList.appendChild(div);
+                
+                div.querySelector('.btn-add-rec').addEventListener('click', (e) => {
+                    const id = parseInt(e.target.dataset.id);
+                    addConnectionEntry(id, 'acquaintance', 3);
+                    e.target.textContent = 'Added';
+                    e.target.style.background = '#333';
+                    e.target.style.color = '#fff';
+                    e.target.disabled = true;
+                });
+            });
+        }
+
+        function openModal(mode, personData = null, defaultConnectionNodeId = null) {
+            modal.classList.add('visible');
+            overlay.classList.add('visible');
+            document.getElementById('form-mode').value = mode;
+            document.getElementById('connections-list').innerHTML = '';
+            
+            if (mode === 'add') {
+                const instr = document.getElementById('add-person-instructions');
+                if (instr) instr.style.display = 'block';
+                document.getElementById('modal-title').textContent = 'Add Person';
+                document.getElementById('btn-wizard-submit').textContent = 'Save to Network';
+                document.getElementById('form-person-id').value = '';
+                document.getElementById('edit-name-group').style.display = 'none';
+                form.reset();
+                document.getElementById('f-name-initial').value = '';
+                document.getElementById('connections-section').style.display = 'block';
+                // Move connections back to step 6 for Add flow
+                document.getElementById('wizard-step-9-original-parent').appendChild(document.getElementById('connections-section'));
+                document.getElementById('edit-connections-accordion').style.display = 'none';
+
+                if (defaultConnectionNodeId !== null && people[defaultConnectionNodeId]) {
+                    addConnectionEntry(people[defaultConnectionNodeId].id);
+                } else {
+                    addConnectionEntry();
+                }
+                goToWizardStep(0);
+            } else if (mode === 'edit') {
+                const instr = document.getElementById('add-person-instructions');
+                if (instr) instr.style.display = 'none';
+                document.getElementById('modal-title').textContent = 'Edit Person';
+                document.getElementById('btn-wizard-submit').textContent = 'Update Network';
+                document.getElementById('form-person-id').value = personData.id;
+                document.getElementById('edit-name-group').style.display = 'block';
+                document.getElementById('f-name').value = personData.name || '';
+                document.getElementById('f-age').value = personData.age || '';
+                document.getElementById('f-role').value = personData.role || '';
+                document.getElementById('f-city').value = personData.city || '';
+                document.getElementById('f-country').value = personData.country || '';
+                document.getElementById('f-desc').value = personData.description || '';
+                document.getElementById('f-tags').value = personData.tags || '';
+                document.getElementById('connections-section').style.display = 'block';
+                
+                // Prepopulate connections if any exist
+                if (personData.connections && personData.connections.length > 0) {
+                    personData.connections.forEach(c => addConnectionEntry(c.id, c.type, c.strength));
+                } else {
+                    addConnectionEntry();
+                }
+                
+                // Move connections section into the accordion for Edit mode
+                document.getElementById('edit-connections-content').appendChild(document.getElementById('connections-section'));
+                document.getElementById('edit-connections-accordion').style.display = 'block';
+                document.getElementById('edit-connections-content').style.display = 'none';
+                document.getElementById('edit-conns-arrow').style.transform = 'rotate(0deg)';
+                
+                // Show Edit mode UI directly (bypass wizard steps)
+                document.querySelectorAll('.wizard-step').forEach(el => {
+                    el.classList.remove('active');
+                    el.style.display = 'none';
+                });
+                // We only show step 4, 4b and step 6 footer. Step 6 content is now inside step 4b!
+                ['wizard-step-4', 'wizard-step-4b', 'wizard-step-6-footer'].forEach(id => {
+                    const el = document.getElementById(id);
+                    if (el) {
+                        el.style.display = id.includes('footer') ? 'flex' : 'block';
+                        void el.offsetWidth;
+                        el.classList.add('active');
+                    }
+                });
+                
+                // Hide back buttons in edit mode
+                document.getElementById('btn-wizard-back-6').style.display = 'none';
+                const backBtn = document.getElementById('btn-wizard-back');
+                if (backBtn) backBtn.style.display = 'none';
+            }
+        }
+        
+        // Accordion logic
+        document.getElementById('btn-toggle-edit-conns').addEventListener('click', () => {
+            const content = document.getElementById('edit-connections-content');
+            const arrow = document.getElementById('edit-conns-arrow');
+            if (content.style.display === 'none') {
+                content.style.display = 'block';
+                arrow.style.transform = 'rotate(180deg)';
+            } else {
+                content.style.display = 'none';
+                arrow.style.transform = 'rotate(0deg)';
+            }
+        });
+
+        function closeModal() {
+            modal.classList.remove('visible');
+            overlay.classList.remove('visible');
+        }
+
+        document.getElementById('btn-add-connection').addEventListener('click', () => openModal('add'));
+        document.getElementById('btn-theme').addEventListener('click', () => {
+            document.body.classList.toggle('light-mode');
+            const isLight = document.body.classList.contains('light-mode');
+            document.getElementById('btn-theme').textContent = isLight ? '[ night ]' : '[ day ]';
+        });
+        document.getElementById('btn-close-modal').addEventListener('click', closeModal);
+        overlay.addEventListener('click', closeModal);
+
+        function updateDatalist() {
+            const datalist = document.getElementById('people-list');
+            if (!datalist) return;
+            
+            let availableNames = [...userNames].sort((a, b) => a.localeCompare(b));
+            
+            if (modal.classList.contains('visible')) {
+                const currentName = document.getElementById('f-name').value.trim();
+                if (currentName) {
+                    availableNames = availableNames.filter(n => n !== currentName);
+                }
+                
+                const inputs = document.querySelectorAll('.conn-target');
+                const selectedNames = Array.from(inputs).map(inp => inp.value.trim()).filter(Boolean);
+                availableNames = availableNames.filter(n => !selectedNames.includes(n));
+            }
+            
+            datalist.innerHTML = '';
+            availableNames.forEach(name => {
+                const option = document.createElement('option');
+                option.value = name;
+                datalist.appendChild(option);
+            });
+        }
+
+        // Update datalist when typing name or connections
+        document.getElementById('f-name').addEventListener('input', updateDatalist);
+
+        function addConnectionEntry(defaultTargetId = null, defaultType = 'friend', defaultStrength = 3) {
+            const div = document.createElement('div');
+            div.className = 'connection-entry';
+            div.style.display = 'flex';
+            div.style.gap = '6px';
+            div.style.alignItems = 'center';
+            div.style.marginBottom = '10px';
+            
+            let defaultName = '';
+            if (defaultTargetId !== null) {
+                const p = people.find(x => x.id === defaultTargetId);
+                if (p) defaultName = p.name;
+            }
+
+            div.innerHTML = `
+                <input type="text" class="conn-target" list="people-list" placeholder="Search Name..." value="${defaultName}" autocomplete="off" style="width: 42%; height: 36px; margin: 0; padding: 0 8px; font-size: 12px; border-radius: 10px; box-sizing: border-box; background: rgba(245,245,245,0.05); border: 1px solid rgba(245,245,245,0.2); color: #F5F5F5;">
+                <select class="conn-type" style="width: 32%; height: 36px; margin: 0; padding: 0 8px; font-size: 12px; border-radius: 10px; box-sizing: border-box;">
+                    <option value="friend" ${defaultType === 'friend' ? 'selected' : ''}>Friend</option>
+                    <option value="family_core" ${defaultType === 'family_core' ? 'selected' : ''}>Fam(Close)</option>
+                    <option value="family_extended" ${defaultType === 'family_extended' ? 'selected' : ''}>Fam(Ext)</option>
+                    <option value="acquaintance" ${defaultType === 'acquaintance' ? 'selected' : ''}>Acq</option>
+                </select>
+                <select class="conn-strength" style="width: 18%; height: 36px; margin: 0; padding: 0 8px; font-size: 12px; border-radius: 10px; box-sizing: border-box;">
+                    <option value="5" ${defaultStrength == 5 ? 'selected' : ''}>5/5</option>
+                    <option value="4" ${defaultStrength == 4 ? 'selected' : ''}>4/5</option>
+                    <option value="3" ${defaultStrength == 3 ? 'selected' : ''}>3/5</option>
+                    <option value="2" ${defaultStrength == 2 ? 'selected' : ''}>2/5</option>
+                    <option value="1" ${defaultStrength == 1 ? 'selected' : ''}>1/5</option>
+                </select>
+                <button type="button" class="btn-remove-conn" style="width: 28px; height: 28px; padding: 0; display: flex; align-items: center; justify-content: center; font-size: 16px;">&times;</button>
+            `;
+            
+            div.querySelector('.conn-target').addEventListener('input', updateDatalist);
+            div.querySelector('.btn-remove-conn').onclick = () => {
+                div.remove();
+                updateDatalist();
+            };
+            connectionsList.appendChild(div);
+            updateDatalist();
+        }
+
+        document.getElementById('btn-add-conn-entry').addEventListener('click', () => addConnectionEntry());
+
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const mode = document.getElementById('form-mode').value;
+            const data = {
+                name: document.getElementById('f-name').value,
+                age: document.getElementById('f-age').value,
+                role: document.getElementById('f-role').value,
+                city: document.getElementById('f-city').value,
+                country: document.getElementById('f-country').value,
+                description: document.getElementById('f-desc').value,
+                tags: document.getElementById('f-tags').value,
+            };
+
+            const originCity = document.getElementById('f-origin-city') ? document.getElementById('f-origin-city').value.trim() : '';
+            if (originCity && originCity !== data.city) {
+                data.description = `[Originally from ${originCity}]\n` + data.description;
+            }
+
+            // Auto-tagging logic
+            if (!data.tags && data.description) {
+                const words = data.description.split(/[\s,.-]+/);
+                const ignoreWords = ['this','that','with','from','they','the','and','for','was','not','are','but','you','all','any','can','her','him','out'];
+                const keywords = words.filter(w => w.length > 3 && !ignoreWords.includes(w.toLowerCase())).slice(0, 4);
+                data.tags = keywords.map(w => '#' + w.replace(/[^a-zA-Zא-ת]/g, '')).join(', ');
+                document.getElementById('f-tags').value = data.tags;
+            }
+
+            const submitBtn = document.getElementById('btn-wizard-submit');
+            submitBtn.textContent = 'SAVING...';
+            submitBtn.disabled = true;
+
+            try {
+                // Collect connections for BOTH add and edit modes
+                const conns = [];
+                const entries = document.querySelectorAll('.connection-entry');
+                entries.forEach(entry => {
+                    const targetName = entry.querySelector('.conn-target').value.trim();
+                    if (!targetName) return; // Skip empty rows
+                    
+                    const targetPerson = people.find(p => p.name === targetName);
+                    if (targetPerson) {
+                        conns.push({
+                            id: targetPerson.id,
+                            type: entry.querySelector('.conn-type').value,
+                            strength: parseInt(entry.querySelector('.conn-strength').value) || 3
+                        });
+                    }
+                });
+                data.connections = conns;
+
+                if (mode === 'add') {
+                    const res = await fetch('/api/people', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(data)
+                    });
+                    if (res.status === 409) {
+                        alert('Error: This person is already in the network! Please find them and add a connection directly.');
+                        submitBtn.textContent = 'SAVE TO NETWORK';
+                        submitBtn.disabled = false;
+                        return;
+                    }
+                    if (!res.ok) throw new Error('Failed to add person');
+                    
+                    closeModal();
+                    
+                    // --- Network Expansion Animation ---
+                    const N = numStrands;
+                    const oldR = 300 + N * 3.5;
+                    const newR = 300 + (N + 1) * 3.5;
+                    const percentIncrease = (((newR/oldR)**3) - 1) * 100;
+                    
+                    const notif = document.createElement('div');
+                    notif.style.cssText = 'position:fixed; top:50%; left:50%; transform:translate(-50%,-50%); background:rgba(0,0,0,0.85); color:#F5F5F5; padding:35px 50px; border-radius: 10px; font-size:28px; text-align:center; z-index:9999; backdrop-filter:blur(20px); opacity:0; transition:opacity 0.8s ease-in-out; font-weight: 300; pointer-events: none; border: 1px solid rgba(245,245,245,0.2); box-shadow: 0 20px 50px rgba(0,0,0,0.5); letter-spacing: 1px;';
+                    notif.innerHTML = `Welcome to the Network!<br><span style="font-size:15px; opacity:0.6; display:block; margin-top:12px; letter-spacing: 0.5px;">Network volume increased by ${percentIncrease.toFixed(1)}%</span>`;
+                    document.body.appendChild(notif);
+                    
+                    // Trigger fade in
+                    requestAnimationFrame(() => notif.style.opacity = '1');
+                    
+                    // Expand network visually
+                    const growthFactor = newR / oldR;
+                    for (let i = 0; i < numStrands; i++) {
+                        const p = pointData[i * pPerStrand];
+                        if(p) {
+                            p.targetCx *= growthFactor;
+                            p.targetCy *= growthFactor;
+                            p.targetCz *= growthFactor;
+                        }
+                    }
+                    
+                    await new Promise(r => setTimeout(r, 2500));
+                    notif.style.opacity = '0';
+                    setTimeout(() => notif.remove(), 800);
+                    
+                } else if (mode === 'edit') {
+                    const personId = document.getElementById('form-person-id').value;
+                    const res = await fetch(`/api/people/${personId}`, {
+                        method: 'PUT',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(data)
+                    });
+                    if (!res.ok) throw new Error('Failed to edit person');
+                    closeModal();
+                }
+                
+                document.getElementById('loading').style.display = 'block';
+                await init();
+                
+                if ((mode === 'add' || mode === 'edit') && numStrands > 0) {
+                    let targetIdx = numStrands - 1;
+                    if (mode === 'edit') {
+                        const personId = parseInt(document.getElementById('form-person-id').value);
+                        const idx = people.findIndex(p => p.id === personId);
+                        if (idx !== -1) targetIdx = idx;
+                    }
+                    
+                    const pIdx = targetIdx * pPerStrand;
+                    
+                    if (mode === 'add') {
+                        // Trigger the new Intro Animation
+                        introAnimationNode = targetIdx;
+                        introAnimationPhase = 1;
+                        introAnimationStart = performance.now();
+                        
+                        // Force camera far away to start, looking at origin
+                        camera.position.set(0, 0, 1800);
+                        camera.lookAt(0, 0, 0);
+                        camTargetPos.set(0, 0, 800); // Sucks us inside
+                        camTargetLookAt.set(0, 0, 0);
+                        isCameraAnimating = true;
+                        
+                        // Teleport the new node exactly to camera initially so it flies in
+                        const pData = pointData[targetIdx * pPerStrand];
+                        if (pData) {
+                            const startWorld = camera.position.clone();
+                            // Push it a bit behind the camera
+                            const camDir = new THREE.Vector3();
+                            camera.getWorldDirection(camDir);
+                            startWorld.add(camDir.multiplyScalar(-500));
+                            masterGroup.worldToLocal(startWorld);
+                            pData.cx = startWorld.x;
+                            pData.cy = startWorld.y;
+                            pData.cz = startWorld.z;
+                            
+                            // Make the new person the permanent center of the network
+                            pData.baseCx = 0;
+                            pData.baseCy = 0;
+                            pData.baseCz = 0;
+                        }
+                        
+                        // Hide connections initially
+                        if (typeof connectionCurves !== 'undefined') {
+                            connectionCurves.forEach(curve => {
+                                curve.mesh.material.uniforms.uOpacity.value = 0.0;
+                            });
+                        }
+                        
+                        // Set timeouts for phases
+                        setTimeout(() => {
+                            introAnimationPhase = 2; // Show connections
+                            if (typeof connectionCurves !== 'undefined') {
+                                connectionCurves.forEach(curve => {
+                                    const aNode = curve.aIdx / pPerStrand;
+                                    const bNode = curve.bIdx / pPerStrand;
+                                    if (aNode === introAnimationNode || bNode === introAnimationNode) {
+                                        curve.mesh.material.uniforms.uOpacity.value = 1.0;
+                                    }
+                                });
+                            }
+                        }, 1500);
+                        
+                        setTimeout(() => {
+                            introAnimationPhase = 3; // Release network
+                            introAnimationNode = null;
+                            
+                            // Restore original target positions so they fly back!
+                            for (let i = 0; i < numStrands; i++) {
+                                const p = pointData[i * pPerStrand];
+                                p.targetCx = p.baseCx;
+                                p.targetCy = p.baseCy;
+                                
+                                labelObjects.forEach(l => {
+                                    l.element.style.fontWeight = '300';
+                                });
+                                if (focusedNodeId !== null && labelObjects[focusedNodeId]) {
+                                    labelObjects[focusedNodeId].element.style.color = 'rgba(245, 245, 245, 1)';
+                                    labelObjects[focusedNodeId].element.style.transform = 'translateY(60px) scale(1.3)';
+                                    labelObjects[focusedNodeId].element.style.fontWeight = '500';
+                                }
+                                
+                                p.targetCz = p.baseCz;
+                            }
+
+                            if (typeof connectionCurves !== 'undefined') {
+                                connectionCurves.forEach(curve => {
+                                    curve.mesh.material.uniforms.uOpacity.value = 1.0;
+                                });
+                            }
+                        }, 3500);
+                        
+                    } else {
+                        // For edit, just immediately re-select the node cleanly
+                        setTimeout(() => {
+                            selectNode(targetIdx, false);
+                        }, 100);
+                    }
+                }
+                
+            } catch (err) {
+                console.error(err);
+                alert('Error saving data');
+            } finally {
+                submitBtn.textContent = 'SAVE TO NETWORK';
+                submitBtn.disabled = false;
+            }
+        });
+
+        document.getElementById('btn-edit-node').addEventListener('click', () => {
+            if (selectedNodeId !== null && people[selectedNodeId]) {
+                openModal('edit', people[selectedNodeId]);
+            }
+        });
+
+        document.getElementById('btn-delete-node').addEventListener('click', async () => {
+            if (selectedNodeId !== null && people[selectedNodeId]) {
+                const person = people[selectedNodeId];
+                document.getElementById('loading').style.display = 'block';
+                try {
+                    if (confirm(`Are you sure you want to delete ${person.name}?`)) {
+                        await fetch(`/api/people/${person.id}`, { method: 'DELETE' });
+                        location.reload();
+                    } else {
+                        document.getElementById('loading').style.display = 'none';
+                    }
+                } catch (e) {
+                    console.error('Delete error', e);
+                    document.getElementById('loading').style.display = 'none';
+                }
+            }
+        });
+
+        document.getElementById('btn-add-from-here').addEventListener('click', () => {
+            if (selectedNodeId !== null) {
+                openModal('add', null, selectedNodeId);
+            }
+        });
+    
+        // Expose to window for inline HTML handlers
+        window.goToWizardStep = goToWizardStep;
+        window.openModal = openModal;
+        window.addConnectionEntry = addConnectionEntry;
+        window.removeConnectionEntry = removeConnectionEntry;
+        window.selectNode = selectNode;
+
