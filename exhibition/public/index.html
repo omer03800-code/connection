@@ -4964,7 +4964,20 @@
                 div.remove();
                 updateDatalist();
             };
-            connectionsList.prepend(div);
+            
+            // UX FIX: Uniform list order. 
+            // Filled cards (suggestions/existing) go above, empty cards go to the bottom.
+            if (defaultTargetId === null) {
+                connectionsList.appendChild(div);
+            } else {
+                const firstEmpty = Array.from(connectionsList.children).find(c => !c.querySelector('.conn-target').value);
+                if (firstEmpty) {
+                    connectionsList.insertBefore(div, firstEmpty);
+                } else {
+                    connectionsList.appendChild(div);
+                }
+            }
+            
             updateDatalist();
         }
 
