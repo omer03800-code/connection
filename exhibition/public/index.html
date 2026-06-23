@@ -3624,18 +3624,15 @@
             }
         });
         
-        // Force English typing only and auto-capitalize first letters
+        // Force auto-capitalize first letters
         form.addEventListener('input', (e) => {
             if (e.target && e.target.tagName === 'INPUT' && e.target.type === 'text') {
                 const originalVal = e.target.value;
                 const start = e.target.selectionStart;
                 const end = e.target.selectionEnd;
                 
-                // Regex matches any Hebrew character
-                let newVal = originalVal.replace(/[\u0590-\u05FF]/g, '');
-                
                 // Capitalize first letter of each word
-                newVal = newVal.split(' ').map(word => {
+                let newVal = originalVal.split(' ').map(word => {
                     if (word.length > 0) {
                         return word.charAt(0).toUpperCase() + word.slice(1);
                     }
