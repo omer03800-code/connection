@@ -957,7 +957,7 @@
                 justify-content: space-between;
                 align-items: center;
             }
-            .autocomplete-item:hover {
+            .autocomplete-item:hover, .autocomplete-item.active {
                 background: rgba(245,245,245,0.1);
             }
             .autocomplete-count {
@@ -969,6 +969,153 @@
                 color: rgba(245,245,245,0.5);
                 margin-top: 8px;
                 min-height: 18px;
+            }
+            
+            /* --- TAGS SYSTEM --- */
+            .tags-wrapper {
+                display: flex;
+                flex-wrap: wrap;
+                gap: 8px;
+                align-items: center;
+                border-bottom: 1px solid rgba(245,245,245,0.4);
+                padding-bottom: 4px;
+                min-height: 38px;
+                transition: border-bottom-color 0.3s ease;
+            }
+            .tags-wrapper:focus-within {
+                border-bottom-color: rgba(245,245,245,0.8);
+            }
+            .tags-wrapper .editorial-input {
+                border-bottom: none;
+                padding: 4px 0;
+                flex-grow: 1;
+                min-width: 120px;
+                width: auto;
+            }
+            .tags-wrapper .editorial-input:focus {
+                border-bottom-color: transparent;
+            }
+            .tag-item {
+                display: flex;
+                align-items: center;
+                background: #000;
+                border: 1px solid rgba(245,245,245,0.2);
+                border-radius: 12px;
+                padding: 4px 12px;
+                font-family: 'Poppins', sans-serif;
+                font-weight: 300;
+                font-size: 14px;
+                color: #fff;
+                white-space: nowrap;
+            }
+            
+            /* --- SUGGESTED CONNECTIONS --- */
+            .suggested-card {
+                background: transparent;
+                border: 1px solid rgba(245, 245, 245, 0.15);
+                border-radius: 12px;
+                padding: 24px 30px;
+                margin-bottom: 16px;
+                display: flex;
+                flex-direction: row;
+                align-items: center;
+            }
+            .suggested-card-content {
+                flex: 1;
+                display: flex;
+                flex-direction: column;
+            }
+            .suggested-card-action {
+                width: 180px;
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                padding-left: 30px;
+            }
+            .suggested-name {
+                font-family: 'Poppins', sans-serif;
+                font-size: 20px;
+                font-weight: 300;
+                color: #F5F5F5;
+                letter-spacing: -0.01em;
+                margin-bottom: 8px;
+                text-wrap: balance;
+            }
+            .suggested-meta {
+                font-family: 'Poppins', sans-serif;
+                font-size: 14px;
+                color: rgba(245,245,245,0.6);
+                font-weight: 300;
+                letter-spacing: 0.2px;
+                text-wrap: balance;
+            }
+            .suggested-meta span {
+                margin: 0 8px;
+                opacity: 0.4;
+            }
+            .btn-connect-sleek {
+                font-family: 'Poppins', sans-serif;
+                background: transparent;
+                color: #E6E6E6;
+                border: none;
+                padding: 10px;
+                font-weight: 300;
+                font-size: 11px;
+                cursor: pointer;
+                transition: 0.2s;
+                text-transform: uppercase;
+                letter-spacing: 2px;
+                outline: none;
+            }
+            .btn-connect-sleek:hover {
+                color: #FFF !important;
+                background: #000 !important;
+                transform: scale(1.02);
+            }
+            .btn-connect-sleek.added {
+                color: rgba(245,245,245,0.3);
+                cursor: default;
+                transform: none;
+            }
+            .suggested-shared-wrap {
+                display: flex;
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 12px;
+                margin-top: 24px;
+            }
+            .suggested-shared-label {
+                font-family: 'Poppins', sans-serif;
+                font-size: 11px;
+                color: rgba(245,245,245,0.4);
+                text-transform: uppercase;
+                letter-spacing: 1.5px;
+                font-weight: 500;
+            }
+            .suggested-shared-pill {
+                font-family: 'Poppins', sans-serif;
+                display: flex;
+                align-items: center;
+                background: #000;
+                border: 1px solid rgba(245,245,245,0.2);
+                border-radius: 12px;
+                padding: 4px 12px;
+                font-weight: 300;
+                font-size: 14px;
+                color: #fff;
+                white-space: nowrap;
+            }
+
+            .tag-remove {
+                margin-left: 8px;
+                cursor: pointer;
+                font-size: 14px;
+                color: rgba(255,255,255,0.5);
+                transition: color 0.2s;
+                font-weight: 400;
+            }
+            .tag-remove:hover {
+                color: #fff;
             }
 
         /* --- VERTICAL PROGRESS BAR (NEW DESIGN) --- */
@@ -1095,12 +1242,14 @@
                 <div id="wizard-step-4" class="wizard-step" style="height: 100%;">
                     <h2 id="step-4-title">Where does your story begin?</h2>
                     
+                    <!-- Full Name Block (only visible when adding connections) -->
+                    <div class="chapter-block" id="edit-name-group" style="display: none; position: absolute; top: 5%; left: 50px; width: calc(100% - 330px); z-index: 40;">
+                        <label class="editorial-label">Full Name</label>
+                        <input type="text" id="f-name" class="editorial-input" required>
+                    </div>
+
                     <!-- 20% Block: Birth Year & Country -->
-                    <div style="position: absolute; top: calc(20% - 10px); left: 50px; width: calc(100% - 330px); z-index: 30;">
-                        <div class="chapter-block" id="edit-name-group" style="display: none; margin-bottom: 30px;">
-                            <label class="editorial-label">Full Name</label>
-                            <input type="text" id="f-name" class="editorial-input" required>
-                        </div>
+                    <div style="position: absolute; top: 20%; left: 50px; width: calc(100% - 330px); z-index: 30;">
 
                         <div style="display:flex; gap:20px;">
                             <div style="flex:1;">
@@ -1114,27 +1263,32 @@
                         </div>
                     </div>
 
-                    <!-- 40% Block: Originally From & Checkbox -->
-                    <div style="position: absolute; top: calc(40% - 10px); left: 50px; width: calc(100% - 330px); z-index: 20;">
-                        <div class="chapter-block autocomplete-wrapper" style="margin-bottom: 8px;">
-                            <label class="editorial-label">Originally From</label>
-                            <input type="text" id="f-origin-city" class="editorial-input auto-location" placeholder="Hometown">
-                            <div class="autocomplete-dropdown" id="dropdown-f-origin-city"></div>
-                            <div class="dynamic-stats" id="stats-f-origin-city"></div>
+                    <!-- 40% Block: Current City & Checkbox -->
+                    <div style="position: absolute; top: 40%; left: 50px; width: calc(100% - 330px); z-index: 20;">
+                        <div class="chapter-block autocomplete-wrapper" style="margin-bottom: 0px;">
+                            <label class="editorial-label">Current City</label>
+                            <div class="tags-wrapper" id="tw-f-city" onclick="document.getElementById('f-city').focus()">
+                                <input type="text" id="f-city" class="editorial-input auto-location" placeholder="Where do you live?">
+                            </div>
+                            <div class="autocomplete-dropdown" id="dropdown-f-city"></div>
+                            <div class="dynamic-stats" id="stats-f-city"></div>
                         </div>
 
-                        <div class="chapter-block" style="display: flex; align-items: center; gap: 10px;">
-                            <input type="checkbox" id="f-same-city" class="white-checkbox" onchange="toggleCurrentCity()">
-                            <label for="f-same-city" id="same-city-label" style="font-size: 13px; color: rgba(245,245,245,0.8); cursor: pointer; user-select: none;">Same as hometown.</label>
+                        <!-- Checkbox just below -->
+                        <div style="display: flex; align-items: center; gap: 8px; font-size: 11px; color: rgba(245,245,245,0.6); text-transform: uppercase; letter-spacing: 1px; margin-top: 5px;">
+                            <input type="checkbox" id="f-same-city" class="white-checkbox" onchange="toggleHometown()">
+                            <label for="f-same-city" style="cursor: pointer; margin-top: 1px;">I grew up there too.</label>
                         </div>
                     </div>
 
-                    <!-- 60% Block: Current City -->
-                    <div class="chapter-block autocomplete-wrapper" id="current-city-wrapper" style="position: absolute; top: calc(60% - 10px); left: 50px; width: calc(100% - 330px); z-index: 10;">
-                        <label class="editorial-label">Current City</label>
-                        <input type="text" id="f-city" class="editorial-input auto-location" placeholder="Where do you live?">
-                        <div class="autocomplete-dropdown" id="dropdown-f-city"></div>
-                        <div class="dynamic-stats" id="stats-f-city"></div>
+                    <!-- 70% Block: Originally From -->
+                    <div class="chapter-block autocomplete-wrapper" id="origin-city-wrapper" style="position: absolute; top: 62%; left: 50px; width: calc(100% - 330px); z-index: 10;">
+                        <label class="editorial-label">Originally From</label>
+                        <div class="tags-wrapper" id="tw-f-origin-city" onclick="document.getElementById('f-origin-city').focus()">
+                            <input type="text" id="f-origin-city" class="editorial-input auto-location" placeholder="Hometown">
+                        </div>
+                        <div class="autocomplete-dropdown" id="dropdown-f-origin-city"></div>
+                        <div class="dynamic-stats" id="stats-f-origin-city"></div>
                     </div>
                 </div>
 
@@ -1142,75 +1296,73 @@
                 <div id="wizard-step-5" class="wizard-step" style="height: 100%;">
                     <h2 id="step-5-title">What keeps you busy?</h2>
                     
-                    <div class="chapter-block autocomplete-wrapper" style="position: absolute; top: calc(20% - 10px); left: 50px; width: calc(100% - 330px); z-index: 30;">
+                    <div class="chapter-block autocomplete-wrapper" style="position: absolute; top: 20%; left: 50px; width: calc(100% - 330px); z-index: 30;">
                         <label class="editorial-label">Current Role</label>
-                        <input type="text" id="f-role" class="editorial-input auto-role" placeholder="e.g. Designer, Developer, Student">
+                        <div class="tags-wrapper" id="tw-f-role" onclick="document.getElementById('f-role').focus()">
+                            <input type="text" id="f-role" class="editorial-input auto-role" placeholder="e.g. Designer, Developer, Student">
+                        </div>
                         <div class="autocomplete-dropdown" id="dropdown-f-role"></div>
                         <div class="dynamic-stats" id="stats-f-role"></div>
                     </div>
 
-                    <div class="chapter-block autocomplete-wrapper" style="position: absolute; top: calc(40% - 10px); left: 50px; width: calc(100% - 330px); z-index: 20;">
+                    <div class="chapter-block autocomplete-wrapper" style="position: absolute; top: 40%; left: 50px; width: calc(100% - 330px); z-index: 20;">
                         <label class="editorial-label">Current Workplace</label>
-                        <input type="text" id="f-workplace" class="editorial-input auto-work" placeholder="Company or Institution">
+                        <div class="tags-wrapper" id="tw-f-workplace" onclick="document.getElementById('f-workplace').focus()">
+                            <input type="text" id="f-workplace" class="editorial-input auto-work" placeholder="Company or Institution">
+                        </div>
                         <div class="autocomplete-dropdown" id="dropdown-f-workplace"></div>
                         <div class="dynamic-stats" id="stats-f-workplace"></div>
                     </div>
                 </div>
 
                 <!-- STEP 6 LIFE CHAPTERS & MORE -->
-                <div id="wizard-step-6" class="wizard-step">
-                    <h2>Life Chapters</h2>
-                    <p class="step-explanation">Where might people know them from? (Optional)</p>
+                <div id="wizard-step-6" class="wizard-step" style="height: 100%;">
+                    <h2 style="display: flex; align-items: baseline; gap: 20px;">
+                        Life Chapters
+                        <span style="font-size: 12px; font-weight: 300; color: rgba(245,245,245,0.5); font-style: italic; line-height: 1.3; min-width: 250px;">* The beast grows stronger with<br>every detail you share.</span>
+                    </h2>
                     
-                    <div class="chapter-block autocomplete-wrapper" style="z-index: 50;">
+                    <div class="chapter-block autocomplete-wrapper" style="position: absolute; top: 20%; left: 50px; width: calc(100% - 330px); z-index: 50;">
                         <label class="editorial-label">High School</label>
-                        <input type="text" id="f-highschool" class="editorial-input auto-highschool" placeholder="School Name">
+                        <div class="tags-wrapper" id="tw-f-highschool" onclick="document.getElementById('f-highschool').focus()">
+                            <input type="text" id="f-highschool" class="editorial-input auto-highschool" placeholder="School Name">
+                        </div>
                         <div class="autocomplete-dropdown" id="dropdown-f-highschool"></div>
                         <div class="dynamic-stats" id="stats-f-highschool"></div>
                     </div>
 
-                    <div class="chapter-block autocomplete-wrapper" style="z-index: 40;">
+                    <div class="chapter-block autocomplete-wrapper" style="position: absolute; top: 38%; left: 50px; width: calc(100% - 330px); z-index: 40;">
                         <label class="editorial-label">Military Service</label>
-                        <input type="text" id="f-military" class="editorial-input auto-military" placeholder="Unit, Base, or Role">
+                        <div class="tags-wrapper" id="tw-f-military" onclick="document.getElementById('f-military').focus()">
+                            <input type="text" id="f-military" class="editorial-input auto-military" placeholder="Unit, Base, or Role">
+                        </div>
                         <div class="autocomplete-dropdown" id="dropdown-f-military"></div>
                         <div class="dynamic-stats" id="stats-f-military"></div>
                     </div>
 
-                    <div class="chapter-block autocomplete-wrapper" style="z-index: 30;">
+                    <div class="chapter-block autocomplete-wrapper" style="position: absolute; top: 56%; left: 50px; width: calc(100% - 330px); z-index: 30;">
                         <label class="editorial-label">Higher Education</label>
-                        <input type="text" id="f-education" class="editorial-input auto-education" placeholder="University, College, Course">
+                        <div class="tags-wrapper" id="tw-f-education" onclick="document.getElementById('f-education').focus()">
+                            <input type="text" id="f-education" class="editorial-input auto-education" placeholder="University, College, Course">
+                        </div>
                         <div class="autocomplete-dropdown" id="dropdown-f-education"></div>
                         <div class="dynamic-stats" id="stats-f-education"></div>
                     </div>
 
-                    <div class="chapter-block autocomplete-wrapper" style="z-index: 20;">
-                        <label class="editorial-label">Previous Work History</label>
-                        <input type="text" id="f-prev-work" class="editorial-input auto-work" placeholder="Previous Company">
-                        <div class="autocomplete-dropdown" id="dropdown-f-prev-work"></div>
-                        <div class="dynamic-stats" id="stats-f-prev-work"></div>
-                    </div>
-
-                    <div class="chapter-block autocomplete-wrapper" style="display: flex; gap: 10px; align-items: flex-end; z-index: 10;">
-                        <div style="flex: 1;">
-                            <label class="editorial-label">Anything Else?</label>
-                            <select id="f-other-category" class="editorial-input" style="padding: 10px 0; outline: none; background: transparent; color: #F5F5F5; border: none; border-bottom: 1px solid rgba(245,245,245,0.4); font-size: 14px;">
-                                <option value="youth" style="background: #222;">Youth Movement / Mechina</option>
-                                <option value="community" style="background: #222;">Community / Volunteer</option>
-                                <option value="other" style="background: #222;">Other Chapter</option>
-                            </select>
+                    <div class="chapter-block autocomplete-wrapper" style="position: absolute; top: 74%; left: 50px; width: calc(100% - 330px); z-index: 20;">
+                        <label class="editorial-label">Feed the beast a little more.</label>
+                        <div class="tags-wrapper" id="tw-f-other-value" onclick="document.getElementById('f-other-value').focus()">
+                            <input type="text" id="f-other-value" class="editorial-input auto-other" placeholder="Mechina, Shnat Sherut, Course...">
                         </div>
-                        <div style="flex: 2; position: relative;" class="autocomplete-wrapper">
-                            <input type="text" id="f-other-value" class="editorial-input auto-other" placeholder="Name of chapter">
-                            <div class="autocomplete-dropdown" id="dropdown-f-other-value"></div>
-                            <div class="dynamic-stats" id="stats-f-other-value"></div>
-                        </div>
+                        <div class="autocomplete-dropdown" id="dropdown-f-other-value"></div>
+                        <div class="dynamic-stats" id="stats-f-other-value"></div>
                     </div>
                 </div>
 
                 <!-- STEP 8 SHARED PATHS (Suggested Connections) -->
                 <div id="wizard-step-8" class="wizard-step">
-                    <h2>Shared Paths Found</h2>
-                    <p class="step-explanation">We found possible connections based on their life chapters.</p>
+                    <h2>Let's start building your network</h2>
+                    <p class="step-explanation">We found a few people who may already be part of it.</p>
                     
                     <div id="recommendation-list"></div>
 
@@ -1219,13 +1371,13 @@
 
                 <!-- STEP 9 ADD CONNECTIONS -->
                 <div id="wizard-step-9" class="wizard-step">
-                    <h2>Who is already connected to them?</h2>
-                    <p class="step-explanation">Select people they know from the network.</p>
+                    <h2 style="color: black;">Let's trace a few connections</h2>
+                    <p class="step-explanation" style="color: #666;">Add a few people already connected to their story.</p>
                     
                     <div id="wizard-step-9-original-parent">
                         <div id="connections-section">
                             <div id="connections-list"></div>
-                            <button type="button" class="btn-add-more-conn" id="btn-add-conn-entry" style="width:100%; border:1px dashed rgba(245,245,245,0.3); background:transparent; color:#F5F5F5; padding:15px; border-radius:10px; cursor:pointer;">+ Add a connection</button>
+                            <button type="button" class="btn-add-more-conn" id="btn-add-conn-entry" style="width:100%; border:1px dashed #ccc; background:white; color:#333; font-size: 11px; font-weight: 600; letter-spacing: 1px; padding:15px; border-radius:8px; cursor:pointer; text-transform: uppercase;">+ Add connection</button>
                         </div>
                     </div>
 
@@ -1256,7 +1408,7 @@
         <!-- GLOBAL FOOTER FOR WIZARD -->
         <div id="global-wizard-footer" style="display: none; padding: 30px 40px; justify-content: space-between; align-items: center; position: absolute; bottom: 0; left: 0; right: 0; z-index: 1000; background: transparent;">
             <button type="button" id="btn-wizard-global-back" class="info-action-btn" style="margin: 0; visibility: hidden;">[ BACK ]</button>
-            <div style="width: 140px; display: flex; align-items: center;">
+            <div style="display: flex; align-items: center; white-space: nowrap;">
                 <button type="button" id="btn-wizard-global-next" class="info-action-btn" style="margin: 0; padding-left: 26px;">[ CONTINUE ]</button>
             </div>
         </div>
@@ -3451,6 +3603,18 @@
             }
         });
         
+        // Force English typing only across all text inputs
+        form.addEventListener('input', (e) => {
+            if (e.target && e.target.tagName === 'INPUT' && e.target.type === 'text') {
+                const originalVal = e.target.value;
+                // Regex matches any Hebrew character
+                const newVal = originalVal.replace(/[\u0590-\u05FF]/g, '');
+                if (originalVal !== newVal) {
+                    e.target.value = newVal;
+                }
+            }
+        });
+        
         let currentWizardStep = 1;
         
         // --- NEW WIZARD LOGIC ---
@@ -3497,28 +3661,30 @@
             if (fCityInput) fCityInput.placeholder = isMyself ? "Where do you live?" : "Where do they live?";
             const step5Title = document.querySelector('#wizard-step-5 h2');
             if (step5Title) step5Title.textContent = isMyself ? "What do you do today?" : "What do they do today?";
-            const step6Explanation = document.querySelector('#wizard-step-6 p.step-explanation');
-            if (step6Explanation) step6Explanation.textContent = isMyself ? "Where might people know you from? (Optional)" : "Where might people know them from? (Optional)";
         }
         
-        function toggleCurrentCity() {
+        window.toggleHometown = function() {
             const isSame = document.getElementById('f-same-city').checked;
-            const currentCityWrapper = document.getElementById('current-city-wrapper');
             const cityInput = document.getElementById('f-city');
             const originCityInput = document.getElementById('f-origin-city');
             
             if (isSame) {
-                currentCityWrapper.style.display = 'none';
-                cityInput.value = originCityInput.value;
+                originCityInput.value = cityInput.value;
+                originCityInput.disabled = true;
+                originCityInput.style.opacity = '0.5';
             } else {
-                currentCityWrapper.style.display = 'block';
-                cityInput.value = '';
+                originCityInput.disabled = false;
+                originCityInput.style.opacity = '1';
+                if (originCityInput.value === cityInput.value) {
+                    originCityInput.value = '';
+                }
             }
         }
-
-        document.getElementById('f-origin-city').addEventListener('input', function() {
+        
+        // Auto-fill origin if typing in current city while checkbox is checked
+        document.getElementById('f-city').addEventListener('input', function() {
             if (document.getElementById('f-same-city').checked) {
-                document.getElementById('f-city').value = this.value;
+                document.getElementById('f-origin-city').value = this.value;
             }
         });
 
@@ -3553,14 +3719,9 @@
                 const btnNext = document.getElementById('btn-wizard-global-next');
                 
                 // Back button logic
-                btnBack.style.visibility = step === 0 ? 'hidden' : 'visible';
-                btnBack.onclick = () => {
-                    const currentIndex = stepsWithFooter.indexOf(step);
-                    if (currentIndex > 0) goToWizardStep(stepsWithFooter[currentIndex - 1]);
-                };
-                
-                // Next button logic
-                btnNext.textContent = step === 9 ? '[ JOIN NETWORK ]' : '[ CONTINUE ]';
+                btnBack.style.visibility = 'visible';
+                btnNext.textContent = step === 9 ? '[ JOIN THE NETWORK ]' : '[ CONTINUE ]';
+                btnNext.style.display = 'inline-block';
                 btnNext.onclick = () => {
                     if (step === 0) processStep0();
                     else if (step === 4) processStep4();
@@ -3652,10 +3813,21 @@
             goToWizardStep(4);
         });
 
-        function processStep4() {
-            const city = document.getElementById('f-city').value.trim();
-            const originCity = document.getElementById('f-origin-city').value.trim();
+        function getFieldValues(wrapperId, inputId) {
+            const wrapper = document.getElementById(wrapperId);
+            const input = document.getElementById(inputId);
+            if (!wrapper || !input) return [];
             
+            const tags = Array.from(wrapper.querySelectorAll('.tag-item span:first-child')).map(s => s.textContent.trim());
+            const val = input.value.trim();
+            if (val && !tags.includes(val)) {
+                tags.push(val);
+            }
+            return tags;
+        }
+
+        function processStep4() {
+            // Data collected later, just transition
             goToWizardStep(5);
         }
 
@@ -3668,24 +3840,20 @@
             let generatedTags = [];
             let generatedDesc = [];
             
-            const addField = (val, prefix, isTag=true) => {
-                if (val) {
-                    if (isTag) generatedTags.push(`${prefix}:${val}`);
-                    generatedDesc.push(`${prefix}: ${val}`);
-                }
+            const addField = (values, prefix, isTag=true) => {
+                values.forEach(val => {
+                    if (val) {
+                        if (isTag) generatedTags.push(`${prefix}:${val}`);
+                        generatedDesc.push(`${prefix}: ${val}`);
+                    }
+                });
             };
             
-            addField(document.getElementById('f-workplace').value.trim(), 'workplace');
-            addField(document.getElementById('f-highschool').value.trim(), 'highschool');
-            addField(document.getElementById('f-military').value.trim(), 'military');
-            addField(document.getElementById('f-education').value.trim(), 'education');
-            addField(document.getElementById('f-prev-work').value.trim(), 'prevwork');
-            
-            const otherVal = document.getElementById('f-other-value').value.trim();
-            if (otherVal) {
-                const otherCat = document.getElementById('f-other-category').value;
-                addField(otherVal, otherCat);
-            }
+            addField(getFieldValues('tw-f-workplace', 'f-workplace'), 'workplace');
+            addField(getFieldValues('tw-f-highschool', 'f-highschool'), 'highschool');
+            addField(getFieldValues('tw-f-military', 'f-military'), 'military');
+            addField(getFieldValues('tw-f-education', 'f-education'), 'education');
+            addField(getFieldValues('tw-f-other-value', 'f-other-value'), 'other');
             
             document.getElementById('f-tags').value = generatedTags.join(', ');
             document.getElementById('f-desc').value = generatedDesc.join('\n');
@@ -3709,6 +3877,39 @@
         }
 
         // --- AUTOCOMPLETE LOGIC ---
+        function addTag(wrapperId, inputId, value, dropdown) {
+            // Remove trailing commas if present
+            value = value.replace(/,$/, '').trim();
+            if (!value) return;
+            
+            const wrapper = document.getElementById(wrapperId);
+            const input = document.getElementById(inputId);
+            
+            // Prevent duplicate tags in the same field
+            const existingTags = Array.from(wrapper.querySelectorAll('.tag-item span:first-child')).map(s => s.textContent.toLowerCase());
+            if (existingTags.includes(value.toLowerCase())) {
+                input.value = '';
+                if (dropdown) dropdown.style.display = 'none';
+                return;
+            }
+            
+            const tag = document.createElement('div');
+            tag.className = 'tag-item';
+            let displayValue = value.startsWith('#') ? value : '#' + value;
+            tag.innerHTML = `<span>${displayValue}</span> <span class="tag-remove">&times;</span>`;
+            
+            tag.querySelector('.tag-remove').onclick = function() {
+                wrapper.removeChild(tag);
+            };
+            
+            wrapper.insertBefore(tag, input);
+            input.value = '';
+            if (dropdown) dropdown.style.display = 'none';
+            
+            // Focus input again
+            input.focus();
+        }
+
         function setupAutocomplete(inputId, staticPrefix) {
             const input = document.getElementById(inputId);
             const dropdown = document.getElementById('dropdown-' + inputId);
@@ -3758,9 +3959,21 @@
 
             input.addEventListener('input', (e) => {
                 const val = input.value;
-                const lowerVal = val.toLowerCase().trim();
+                if (val.includes(',')) {
+                    const parts = val.split(',');
+                    const toTag = parts.slice(0, -1).join(',').trim();
+                    if (toTag) addTag('tw-' + inputId, inputId, toTag, dropdown);
+                    input.value = parts[parts.length - 1];
+                    // Re-trigger input for the remaining text
+                    input.dispatchEvent(new Event('input'));
+                    return;
+                }
+
+                // If user types #, strip it for autocomplete matching
+                const searchValForMatch = val.replace(/^#/, '');
+                const lowerVal = searchValForMatch.toLowerCase().trim();
                 dropdown.innerHTML = '';
-                stats.innerHTML = '';
+                if (stats) stats.style.display = 'none';
                 
                 if (!val.trim()) {
                     dropdown.style.display = 'none';
@@ -3779,14 +3992,44 @@
                 
                 // Count occurrences from people array
                 let counts = {};
+                
+                const toTitleCase = (str) => {
+                    return str.replace(/\w\S*/g, (txt) => txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase());
+                };
+                
+                const normalizeCity = (c) => {
+                    const lower = c.toLowerCase();
+                    if (['ilaniya', 'moshav ilaniya', 'moshav ilania', 'אילניה', 'מושב אילניה', 'ilania'].includes(lower)) return 'Ilania';
+                    return toTitleCase(c);
+                };
+                
+                const normalizeSchool = (e) => {
+                    const lower = e.toLowerCase();
+                    if (lower === 'haifa university' || lower === 'university of haifa') return 'University of Haifa';
+                    if (lower === 'kadoorie' || lower === 'kadoorie school' || lower === 'kadoorie agricultural school') return 'Kadoorie Agricultural School (Kadoorie)';
+                    return toTitleCase(e);
+                };
+                
+                const splitAndCount = (value, isCity = false, isSchool = false) => {
+                    if (!value) return;
+                    const parts = value.split(/\||\/|,|\s-\s|—|\n/);
+                    parts.forEach(p => {
+                        let cleanVal = p.trim();
+                        if (cleanVal) {
+                            if (isCity) cleanVal = normalizeCity(cleanVal);
+                            else if (isSchool) cleanVal = normalizeSchool(cleanVal);
+                            else cleanVal = toTitleCase(cleanVal);
+                            counts[cleanVal] = (counts[cleanVal] || 0) + 1;
+                        }
+                    });
+                };
+                
                 people.forEach(p => {
                     // Check direct fields
                     if (prefix === 'city' && p.city) {
-                        const c = p.city.trim();
-                        counts[c] = (counts[c] || 0) + 1;
+                        splitAndCount(p.city, true, false);
                     } else if (prefix === 'role' && p.role) {
-                        const r = p.role.trim();
-                        counts[r] = (counts[r] || 0) + 1;
+                        splitAndCount(p.role, false, false);
                     }
                     
                     // Check tags
@@ -3796,8 +4039,8 @@
                             t = t.trim();
                             // Check for new format: "category: value"
                             if (t.toLowerCase().startsWith(prefix + ':')) {
-                                const cleanVal = t.substring(prefix.length + 1).trim();
-                                counts[cleanVal] = (counts[cleanVal] || 0) + 1;
+                                let cleanVal = t.substring(prefix.length + 1).trim();
+                                splitAndCount(cleanVal, prefix === 'city' || prefix === 'origin-city', prefix === 'education' || prefix === 'highschool');
                             }
                         });
                     }
@@ -3810,24 +4053,34 @@
                     });
                 }
                 
-                // Inline Autofill Logic
+
+                
+                // Inline Autofill Logic (Word by Word)
                 if (!isDeleting && val.length > 0) {
                     const startsWithMatches = Object.keys(counts)
-                        .filter(k => k.toLowerCase().startsWith(val.toLowerCase()))
+                        .filter(k => k.toLowerCase().startsWith(searchValForMatch.toLowerCase()))
                         .sort((a, b) => counts[b] - counts[a]);
                         
                     if (startsWithMatches.length > 0) {
                         const bestMatch = startsWithMatches[0];
-                        const remainder = bestMatch.substring(val.length);
+                        let remainder = bestMatch.substring(searchValForMatch.length);
+                        
+                        // Truncate remainder at the next space to only autofill one word at a time
+                        const nextSpaceIndex = remainder.indexOf(' ');
+                        if (nextSpaceIndex !== -1) {
+                            remainder = remainder.substring(0, nextSpaceIndex);
+                        }
+                        
                         if (remainder.length > 0) {
                             input.value = val + remainder;
                             input.setSelectionRange(val.length, input.value.length);
                         }
                     }
                 }
-
+                
                 // Dropdown logic
-                const searchVal = input.value.substring(0, input.selectionStart || input.value.length).trim().toLowerCase();
+                const rawVal = input.value.substring(0, input.selectionStart || input.value.length).trim();
+                const searchVal = rawVal.replace(/^#/, '').toLowerCase();
                 const suggestions = Object.keys(counts)
                     .filter(k => k.toLowerCase().includes(searchVal))
                     .sort((a, b) => counts[b] - counts[a])
@@ -3839,17 +4092,62 @@
                         div.className = 'autocomplete-item';
                         div.innerHTML = `<span>${s}</span> <span class="autocomplete-count">${counts[s]} people</span>`;
                         div.onclick = () => {
-                            input.value = s;
-                            dropdown.style.display = 'none';
-                            stats.innerHTML = `${counts[s]} people in the network are connected to this.`;
+                            addTag('tw-' + inputId, inputId, s, dropdown);
                         };
                         dropdown.appendChild(div);
                     });
                     dropdown.style.display = 'block';
                 } else {
                     dropdown.style.display = 'none';
-                    stats.innerHTML = `You are the first one in the network to add this!`;
                 }
+            });
+
+            input.addEventListener('keydown', (e) => {
+                const items = dropdown.querySelectorAll('.autocomplete-item');
+                let activeIndex = Array.from(items).findIndex(item => item.classList.contains('active'));
+
+                if (e.key === 'ArrowDown') {
+                    e.preventDefault();
+                    if (activeIndex < items.length - 1) {
+                        if (activeIndex >= 0) items[activeIndex].classList.remove('active');
+                        activeIndex++;
+                        items[activeIndex].classList.add('active');
+                        items[activeIndex].scrollIntoView({ block: 'nearest' });
+                    }
+                } else if (e.key === 'ArrowUp') {
+                    e.preventDefault();
+                    if (activeIndex > 0) {
+                        items[activeIndex].classList.remove('active');
+                        activeIndex--;
+                        items[activeIndex].classList.add('active');
+                        items[activeIndex].scrollIntoView({ block: 'nearest' });
+                    }
+                } else if (e.key === 'Enter') {
+                    e.preventDefault();
+                    e.stopPropagation(); // Prevent moving to next wizard step
+                    if (activeIndex >= 0 && items[activeIndex]) {
+                        items[activeIndex].click();
+                        return;
+                    }
+                    const val = input.value.trim();
+                    if (val) {
+                        addTag('tw-' + inputId, inputId, val, dropdown);
+                    }
+                } else if (e.key === 'Backspace' && input.value === '') {
+                    const wrapper = document.getElementById('tw-' + inputId);
+                    const tags = wrapper.querySelectorAll('.tag-item');
+                    if (tags.length > 0) {
+                        tags[tags.length - 1].remove();
+                    }
+                }
+            });
+
+            input.addEventListener('blur', () => {
+                setTimeout(() => {
+                    if (input.value.trim()) {
+                        addTag('tw-' + inputId, inputId, input.value.trim(), dropdown);
+                    }
+                }, 150);
             });
 
             // Close dropdown when clicking outside
@@ -4035,6 +4333,7 @@
                 { type: 'uni', words: ['colman', 'המכללה למינהל', 'מכללה למנהל', 'the college of management'] },
                 { type: 'uni', words: ['open university', 'האוניברסיטה הפתוחה'] },
                 { type: 'uni', words: ['hit', 'holon institute of technology', 'מכון טכנולוגי חולון'] },
+                { type: 'army_unit', words: ['operations room controller', 'sambatzit', 'סמבצית'] },
                 { type: 'company', words: ['google'] }, { type: 'company', words: ['microsoft'] }, { type: 'company', words: ['apple'] }, { type: 'company', words: ['amazon'] }, { type: 'company', words: ['nvidia'] }, { type: 'company', words: ['intel'] }, { type: 'company', words: ['meta', 'facebook'] }, { type: 'company', words: ['ibm'] }, { type: 'company', words: ['salesforce'] }, { type: 'company', words: ['monday.com', 'monday'] }, { type: 'company', words: ['wix'] }, { type: 'company', words: ['fiverr'] }, { type: 'company', words: ['check point', 'checkpoint'] }, { type: 'company', words: ['cyberark'] }, { type: 'company', words: ['nice'] }, { type: 'company', words: ['amdocs'] }, { type: 'company', words: ['playtika'] }, { type: 'company', words: ['etoro'] }, { type: 'company', words: ['taboola'] }, { type: 'company', words: ['outbrain'] },
                 { type: 'army_unit', words: ['golani'] }, { type: 'army_unit', words: ['givati'] }, { type: 'army_unit', words: ['nahal'] }, { type: 'army_unit', words: ['paratroopers', 'tzanhanim'] }, { type: 'army_unit', words: ['kfir'] }, { type: 'army_unit', words: ['armored corps', 'shiryon'] }, { type: 'army_unit', words: ['artillery', 'totchanim'] }, { type: 'army_unit', words: ['combat engineering', 'handasa kravit'] }, { type: 'army_unit', words: ['air force', 'heil haavir'] }, { type: 'army_unit', words: ['navy', 'heil hayam'] }, { type: 'army_unit', words: ['home front command', 'pikud haoref'] }, { type: 'army_unit', words: ['border police', 'magav'] }, { type: 'army_unit', words: ['intelligence', 'aman'] }, { type: 'army_unit', words: ['sayeret matkal', 'general staff reconnaissance'] }, { type: 'army_unit', words: ['shayetet 13', 'naval commandos'] }, { type: 'army_unit', words: ['shaldag', 'air force commandos'] }, { type: 'army_unit', words: ['maglan', 'special forces'] }, { type: 'army_unit', words: ['duvdevan', 'undercover unit'] }, { type: 'army_unit', words: ['egoz', 'reconnaissance unit'] }, { type: 'army_unit', words: ['yahalom', 'combat engineering special forces'] }, { type: 'army_unit', words: ['oketz', 'k9 unit'] }, { type: 'army_unit', words: ['unit 669', 'combat search and rescue'] }, { type: 'army_unit', words: ['unit 8200', '8200', 'signals intelligence'] }, { type: 'army_unit', words: ['lotar', 'counter-terror'] },
                 { type: 'army_base', words: ['bahad 1'] }, { type: 'army_base', words: ['bahad 7'] }, { type: 'army_base', words: ['bahad 12'] }, { type: 'army_base', words: ['glilot'] }, { type: 'army_base', words: ['kirya'] }, { type: 'army_base', words: ['tel hashomer'] }, { type: 'army_base', words: ['ir habahadim'] }, { type: 'army_base', words: ['tzrifin'] }, { type: 'army_base', words: ['nevatim'] }, { type: 'army_base', words: ['hatzerim'] }, { type: 'army_base', words: ['ramat david'] }, { type: 'army_base', words: ['palmachim'] }, { type: 'army_base', words: ['ramon'] }, { type: 'army_base', words: ['ovda'] }, { type: 'army_base', words: ['ze\'elim', 'zeelim'] }, { type: 'army_base', words: ['re\'im', 'reim'] }, { type: 'army_base', words: ['urim'] }, { type: 'army_base', words: ['nafah'] }, { type: 'army_base', words: ['saar 474'] }, { type: 'army_base', words: ['barak 188'] }, { type: 'army_base', words: ['golani 1'] }, { type: 'army_base', words: ['givati 84'] }, { type: 'army_base', words: ['nahal 933'] }, { type: 'army_base', words: ['tzanhanim 35'] }, { type: 'army_base', words: ['kfir 900'] }, { type: 'army_base', words: ['harel 10'] }, { type: 'army_base', words: ['alexandroni 3'] }, { type: 'army_base', words: ['carmeli 2'] },
@@ -4044,7 +4343,8 @@
             const genericRoles = ['softwareengineer', 'fullstackdeveloper', 'frontenddeveloper', 'backenddeveloper', 'mobiledeveloper', 'iosdeveloper', 'androiddeveloper', 'webdeveloper', 'gamedeveloper', 'devopsengineer', 'sitelieliabilityengineer', 'sre', 'cloudengineer', 'cloudarchitect', 'solutionsarchitect', 'dataengineer', 'dataanalyst', 'datascientist', 'machinelearningengineer', 'aiengineer', 'airesearcher', 'promptengineer', 'cybersecurityanalyst', 'cybersecurityengineer', 'informationsecuritymanager', 'penetrationtester', 'socanalyst', 'qaengineer', 'automationengineer', 'testengineer', 'productmanager', 'technicalproductmanager', 'projectmanager', 'programmanager', 'scrummaster', 'businessanalyst', 'systemsanalyst', 'uxdesigner', 'uidesigner', 'uxresearcher', 'productdesigner', 'servicedesigner', 'interactiondesigner', 'technicalwriter', 'solutionsconsultant', 'customersuccessmanager', 'technicalsupportengineer', 'salesengineer', 'presalesengineer', 'itmanager', 'itadministrator', 'databaseadministrator', 'dba', 'networkengineer', 'embeddedsystemsengineer', 'hardwareengineer', 'electronicsengineer', 'roboticsengineer', 'computervisionengineer', 'blockchaindeveloper', 'arvrdeveloper', 'marketingmanager', 'digitalmarketingmanager', 'brandmanager', 'marketingdirector', 'chiefmarketingofficer', 'cmo', 'performancemarketingmanager', 'growthmarketingmanager', 'productmarketingmanager', 'contentmarketingmanager', 'socialmediamanager', 'communitymanager', 'influencermarketingmanager', 'emailmarketingspecialist', 'seospecialist', 'semspecialist', 'ppcspecialist', 'marketingspecialist', 'marketingcoordinator', 'marketinganalyst', 'marketresearchanalyst', 'brandstrategist', 'creativestrategist', 'communicationsmanager', 'publicrelationsmanager', 'prmanager', 'prspecialist', 'mediaplanner', 'mediabuyer', 'campaignmanager', 'advertisingmanager', 'copywriter', 'contentcreator', 'contentmanager', 'contentstrategist', 'creativedirector', 'artdirector', 'graphicdesigner', 'uxwriter', 'crmmanager', 'partnershipmanager', 'businessdevelopmentmanager', 'eventmanager', 'eventproducer', 'ecommercemanager', 'affiliatemarketingmanager', 'influencerrelationsmanager', 'marketingconsultant', 'freelancer', 'welfarenco', 'mashakittash', 'combatsoldier', 'lochem', 'lochemet', 'educationnco', 'mashakitchinuch', 'operationsroomcontroller', 'sambatzit', 'commander', 'mefaked', 'mefakedet', 'intelligenceanalyst', 'modiin', 'infantryinstructor', 'madrichatchir', 'combatinstructor', 'madrichatkrav', 'traininginstructor', 'madricha', 'operationsnco', 'mashakmivtzaim', 'humanresourcesnco', 'mashakitkoachadam', 'הייטק', 'hightech', 'hitech', 'high-tech', 'hi-tech', 'tech', 'טק', 'student', 'סטודנט', 'סטודנטית', 'manager', 'מנהל', 'מנהלת', 'friend', 'friends', 'חבר', 'חברה', 'חברים', 'family', 'משפחה', 'colleague', 'קולגה', 'partner', 'בן זוג', 'בת זוג', 'ex', 'אקס', 'אקסית'];
             
             const p1Tags = p1.tags ? (Array.isArray(p1.tags) ? p1.tags : p1.tags.split(',').map(t=>t.trim().toLowerCase()).filter(Boolean)) : [];
-            const p1Text = ' ' + [(p1.city||'').toLowerCase(), (p1.role||'').toLowerCase(), (p1.description||'').toLowerCase(), ...p1Tags].join(' ').replace(/[,.!]/g, ' ') + ' ';
+            const p1TagsCleaned = p1Tags.map(t => t.replace(/.*?:/, '').replace(/^#/, ''));
+            const p1Text = ' ' + [(p1.city||'').toLowerCase(), (p1.originCity||'').toLowerCase(), (p1.role||'').toLowerCase(), (p1.description||'').toLowerCase(), ...p1TagsCleaned].join(' ').replace(/[,.!]/g, ' ') + ' ';
             const p1Years = p1Tags.map(t => t.replace(/^#/, '')).filter(t => /^(19|20)\d{2}$/.test(t));
             const p1Age = p1.age ? parseInt(p1.age) : null;
             const p1CityLower = p1.city ? p1.city.toLowerCase() : '';
@@ -4060,7 +4360,8 @@
             let score = 0;
             
             const p2Tags = p2.tags ? (Array.isArray(p2.tags) ? p2.tags : p2.tags.split(',').map(t=>t.trim().toLowerCase()).filter(Boolean)) : [];
-            const p2Text = ' ' + [(p2.city||'').toLowerCase(), (p2.role||'').toLowerCase(), ...p2Tags].join(' ').replace(/[,.!]/g, ' ') + ' ';
+            const p2TagsCleaned = p2Tags.map(t => t.replace(/.*?:/, '').replace(/^#/, ''));
+            const p2Text = ' ' + [(p2.city||'').toLowerCase(), (p2.role||'').toLowerCase(), ...p2TagsCleaned].join(' ').replace(/[,.!]/g, ' ') + ' ';
             const p2Years = p2Tags.map(t => t.replace(/^#/, '')).filter(t => /^(19|20)\d{2}$/.test(t));
             const p2Age = p2.age ? parseInt(p2.age) : null;
             const p2CityLower = p2.city ? p2.city.toLowerCase() : '';
@@ -4104,8 +4405,8 @@
             if (shared.uni > 0 && shared.degree > 0 && sharedYear) score += 40;
             else if (shared.uni > 0 && shared.degree > 0) score += 35;
             else if (shared.uni > 0 && sharedYear) score += 25;
-            else if (shared.uni > 0) score += 10;
-            if (shared.degree > 0 && shared.uni === 0) score += 5;
+            else if (shared.uni > 0) score += 15;
+            if (shared.degree > 0 && shared.uni === 0) score += 15;
             
             if (p1CityLower && p2CityLower) {
                 if ((p2CityLower.includes(p1CityLower) || p1CityLower.includes(p2CityLower)) && !ignoreCities.includes(p1CityLower) && !ignoreCities.includes(p2CityLower)) {
@@ -4167,8 +4468,9 @@
 
             const p1 = {
                 age: calculatedAge,
-                city: document.getElementById('f-city') ? document.getElementById('f-city').value.trim() : '',
-                role: document.getElementById('f-role') ? document.getElementById('f-role').value.trim() : '',
+                city: getFieldValues('tw-f-city', 'f-city').join(', '),
+                originCity: getFieldValues('tw-f-origin-city', 'f-origin-city').join(', '),
+                role: getFieldValues('tw-f-role', 'f-role').join(', '),
                 description: desc,
                 tags: tags
             };
@@ -4196,31 +4498,44 @@
                 const p = rec.person;
                 const sharedConcepts = rec.shared || [];
                 const div = document.createElement('div');
-                div.style.cssText = 'background: rgba(245,245,245,0.02); border: 1px solid rgba(245,245,245,0.1); border-radius: 12px; padding: 20px; margin-bottom: 15px; display: flex; justify-content: space-between; align-items: center; transition: 0.3s; flex-direction: column; gap: 15px; align-items: stretch;';
+                div.className = 'suggested-card';
                 
                 let sharedHTML = '';
                 if (sharedConcepts.length > 0) {
-                    sharedHTML = `<div style="font-size: 11px; color: rgba(245,245,245,0.8); background: rgba(245,245,245,0.1); padding: 6px 10px; border-radius: 6px; display: inline-block;">Why suggested: ${sharedConcepts.join(', ')}</div>`;
+                    const pillsHTML = sharedConcepts.map(c => {
+                        const match = c.match(/\(([^)]+)\)/);
+                        const shortLabel = match ? match[1] : c;
+                        return `<span class="suggested-shared-pill">${shortLabel}</span>`;
+                    }).join('');
+                    sharedHTML = `
+                        <div class="suggested-shared-wrap">
+                            <span class="suggested-shared-label">SHARED PATHS</span>
+                            <div style="display: flex; gap: 8px; flex-wrap: wrap;">${pillsHTML}</div>
+                        </div>
+                    `;
                 }
 
+                const metaStr = `${p.role || 'Unknown'} <span>•</span> ${p.city || 'Unknown'}`;
+                // Bulletproof anti-orphan: replace the last space with a non-breaking space
+                const metaNoOrphans = metaStr.replace(/ ([^ ]*)$/, '&nbsp;$1');
+
                 div.innerHTML = `
-                    <div style="display: flex; justify-content: space-between; align-items: center;">
-                        <div>
-                            <div style="font-size: 16px; font-weight: bold; color: #F5F5F5;">${p.name}</div>
-                            <div style="font-size: 12px; color: rgba(245,245,245,0.6);">${p.role || ''} • ${p.city || ''}</div>
-                        </div>
-                        <button type="button" class="btn-add-rec" data-id="${p.id}" style="background: white; color: black; border: none; padding: 8px 16px; border-radius: 10px; font-weight: bold; font-size: 12px; cursor: pointer;">Connect</button>
+                    <div class="suggested-card-content">
+                        <div class="suggested-name">${p.name.replace(/ ([^ ]*)$/, '&nbsp;$1')}</div>
+                        <div class="suggested-meta">${metaNoOrphans}</div>
+                        ${sharedHTML}
                     </div>
-                    ${sharedHTML}
+                    <div class="suggested-card-action">
+                        <button type="button" class="btn-connect-sleek" data-id="${p.id}">[ CONNECT ]</button>
+                    </div>
                 `;
                 recList.appendChild(div);
                 
-                div.querySelector('.btn-add-rec').addEventListener('click', (e) => {
+                div.querySelector('.btn-connect-sleek').addEventListener('click', (e) => {
                     const id = parseInt(e.target.dataset.id);
                     addConnectionEntry(id, 'acquaintance', 3);
-                    e.target.textContent = 'Added';
-                    e.target.style.background = '#333';
-                    e.target.style.color = '#fff';
+                    e.target.textContent = '[ ADDED ]';
+                    e.target.classList.add('added');
                     e.target.disabled = true;
                 });
             });
@@ -4266,8 +4581,22 @@
                 if (byField && personData.age) {
                     byField.value = new Date().getFullYear() - parseInt(personData.age);
                 }
-                document.getElementById('f-role').value = personData.role || '';
-                document.getElementById('f-city').value = personData.city || '';
+                const loadTags = (wrapperId, inputId, valueStr) => {
+                    const wrapper = document.getElementById(wrapperId);
+                    const input = document.getElementById(inputId);
+                    if (!wrapper || !input) return;
+                    wrapper.querySelectorAll('.tag-item').forEach(t => t.remove());
+                    input.value = '';
+                    if (valueStr) {
+                        valueStr.split(',').map(v => v.trim()).filter(v => v).forEach(v => {
+                            addTag(wrapperId, inputId, v, null);
+                        });
+                    }
+                };
+
+                loadTags('tw-f-role', 'f-role', personData.role);
+                loadTags('tw-f-city', 'f-city', personData.city);
+                
                 document.getElementById('f-country').value = personData.country || '';
                 document.getElementById('f-desc').value = personData.description || '';
                 document.getElementById('f-tags').value = personData.tags || '';
@@ -4374,36 +4703,71 @@
         function addConnectionEntry(defaultTargetId = null, defaultType = 'friend', defaultStrength = 3) {
             const div = document.createElement('div');
             div.className = 'connection-entry';
+            div.style.background = 'white';
+            div.style.border = '1px solid rgba(0,0,0,0.1)';
+            div.style.borderRadius = '8px';
+            div.style.padding = '15px 20px';
             div.style.display = 'flex';
-            div.style.gap = '6px';
+            div.style.justifyContent = 'space-between';
             div.style.alignItems = 'center';
             div.style.marginBottom = '10px';
             
             let defaultName = '';
+            let infoString = 'Select a person...';
             if (defaultTargetId !== null) {
                 const p = people.find(x => x.id === defaultTargetId);
-                if (p) defaultName = p.name;
+                if (p) {
+                    defaultName = p.name;
+                    let parts = [];
+                    if (p.role) parts.push(p.role);
+                    if (p.city) parts.push(p.city);
+                    infoString = parts.join(' • ');
+                }
             }
 
             div.innerHTML = `
-                <input type="text" class="conn-target" list="people-list" placeholder="Search Name..." value="${defaultName}" autocomplete="off" style="width: 42%; height: 36px; margin: 0; padding: 0 8px; font-size: 12px; border-radius: 10px; box-sizing: border-box; background: rgba(245,245,245,0.05); border: 1px solid rgba(245,245,245,0.2); color: #F5F5F5;">
-                <select class="conn-type" style="width: 32%; height: 36px; margin: 0; padding: 0 8px; font-size: 12px; border-radius: 10px; box-sizing: border-box;">
-                    <option value="friend" ${defaultType === 'friend' ? 'selected' : ''}>Friend</option>
-                    <option value="family_core" ${defaultType === 'family_core' ? 'selected' : ''}>Fam(Close)</option>
-                    <option value="family_extended" ${defaultType === 'family_extended' ? 'selected' : ''}>Fam(Ext)</option>
-                    <option value="acquaintance" ${defaultType === 'acquaintance' ? 'selected' : ''}>Acq</option>
-                </select>
-                <select class="conn-strength" style="width: 18%; height: 36px; margin: 0; padding: 0 8px; font-size: 12px; border-radius: 10px; box-sizing: border-box;">
-                    <option value="5" ${defaultStrength == 5 ? 'selected' : ''}>5/5</option>
-                    <option value="4" ${defaultStrength == 4 ? 'selected' : ''}>4/5</option>
-                    <option value="3" ${defaultStrength == 3 ? 'selected' : ''}>3/5</option>
-                    <option value="2" ${defaultStrength == 2 ? 'selected' : ''}>2/5</option>
-                    <option value="1" ${defaultStrength == 1 ? 'selected' : ''}>1/5</option>
-                </select>
-                <button type="button" class="btn-remove-conn" style="width: 28px; height: 28px; padding: 0; display: flex; align-items: center; justify-content: center; font-size: 16px;">&times;</button>
+                <div style="flex: 1; display: flex; flex-direction: column;">
+                    <input type="text" class="conn-target" list="people-list" placeholder="Search Name..." value="${defaultName}" autocomplete="off" style="font-family: 'Poppins', sans-serif; font-weight: 600; font-size: 14px; border: none; outline: none; background: transparent; color: #000; padding: 0; margin-bottom: 4px; width: 100%;">
+                    <div class="conn-info" style="font-family: 'Poppins', sans-serif; font-size: 11px; color: #888;">${infoString}</div>
+                </div>
+                
+                <div style="display: flex; gap: 30px; align-items: center;">
+                    <div style="display: flex; flex-direction: column;">
+                        <div style="font-family: 'Poppins', sans-serif; font-size: 8px; letter-spacing: 1px; color: #888; text-transform: uppercase; margin-bottom: 4px;">Relationship</div>
+                        <select class="conn-type" style="font-family: 'Poppins', sans-serif; border: none; outline: none; font-size: 12px; font-weight: 500; background: transparent; cursor: pointer; padding: 0; color: #000;">
+                            <option value="friend" ${defaultType === 'friend' ? 'selected' : ''}>Friend</option>
+                            <option value="acquaintance" ${defaultType === 'acquaintance' ? 'selected' : ''}>Acquaintance</option>
+                            <option value="family_core" ${defaultType === 'family_core' ? 'selected' : ''}>Family (Close)</option>
+                            <option value="family_extended" ${defaultType === 'family_extended' ? 'selected' : ''}>Family (Ext)</option>
+                        </select>
+                    </div>
+                    <div style="display: flex; flex-direction: column;">
+                        <div style="font-family: 'Poppins', sans-serif; font-size: 8px; letter-spacing: 1px; color: #888; text-transform: uppercase; margin-bottom: 4px;">Strength</div>
+                        <select class="conn-strength" style="font-family: 'Poppins', sans-serif; border: none; outline: none; font-size: 12px; font-weight: 500; background: transparent; cursor: pointer; padding: 0; color: #000;">
+                            <option value="5" ${defaultStrength == 5 ? 'selected' : ''}>5/5</option>
+                            <option value="4" ${defaultStrength == 4 ? 'selected' : ''}>4/5</option>
+                            <option value="3" ${defaultStrength == 3 ? 'selected' : ''}>3/5</option>
+                            <option value="2" ${defaultStrength == 2 ? 'selected' : ''}>2/5</option>
+                            <option value="1" ${defaultStrength == 1 ? 'selected' : ''}>1/5</option>
+                        </select>
+                    </div>
+                    <button type="button" class="btn-remove-conn" style="background: transparent; border: none; color: #888; cursor: pointer; font-size: 18px; padding: 0 0 0 10px; line-height: 1;">&times;</button>
+                </div>
             `;
             
-            div.querySelector('.conn-target').addEventListener('input', updateDatalist);
+            div.querySelector('.conn-target').addEventListener('input', (e) => {
+                const p = people.find(x => x.name === e.target.value);
+                const infoDiv = div.querySelector('.conn-info');
+                if (p) {
+                    let parts = [];
+                    if (p.role) parts.push(p.role);
+                    if (p.city) parts.push(p.city);
+                    infoDiv.textContent = parts.join(' • ');
+                } else {
+                    infoDiv.textContent = 'Select a person...';
+                }
+                updateDatalist();
+            });
             div.querySelector('.btn-remove-conn').onclick = () => {
                 div.remove();
                 updateDatalist();
@@ -4421,23 +4785,23 @@
             const by = document.getElementById('f-birth-year').value;
             if (by) calcAge = (new Date().getFullYear() - parseInt(by)).toString();
 
-            let cityVal = document.getElementById('f-city').value.trim();
-            const lowerCity = cityVal.toLowerCase();
-            if (['ilaniya', 'moshav ilaniya', 'moshav ilania', 'אילניה', 'מושב אילניה'].includes(lowerCity)) {
-                cityVal = 'ilania';
-            }
+            let cityValues = getFieldValues('tw-f-city', 'f-city');
+            let cityVal = cityValues.map(c => {
+                const lowerCity = c.toLowerCase();
+                return ['ilaniya', 'moshav ilaniya', 'moshav ilania', 'אילניה', 'מושב אילניה'].includes(lowerCity) ? 'ilania' : c;
+            }).join(', ');
 
             const data = {
                 name: document.getElementById('f-name').value,
                 age: calcAge,
-                role: document.getElementById('f-role').value,
+                role: getFieldValues('tw-f-role', 'f-role').join(', '),
                 city: cityVal,
                 country: document.getElementById('f-country').value || 'Israel',
                 description: document.getElementById('f-desc').value,
                 tags: document.getElementById('f-tags').value,
             };
 
-            const originCity = document.getElementById('f-origin-city') ? document.getElementById('f-origin-city').value.trim() : '';
+            const originCity = getFieldValues('tw-f-origin-city', 'f-origin-city').join(', ');
             if (originCity && originCity !== data.city) {
                 data.description = `[Originally from ${originCity}]\n` + data.description;
             }
