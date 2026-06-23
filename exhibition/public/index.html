@@ -4815,7 +4815,7 @@
                         let parts = [];
                         if (p.role) parts.push(p.role);
                         if (p.city) parts.push(p.city);
-                        opt.innerHTML = \`<div style="font-size: 13px; font-weight:600; color: #F5F5F5;">\${p.name}</div><div style="font-size:10px; color:rgba(255,255,255,0.5);">\${parts.join(' • ')}</div>\`;
+                        opt.innerHTML = `<div style="font-size: 13px; font-weight:600; color: #F5F5F5;">${p.name}</div><div style="font-size:10px; color:rgba(255,255,255,0.5);">${parts.join(' • ')}</div>`;
                         opt.onclick = () => {
                             targetInput.value = p.name;
                             infoDiv.textContent = parts.join(' • ');
