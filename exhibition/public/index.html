@@ -1141,8 +1141,8 @@
         .wizard-progress-container {
             position: absolute;
             right: 40px;
-            top: 20%;
-            bottom: 20%;
+            top: 104px;
+            bottom: 120px;
             transform: none;
             display: none;
             flex-direction: column;
@@ -4965,14 +4965,7 @@
                 updateDatalist();
             };
             
-            // UX FIX: Empty forms always at the top to prevent scrolling.
-            // Filled cards (suggestions/existing) go to the bottom.
-            if (defaultTargetId === null) {
-                connectionsList.prepend(div);
-            } else {
-                connectionsList.appendChild(div);
-            }
-            
+            connectionsList.appendChild(div);
             updateDatalist();
         }
 
