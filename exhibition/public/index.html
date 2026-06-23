@@ -4728,7 +4728,7 @@
             div.style.background = 'transparent';
             div.style.border = '1px solid rgba(255,255,255,0.15)';
             div.style.borderRadius = '8px';
-            div.style.padding = '20px 25px'; // Increased padding
+            div.style.padding = '30px'; // Increased padding
             div.style.display = 'flex';
             div.style.justifyContent = 'space-between';
             div.style.alignItems = 'center';
@@ -4842,6 +4842,14 @@
             targetInput.addEventListener('input', () => {
                 if (!targetInput.value) infoDiv.textContent = 'Select a person...';
                 renderAutocomplete();
+            });
+            
+            targetInput.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter') {
+                    e.preventDefault(); // Prevent form submission
+                    // If dropdown is open and has exactly one exact match, we could select it, 
+                    // but simply preventing submit is enough to fix the closing issue.
+                }
             });
             
             targetInput.addEventListener('click', () => {
