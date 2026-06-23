@@ -4521,7 +4521,8 @@
             let scores = [];
             people.forEach(p => {
                 const result = calculateMatchScore(p1, p);
-                if (result.score >= 15) {
+                // Only suggest if score is high enough AND there's an explicit shared concept
+                if (result.score >= 15 && result.sharedConcepts.length > 0) {
                     scores.push({ person: p, score: result.score, shared: result.sharedConcepts });
                 }
             });
