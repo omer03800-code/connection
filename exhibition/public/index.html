@@ -1371,13 +1371,13 @@
 
                 <!-- STEP 9 ADD CONNECTIONS -->
                 <div id="wizard-step-9" class="wizard-step">
-                    <h2 style="color: black;">Let's trace a few connections</h2>
-                    <p class="step-explanation" style="color: #666;">Add a few people already connected to their story.</p>
+                    <h2>Let's trace a few connections</h2>
+                    <p class="step-explanation">Add a few people already connected to their story.</p>
                     
                     <div id="wizard-step-9-original-parent">
                         <div id="connections-section">
                             <div id="connections-list"></div>
-                            <button type="button" class="btn-add-more-conn" id="btn-add-conn-entry" style="width:100%; border:1px dashed #ccc; background:white; color:#333; font-size: 11px; font-weight: 600; letter-spacing: 1px; padding:15px; border-radius:8px; cursor:pointer; text-transform: uppercase;">+ Add connection</button>
+                            <button type="button" class="btn-add-more-conn" id="btn-add-conn-entry" style="width:100%; border:1px dashed rgba(255,255,255,0.3); background:transparent; color:#F5F5F5; font-size: 11px; font-weight: 600; letter-spacing: 1px; padding:15px; border-radius:8px; cursor:pointer; text-transform: uppercase; transition: 0.2s;">+ Add connection</button>
                         </div>
                     </div>
 
@@ -3735,7 +3735,13 @@
                 const btnNext = document.getElementById('btn-wizard-global-next');
                 
                 // Back button logic
-                btnBack.style.visibility = 'visible';
+                btnBack.style.visibility = step === 0 ? 'hidden' : 'visible';
+                btnBack.onclick = () => {
+                    const currentIndex = stepsWithFooter.indexOf(step);
+                    if (currentIndex > 0) goToWizardStep(stepsWithFooter[currentIndex - 1]);
+                };
+                
+                // Next button logic
                 btnNext.textContent = step === 9 ? '[ JOIN THE NETWORK ]' : '[ CONTINUE ]';
                 btnNext.style.display = 'inline-block';
                 btnNext.onclick = () => {
@@ -4719,8 +4725,8 @@
         function addConnectionEntry(defaultTargetId = null, defaultType = 'friend', defaultStrength = 3) {
             const div = document.createElement('div');
             div.className = 'connection-entry';
-            div.style.background = 'white';
-            div.style.border = '1px solid rgba(0,0,0,0.1)';
+            div.style.background = 'transparent';
+            div.style.border = '1px solid rgba(255,255,255,0.15)';
             div.style.borderRadius = '8px';
             div.style.padding = '15px 20px';
             div.style.display = 'flex';
@@ -4743,23 +4749,26 @@
 
             div.innerHTML = `
                 <div style="flex: 1; display: flex; flex-direction: column;">
-                    <input type="text" class="conn-target" list="people-list" placeholder="Search Name..." value="${defaultName}" autocomplete="off" style="font-family: 'Poppins', sans-serif; font-weight: 600; font-size: 14px; border: none; outline: none; background: transparent; color: #000; padding: 0; margin-bottom: 4px; width: 100%;">
-                    <div class="conn-info" style="font-family: 'Poppins', sans-serif; font-size: 11px; color: #888;">${infoString}</div>
+                    <input type="text" class="conn-target" list="people-list" placeholder="Search Name..." value="${defaultName}" autocomplete="off" style="font-family: 'Poppins', sans-serif; font-weight: 600; font-size: 14px; border: none; outline: none; background: transparent; color: #F5F5F5; padding: 0; margin-bottom: 4px; width: 100%;">
+                    <div class="conn-info" style="font-family: 'Poppins', sans-serif; font-size: 11px; color: rgba(255,255,255,0.5);">${infoString}</div>
                 </div>
                 
                 <div style="display: flex; gap: 30px; align-items: center;">
                     <div style="display: flex; flex-direction: column;">
-                        <div style="font-family: 'Poppins', sans-serif; font-size: 8px; letter-spacing: 1px; color: #888; text-transform: uppercase; margin-bottom: 4px;">Relationship</div>
-                        <select class="conn-type" style="font-family: 'Poppins', sans-serif; border: none; outline: none; font-size: 12px; font-weight: 500; background: transparent; cursor: pointer; padding: 0; color: #000;">
+                        <div style="font-family: 'Poppins', sans-serif; font-size: 8px; letter-spacing: 1px; color: rgba(255,255,255,0.5); text-transform: uppercase; margin-bottom: 4px;">Relationship</div>
+                        <select class="conn-type" style="font-family: 'Poppins', sans-serif; border: none; outline: none; font-size: 12px; font-weight: 500; background: transparent; cursor: pointer; padding: 0; color: #F5F5F5;">
                             <option value="friend" ${defaultType === 'friend' ? 'selected' : ''}>Friend</option>
                             <option value="acquaintance" ${defaultType === 'acquaintance' ? 'selected' : ''}>Acquaintance</option>
                             <option value="family_core" ${defaultType === 'family_core' ? 'selected' : ''}>Family (Close)</option>
                             <option value="family_extended" ${defaultType === 'family_extended' ? 'selected' : ''}>Family (Ext)</option>
                         </select>
                     </div>
+                    
+                    <div style="width: 1px; height: 24px; background: rgba(255,255,255,0.15);"></div>
+
                     <div style="display: flex; flex-direction: column;">
-                        <div style="font-family: 'Poppins', sans-serif; font-size: 8px; letter-spacing: 1px; color: #888; text-transform: uppercase; margin-bottom: 4px;">Strength</div>
-                        <select class="conn-strength" style="font-family: 'Poppins', sans-serif; border: none; outline: none; font-size: 12px; font-weight: 500; background: transparent; cursor: pointer; padding: 0; color: #000;">
+                        <div style="font-family: 'Poppins', sans-serif; font-size: 8px; letter-spacing: 1px; color: rgba(255,255,255,0.5); text-transform: uppercase; margin-bottom: 4px;">Strength</div>
+                        <select class="conn-strength" style="font-family: 'Poppins', sans-serif; border: none; outline: none; font-size: 12px; font-weight: 500; background: transparent; cursor: pointer; padding: 0; color: #F5F5F5;">
                             <option value="5" ${defaultStrength == 5 ? 'selected' : ''}>5/5</option>
                             <option value="4" ${defaultStrength == 4 ? 'selected' : ''}>4/5</option>
                             <option value="3" ${defaultStrength == 3 ? 'selected' : ''}>3/5</option>
@@ -4767,7 +4776,7 @@
                             <option value="1" ${defaultStrength == 1 ? 'selected' : ''}>1/5</option>
                         </select>
                     </div>
-                    <button type="button" class="btn-remove-conn" style="background: transparent; border: none; color: #888; cursor: pointer; font-size: 18px; padding: 0 0 0 10px; line-height: 1;">&times;</button>
+                    <button type="button" class="btn-remove-conn" style="background: transparent; border: none; color: rgba(255,255,255,0.4); cursor: pointer; font-size: 18px; padding: 0 0 0 10px; line-height: 1; transition: 0.2s;">&times;</button>
                 </div>
             `;
             
