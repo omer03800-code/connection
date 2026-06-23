@@ -4965,17 +4965,12 @@
                 updateDatalist();
             };
             
-            // UX FIX: Uniform list order. 
-            // Filled cards (suggestions/existing) go above, empty cards go to the bottom.
+            // UX FIX: Empty forms always at the top to prevent scrolling.
+            // Filled cards (suggestions/existing) go to the bottom.
             if (defaultTargetId === null) {
-                connectionsList.appendChild(div);
+                connectionsList.prepend(div);
             } else {
-                const firstEmpty = Array.from(connectionsList.children).find(c => !c.querySelector('.conn-target').value);
-                if (firstEmpty) {
-                    connectionsList.insertBefore(div, firstEmpty);
-                } else {
-                    connectionsList.appendChild(div);
-                }
+                connectionsList.appendChild(div);
             }
             
             updateDatalist();
