@@ -4728,12 +4728,12 @@
             div.style.background = 'transparent';
             div.style.border = '1px solid rgba(255,255,255,0.15)';
             div.style.borderRadius = '8px';
-            div.style.padding = '15px 20px';
+            div.style.padding = '20px 25px'; // Increased padding
             div.style.display = 'flex';
             div.style.justifyContent = 'space-between';
             div.style.alignItems = 'center';
-            div.style.marginBottom = '10px';
-            div.style.position = 'relative'; // For dropdown positioning if needed
+            div.style.marginBottom = '15px'; // Increased margin
+            div.style.position = 'relative'; 
             
             let defaultName = '';
             let infoString = 'Select a person...';
@@ -4758,32 +4758,37 @@
 
             div.innerHTML = `
                 <div style="flex: 1; display: flex; flex-direction: column; position: relative;">
-                    <input type="text" class="conn-target" placeholder="Search Name..." value="${defaultName}" autocomplete="off" style="font-family: 'Poppins', sans-serif; font-weight: 600; font-size: 14px; border: none; outline: none; background: transparent; color: #F5F5F5; padding: 0; margin-bottom: 4px; width: 100%;">
+                    <input type="text" class="conn-target" placeholder="Search Name..." value="${defaultName}" autocomplete="off" style="font-family: 'Poppins', sans-serif; font-weight: 300; font-size: 14px; border: none; outline: none; background: transparent; color: #F5F5F5; padding: 0; margin-bottom: 4px; width: 100%;">
                     <div class="conn-info" style="font-family: 'Poppins', sans-serif; font-size: 11px; color: rgba(255,255,255,0.5);">${infoString}</div>
                     <div class="conn-autocomplete" style="display: none; position: absolute; top: 100%; left: 0; background: rgba(10,10,10,0.95); border: 1px solid rgba(255,255,255,0.2); border-radius: 8px; z-index: 100; min-width: 200px; flex-direction: column; max-height: 150px; overflow-y: auto; box-shadow: 0 4px 15px rgba(0,0,0,0.5); margin-top: 5px;"></div>
                 </div>
                 
                 <div style="display: flex; gap: 30px; align-items: center;">
                     <div style="display: flex; flex-direction: column; position: relative;">
-                        <div style="font-family: 'Poppins', sans-serif; font-size: 8px; letter-spacing: 1px; color: rgba(255,255,255,0.5); text-transform: uppercase; margin-bottom: 4px;">Relationship</div>
-                        <div class="conn-type-display" style="font-family: 'Poppins', sans-serif; font-size: 12px; font-weight: 500; color: #F5F5F5; cursor: pointer; display: flex; justify-content: space-between; align-items: center; min-width: 100px;"><span>${getRelLabel(defaultType)}</span> <span style="font-size: 8px;">▼</span></div>
+                        <div style="font-family: 'Poppins', sans-serif; font-size: 10px; letter-spacing: 1px; color: rgba(255,255,255,0.5); text-transform: uppercase; margin-bottom: 4px;">Relationship</div>
+                        <div class="conn-type-display" style="font-family: 'Poppins', sans-serif; font-size: 12px; font-weight: 300; color: #F5F5F5; cursor: pointer; display: flex; justify-content: space-between; align-items: center; min-width: 100px;"><span>${getRelLabel(defaultType)}</span> <span style="font-size: 8px;">▼</span></div>
                         <div class="conn-type-dropdown" style="display: none; position: absolute; top: 100%; left: 0; background: rgba(10,10,10,0.95); border: 1px solid rgba(255,255,255,0.2); border-radius: 8px; z-index: 100; min-width: 140px; flex-direction: column; padding: 5px; box-shadow: 0 4px 15px rgba(0,0,0,0.5); margin-top: 5px;">
-                            <div class="conn-type-option" data-val="friend" style="padding: 8px; font-size: 12px; cursor: pointer; color: #F5F5F5; transition: 0.2s;" onmouseover="this.style.background='rgba(255,255,255,0.1)'" onmouseout="this.style.background='transparent'">Friend</div>
-                            <div class="conn-type-option" data-val="acquaintance" style="padding: 8px; font-size: 12px; cursor: pointer; color: #F5F5F5; transition: 0.2s;" onmouseover="this.style.background='rgba(255,255,255,0.1)'" onmouseout="this.style.background='transparent'">Acquaintance</div>
-                            <div class="conn-type-option" data-val="family_core" style="padding: 8px; font-size: 12px; cursor: pointer; color: #F5F5F5; transition: 0.2s;" onmouseover="this.style.background='rgba(255,255,255,0.1)'" onmouseout="this.style.background='transparent'">Family (Close)</div>
-                            <div class="conn-type-option" data-val="family_extended" style="padding: 8px; font-size: 12px; cursor: pointer; color: #F5F5F5; transition: 0.2s;" onmouseover="this.style.background='rgba(255,255,255,0.1)'" onmouseout="this.style.background='transparent'">Family (Ext)</div>
+                            <div class="conn-type-option" data-val="friend" style="padding: 8px; font-size: 12px; cursor: pointer; color: #F5F5F5; font-weight: 300; transition: 0.2s;" onmouseover="this.style.background='rgba(255,255,255,0.1)'" onmouseout="this.style.background='transparent'">Friend</div>
+                            <div class="conn-type-option" data-val="acquaintance" style="padding: 8px; font-size: 12px; cursor: pointer; color: #F5F5F5; font-weight: 300; transition: 0.2s;" onmouseover="this.style.background='rgba(255,255,255,0.1)'" onmouseout="this.style.background='transparent'">Acquaintance</div>
+                            <div class="conn-type-option" data-val="family_core" style="padding: 8px; font-size: 12px; cursor: pointer; color: #F5F5F5; font-weight: 300; transition: 0.2s;" onmouseover="this.style.background='rgba(255,255,255,0.1)'" onmouseout="this.style.background='transparent'">Family (Close)</div>
+                            <div class="conn-type-option" data-val="family_extended" style="padding: 8px; font-size: 12px; cursor: pointer; color: #F5F5F5; font-weight: 300; transition: 0.2s;" onmouseover="this.style.background='rgba(255,255,255,0.1)'" onmouseout="this.style.background='transparent'">Family (Ext)</div>
                         </div>
                         <input type="hidden" class="conn-type" value="${defaultType}">
                     </div>
                     
                     <div style="width: 1px; height: 24px; background: rgba(255,255,255,0.15);"></div>
 
-                    <div style="display: flex; flex-direction: column; width: 70px;">
-                        <div style="display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 4px;">
-                            <div style="font-family: 'Poppins', sans-serif; font-size: 8px; letter-spacing: 1px; color: rgba(255,255,255,0.5); text-transform: uppercase;">Strength</div>
-                            <div class="conn-strength-display" style="font-family: 'Poppins', sans-serif; font-size: 10px; font-weight: 500; color: #F5F5F5;">${defaultStrength}/5</div>
+                    <div style="display: flex; flex-direction: column; position: relative;">
+                        <div style="font-family: 'Poppins', sans-serif; font-size: 10px; letter-spacing: 1px; color: rgba(255,255,255,0.5); text-transform: uppercase; margin-bottom: 4px;">Strength</div>
+                        <div class="conn-strength-display" style="font-family: 'Poppins', sans-serif; font-size: 12px; font-weight: 300; color: #F5F5F5; cursor: pointer; display: flex; justify-content: space-between; align-items: center; min-width: 40px;"><span>${defaultStrength}/5</span> <span style="font-size: 8px;">▼</span></div>
+                        <div class="conn-strength-dropdown" style="display: none; position: absolute; top: 100%; left: 0; background: rgba(10,10,10,0.95); border: 1px solid rgba(255,255,255,0.2); border-radius: 8px; z-index: 100; min-width: 60px; flex-direction: column; padding: 5px; box-shadow: 0 4px 15px rgba(0,0,0,0.5); margin-top: 5px;">
+                            <div class="conn-str-option" data-val="5" style="padding: 8px; font-size: 12px; cursor: pointer; color: #F5F5F5; font-weight: 300; text-align: center; transition: 0.2s;" onmouseover="this.style.background='rgba(255,255,255,0.1)'" onmouseout="this.style.background='transparent'">5/5</div>
+                            <div class="conn-str-option" data-val="4" style="padding: 8px; font-size: 12px; cursor: pointer; color: #F5F5F5; font-weight: 300; text-align: center; transition: 0.2s;" onmouseover="this.style.background='rgba(255,255,255,0.1)'" onmouseout="this.style.background='transparent'">4/5</div>
+                            <div class="conn-str-option" data-val="3" style="padding: 8px; font-size: 12px; cursor: pointer; color: #F5F5F5; font-weight: 300; text-align: center; transition: 0.2s;" onmouseover="this.style.background='rgba(255,255,255,0.1)'" onmouseout="this.style.background='transparent'">3/5</div>
+                            <div class="conn-str-option" data-val="2" style="padding: 8px; font-size: 12px; cursor: pointer; color: #F5F5F5; font-weight: 300; text-align: center; transition: 0.2s;" onmouseover="this.style.background='rgba(255,255,255,0.1)'" onmouseout="this.style.background='transparent'">2/5</div>
+                            <div class="conn-str-option" data-val="1" style="padding: 8px; font-size: 12px; cursor: pointer; color: #F5F5F5; font-weight: 300; text-align: center; transition: 0.2s;" onmouseover="this.style.background='rgba(255,255,255,0.1)'" onmouseout="this.style.background='transparent'">1/5</div>
                         </div>
-                        <input type="range" class="conn-strength" min="1" max="5" value="${defaultStrength}" style="width: 100%; accent-color: #F5F5F5; cursor: pointer; height: 4px; margin: 0; padding: 0;">
+                        <input type="hidden" class="conn-strength" value="${defaultStrength}">
                     </div>
                     
                     <button type="button" class="btn-remove-conn" style="background: transparent; border: none; color: rgba(255,255,255,0.4); cursor: pointer; font-size: 18px; padding: 0 0 0 10px; line-height: 1; transition: 0.2s;">&times;</button>
@@ -4795,15 +4800,19 @@
             const targetAc = div.querySelector('.conn-autocomplete');
             const infoDiv = div.querySelector('.conn-info');
             
-            targetInput.addEventListener('input', (e) => {
-                const val = e.target.value.toLowerCase();
+            const renderAutocomplete = () => {
+                const val = targetInput.value.toLowerCase();
                 targetAc.innerHTML = '';
-                if (!val) {
-                    targetAc.style.display = 'none';
-                    infoDiv.textContent = 'Select a person...';
-                    return;
-                }
-                const matches = people.filter(p => p.name.toLowerCase().includes(val)).slice(0, 5);
+                
+                // Get selected names to exclude
+                const selectedNames = Array.from(document.querySelectorAll('.conn-target')).map(inp => inp.value);
+                
+                // Filter matches
+                const matches = people.filter(p => {
+                    if (selectedNames.includes(p.name) && p.name !== targetInput.value) return false;
+                    return p.name.toLowerCase().includes(val);
+                }).slice(0, 5);
+
                 if (matches.length > 0) {
                     targetAc.style.display = 'flex';
                     matches.forEach(p => {
@@ -4815,7 +4824,7 @@
                         let parts = [];
                         if (p.role) parts.push(p.role);
                         if (p.city) parts.push(p.city);
-                        opt.innerHTML = `<div style="font-size: 13px; font-weight:600; color: #F5F5F5;">${p.name}</div><div style="font-size:10px; color:rgba(255,255,255,0.5);">${parts.join(' • ')}</div>`;
+                        opt.innerHTML = `<div style="font-size: 13px; font-weight:300; color: #F5F5F5;">${p.name}</div><div style="font-size:10px; color:rgba(255,255,255,0.5); font-weight:300;">${parts.join(' • ')}</div>`;
                         opt.onclick = () => {
                             targetInput.value = p.name;
                             infoDiv.textContent = parts.join(' • ');
@@ -4826,7 +4835,18 @@
                     });
                 } else {
                     targetAc.style.display = 'none';
+                    if (val) infoDiv.textContent = 'Person not found...';
                 }
+            };
+
+            targetInput.addEventListener('input', () => {
+                if (!targetInput.value) infoDiv.textContent = 'Select a person...';
+                renderAutocomplete();
+            });
+            
+            targetInput.addEventListener('click', () => {
+                document.querySelectorAll('.conn-type-dropdown, .conn-strength-dropdown').forEach(d => d.style.display = 'none');
+                renderAutocomplete();
             });
             
             // Hide dropdowns when clicking outside
@@ -4839,6 +4859,11 @@
                 if (typeDisplay && typeDropdown && !typeDisplay.contains(e.target) && !typeDropdown.contains(e.target)) {
                     typeDropdown.style.display = 'none';
                 }
+                const strDisplay = div.querySelector('.conn-strength-display');
+                const strDropdown = div.querySelector('.conn-strength-dropdown');
+                if (strDisplay && strDropdown && !strDisplay.contains(e.target) && !strDropdown.contains(e.target)) {
+                    strDropdown.style.display = 'none';
+                }
             });
             
             // Type dropdown
@@ -4847,7 +4872,7 @@
             const typeInput = div.querySelector('.conn-type');
             typeDisplay.onclick = () => {
                 const isVisible = typeDropdown.style.display === 'flex';
-                document.querySelectorAll('.conn-type-dropdown, .conn-autocomplete').forEach(d => d.style.display = 'none');
+                document.querySelectorAll('.conn-type-dropdown, .conn-autocomplete, .conn-strength-dropdown').forEach(d => d.style.display = 'none');
                 typeDropdown.style.display = isVisible ? 'none' : 'flex';
             };
             div.querySelectorAll('.conn-type-option').forEach(opt => {
@@ -4858,11 +4883,21 @@
                 };
             });
             
-            // Strength slider
+            // Strength dropdown
+            const strDisplay = div.querySelector('.conn-strength-display');
+            const strDropdown = div.querySelector('.conn-strength-dropdown');
             const strInput = div.querySelector('.conn-strength');
-            const strValDisplay = div.querySelector('.conn-strength-display');
-            strInput.addEventListener('input', (e) => {
-                strValDisplay.textContent = e.target.value + '/5';
+            strDisplay.onclick = () => {
+                const isVisible = strDropdown.style.display === 'flex';
+                document.querySelectorAll('.conn-type-dropdown, .conn-autocomplete, .conn-strength-dropdown').forEach(d => d.style.display = 'none');
+                strDropdown.style.display = isVisible ? 'none' : 'flex';
+            };
+            div.querySelectorAll('.conn-str-option').forEach(opt => {
+                opt.onclick = () => {
+                    strInput.value = opt.dataset.val;
+                    strDisplay.querySelector('span').textContent = opt.textContent + '/5';
+                    strDropdown.style.display = 'none';
+                };
             });
 
             div.querySelector('.btn-remove-conn').onclick = () => {
