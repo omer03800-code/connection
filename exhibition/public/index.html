@@ -4614,8 +4614,6 @@
 
                 if (defaultConnectionNodeId !== null && people[defaultConnectionNodeId]) {
                     addConnectionEntry(people[defaultConnectionNodeId].id);
-                } else {
-                    addConnectionEntry();
                 }
                 
                 // Initialize toggle UI
@@ -4656,8 +4654,6 @@
                 // Prepopulate connections if any exist
                 if (personData.connections && personData.connections.length > 0) {
                     personData.connections.forEach(c => addConnectionEntry(c.id, c.type, c.strength));
-                } else {
-                    addConnectionEntry();
                 }
                 
                 // Move connections section into the accordion for Edit mode
