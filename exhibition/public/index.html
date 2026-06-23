@@ -4835,7 +4835,7 @@
                 const matches = people.filter(p => {
                     if (selectedNames.includes(p.name) && p.name !== targetInput.value) return false;
                     return p.name.toLowerCase().includes(val);
-                }).slice(0, 5);
+                });
 
                 if (matches.length > 0) {
                     targetAc.style.display = 'flex';
