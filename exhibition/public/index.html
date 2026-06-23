@@ -1375,7 +1375,7 @@
                     <p class="step-explanation">Add a few people already connected to their story.</p>
                     
                     <div id="wizard-step-9-original-parent">
-                        <div id="connections-section">
+                        <div id="connections-section" style="padding-right: 180px;">
                             <div id="connections-list"></div>
                             <button type="button" class="btn-add-more-conn" id="btn-add-conn-entry" style="width:100%; border:1px dashed rgba(255,255,255,0.3); background:transparent; color:#F5F5F5; font-size: 11px; font-weight: 600; letter-spacing: 1px; padding:15px; border-radius:8px; cursor:pointer; text-transform: uppercase; transition: 0.2s;">+ Add connection</button>
                         </div>
@@ -4733,6 +4733,7 @@
             div.style.justifyContent = 'space-between';
             div.style.alignItems = 'center';
             div.style.marginBottom = '10px';
+            div.style.position = 'relative'; // For dropdown positioning if needed
             
             let defaultName = '';
             let infoString = 'Select a person...';
@@ -4747,52 +4748,123 @@
                 }
             }
 
+            const getRelLabel = (val) => {
+                if (val === 'friend') return 'Friend';
+                if (val === 'acquaintance') return 'Acquaintance';
+                if (val === 'family_core') return 'Family (Close)';
+                if (val === 'family_extended') return 'Family (Ext)';
+                return 'Friend';
+            };
+
             div.innerHTML = `
-                <div style="flex: 1; display: flex; flex-direction: column;">
-                    <input type="text" class="conn-target" list="people-list" placeholder="Search Name..." value="${defaultName}" autocomplete="off" style="font-family: 'Poppins', sans-serif; font-weight: 600; font-size: 14px; border: none; outline: none; background: transparent; color: #F5F5F5; padding: 0; margin-bottom: 4px; width: 100%;">
+                <div style="flex: 1; display: flex; flex-direction: column; position: relative;">
+                    <input type="text" class="conn-target" placeholder="Search Name..." value="${defaultName}" autocomplete="off" style="font-family: 'Poppins', sans-serif; font-weight: 600; font-size: 14px; border: none; outline: none; background: transparent; color: #F5F5F5; padding: 0; margin-bottom: 4px; width: 100%;">
                     <div class="conn-info" style="font-family: 'Poppins', sans-serif; font-size: 11px; color: rgba(255,255,255,0.5);">${infoString}</div>
+                    <div class="conn-autocomplete" style="display: none; position: absolute; top: 100%; left: 0; background: rgba(10,10,10,0.95); border: 1px solid rgba(255,255,255,0.2); border-radius: 8px; z-index: 100; min-width: 200px; flex-direction: column; max-height: 150px; overflow-y: auto; box-shadow: 0 4px 15px rgba(0,0,0,0.5); margin-top: 5px;"></div>
                 </div>
                 
                 <div style="display: flex; gap: 30px; align-items: center;">
-                    <div style="display: flex; flex-direction: column;">
+                    <div style="display: flex; flex-direction: column; position: relative;">
                         <div style="font-family: 'Poppins', sans-serif; font-size: 8px; letter-spacing: 1px; color: rgba(255,255,255,0.5); text-transform: uppercase; margin-bottom: 4px;">Relationship</div>
-                        <select class="conn-type" style="font-family: 'Poppins', sans-serif; border: none; outline: none; font-size: 12px; font-weight: 500; background: transparent; cursor: pointer; padding: 0; color: #F5F5F5;">
-                            <option value="friend" ${defaultType === 'friend' ? 'selected' : ''}>Friend</option>
-                            <option value="acquaintance" ${defaultType === 'acquaintance' ? 'selected' : ''}>Acquaintance</option>
-                            <option value="family_core" ${defaultType === 'family_core' ? 'selected' : ''}>Family (Close)</option>
-                            <option value="family_extended" ${defaultType === 'family_extended' ? 'selected' : ''}>Family (Ext)</option>
-                        </select>
+                        <div class="conn-type-display" style="font-family: 'Poppins', sans-serif; font-size: 12px; font-weight: 500; color: #F5F5F5; cursor: pointer; display: flex; justify-content: space-between; align-items: center; min-width: 100px;"><span>${getRelLabel(defaultType)}</span> <span style="font-size: 8px;">▼</span></div>
+                        <div class="conn-type-dropdown" style="display: none; position: absolute; top: 100%; left: 0; background: rgba(10,10,10,0.95); border: 1px solid rgba(255,255,255,0.2); border-radius: 8px; z-index: 100; min-width: 140px; flex-direction: column; padding: 5px; box-shadow: 0 4px 15px rgba(0,0,0,0.5); margin-top: 5px;">
+                            <div class="conn-type-option" data-val="friend" style="padding: 8px; font-size: 12px; cursor: pointer; color: #F5F5F5; transition: 0.2s;" onmouseover="this.style.background='rgba(255,255,255,0.1)'" onmouseout="this.style.background='transparent'">Friend</div>
+                            <div class="conn-type-option" data-val="acquaintance" style="padding: 8px; font-size: 12px; cursor: pointer; color: #F5F5F5; transition: 0.2s;" onmouseover="this.style.background='rgba(255,255,255,0.1)'" onmouseout="this.style.background='transparent'">Acquaintance</div>
+                            <div class="conn-type-option" data-val="family_core" style="padding: 8px; font-size: 12px; cursor: pointer; color: #F5F5F5; transition: 0.2s;" onmouseover="this.style.background='rgba(255,255,255,0.1)'" onmouseout="this.style.background='transparent'">Family (Close)</div>
+                            <div class="conn-type-option" data-val="family_extended" style="padding: 8px; font-size: 12px; cursor: pointer; color: #F5F5F5; transition: 0.2s;" onmouseover="this.style.background='rgba(255,255,255,0.1)'" onmouseout="this.style.background='transparent'">Family (Ext)</div>
+                        </div>
+                        <input type="hidden" class="conn-type" value="${defaultType}">
                     </div>
                     
                     <div style="width: 1px; height: 24px; background: rgba(255,255,255,0.15);"></div>
 
-                    <div style="display: flex; flex-direction: column;">
-                        <div style="font-family: 'Poppins', sans-serif; font-size: 8px; letter-spacing: 1px; color: rgba(255,255,255,0.5); text-transform: uppercase; margin-bottom: 4px;">Strength</div>
-                        <select class="conn-strength" style="font-family: 'Poppins', sans-serif; border: none; outline: none; font-size: 12px; font-weight: 500; background: transparent; cursor: pointer; padding: 0; color: #F5F5F5;">
-                            <option value="5" ${defaultStrength == 5 ? 'selected' : ''}>5/5</option>
-                            <option value="4" ${defaultStrength == 4 ? 'selected' : ''}>4/5</option>
-                            <option value="3" ${defaultStrength == 3 ? 'selected' : ''}>3/5</option>
-                            <option value="2" ${defaultStrength == 2 ? 'selected' : ''}>2/5</option>
-                            <option value="1" ${defaultStrength == 1 ? 'selected' : ''}>1/5</option>
-                        </select>
+                    <div style="display: flex; flex-direction: column; width: 70px;">
+                        <div style="display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 4px;">
+                            <div style="font-family: 'Poppins', sans-serif; font-size: 8px; letter-spacing: 1px; color: rgba(255,255,255,0.5); text-transform: uppercase;">Strength</div>
+                            <div class="conn-strength-display" style="font-family: 'Poppins', sans-serif; font-size: 10px; font-weight: 500; color: #F5F5F5;">${defaultStrength}/5</div>
+                        </div>
+                        <input type="range" class="conn-strength" min="1" max="5" value="${defaultStrength}" style="width: 100%; accent-color: #F5F5F5; cursor: pointer; height: 4px; margin: 0; padding: 0;">
                     </div>
+                    
                     <button type="button" class="btn-remove-conn" style="background: transparent; border: none; color: rgba(255,255,255,0.4); cursor: pointer; font-size: 18px; padding: 0 0 0 10px; line-height: 1; transition: 0.2s;">&times;</button>
                 </div>
             `;
             
-            div.querySelector('.conn-target').addEventListener('input', (e) => {
-                const p = people.find(x => x.name === e.target.value);
-                const infoDiv = div.querySelector('.conn-info');
-                if (p) {
-                    let parts = [];
-                    if (p.role) parts.push(p.role);
-                    if (p.city) parts.push(p.city);
-                    infoDiv.textContent = parts.join(' • ');
-                } else {
+            // Name Autocomplete
+            const targetInput = div.querySelector('.conn-target');
+            const targetAc = div.querySelector('.conn-autocomplete');
+            const infoDiv = div.querySelector('.conn-info');
+            
+            targetInput.addEventListener('input', (e) => {
+                const val = e.target.value.toLowerCase();
+                targetAc.innerHTML = '';
+                if (!val) {
+                    targetAc.style.display = 'none';
                     infoDiv.textContent = 'Select a person...';
+                    return;
                 }
-                updateDatalist();
+                const matches = people.filter(p => p.name.toLowerCase().includes(val)).slice(0, 5);
+                if (matches.length > 0) {
+                    targetAc.style.display = 'flex';
+                    matches.forEach(p => {
+                        const opt = document.createElement('div');
+                        opt.style.cssText = 'padding: 8px 12px; cursor: pointer; border-bottom: 1px solid rgba(255,255,255,0.1); transition: 0.2s;';
+                        opt.onmouseover = () => opt.style.background = 'rgba(255,255,255,0.1)';
+                        opt.onmouseout = () => opt.style.background = 'transparent';
+                        
+                        let parts = [];
+                        if (p.role) parts.push(p.role);
+                        if (p.city) parts.push(p.city);
+                        opt.innerHTML = \`<div style="font-size: 13px; font-weight:600; color: #F5F5F5;">\${p.name}</div><div style="font-size:10px; color:rgba(255,255,255,0.5);">\${parts.join(' • ')}</div>\`;
+                        opt.onclick = () => {
+                            targetInput.value = p.name;
+                            infoDiv.textContent = parts.join(' • ');
+                            targetAc.style.display = 'none';
+                            updateDatalist();
+                        };
+                        targetAc.appendChild(opt);
+                    });
+                } else {
+                    targetAc.style.display = 'none';
+                }
             });
+            
+            // Hide dropdowns when clicking outside
+            document.addEventListener('click', (e) => {
+                if (!targetInput.contains(e.target) && !targetAc.contains(e.target)) {
+                    targetAc.style.display = 'none';
+                }
+                const typeDisplay = div.querySelector('.conn-type-display');
+                const typeDropdown = div.querySelector('.conn-type-dropdown');
+                if (typeDisplay && typeDropdown && !typeDisplay.contains(e.target) && !typeDropdown.contains(e.target)) {
+                    typeDropdown.style.display = 'none';
+                }
+            });
+            
+            // Type dropdown
+            const typeDisplay = div.querySelector('.conn-type-display');
+            const typeDropdown = div.querySelector('.conn-type-dropdown');
+            const typeInput = div.querySelector('.conn-type');
+            typeDisplay.onclick = () => {
+                const isVisible = typeDropdown.style.display === 'flex';
+                document.querySelectorAll('.conn-type-dropdown, .conn-autocomplete').forEach(d => d.style.display = 'none');
+                typeDropdown.style.display = isVisible ? 'none' : 'flex';
+            };
+            div.querySelectorAll('.conn-type-option').forEach(opt => {
+                opt.onclick = () => {
+                    typeInput.value = opt.dataset.val;
+                    typeDisplay.querySelector('span').textContent = opt.textContent;
+                    typeDropdown.style.display = 'none';
+                };
+            });
+            
+            // Strength slider
+            const strInput = div.querySelector('.conn-strength');
+            const strValDisplay = div.querySelector('.conn-strength-display');
+            strInput.addEventListener('input', (e) => {
+                strValDisplay.textContent = e.target.value + '/5';
+            });
+
             div.querySelector('.btn-remove-conn').onclick = () => {
                 div.remove();
                 updateDatalist();
