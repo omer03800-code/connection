@@ -3758,6 +3758,13 @@
                 // Back button logic
                 btnBack.style.visibility = step === 0 ? 'hidden' : 'visible';
                 btnBack.onclick = () => {
+                    if (step === 9) {
+                        const recList = document.getElementById('recommendation-list');
+                        if (!recList || recList.children.length === 0) {
+                            goToWizardStep(6);
+                            return;
+                        }
+                    }
                     const currentIndex = stepsWithFooter.indexOf(step);
                     if (currentIndex > 0) goToWizardStep(stepsWithFooter[currentIndex - 1]);
                 };
