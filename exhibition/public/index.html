@@ -642,6 +642,23 @@
         .info-actions { display: flex; gap: 8px; margin-top: 15px; }
         .info-actions button { flex: 1; padding: 8px 0; margin-bottom: 0; }
 
+        .strength-slider {
+            -webkit-appearance: none;
+            width: 100%;
+            height: 2px;
+            background: rgba(255,255,255,0.2);
+            outline: none;
+            border-radius: 2px;
+        }
+        .strength-slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: #F5F5F5;
+            cursor: pointer;
+        }
     </style>
 </head>
 
@@ -4780,17 +4797,9 @@
                     
                     <div style="width: 1px; height: 24px; background: rgba(255,255,255,0.15);"></div>
 
-                    <div style="display: flex; flex-direction: column; position: relative;">
-                        <div style="font-family: 'Poppins', sans-serif; font-size: 12px; letter-spacing: 1px; color: rgba(255,255,255,0.5); text-transform: uppercase; margin-bottom: 4px;">Strength</div>
-                        <div class="conn-strength-display" style="font-family: 'Poppins', sans-serif; font-size: 16px; font-weight: 300; color: #F5F5F5; cursor: pointer; display: flex; justify-content: space-between; align-items: center; min-width: 40px;"><span>${defaultStrength}/5</span> <span style="font-size: 8px;">▼</span></div>
-                        <div class="conn-strength-dropdown" style="display: none; position: absolute; top: 100%; left: 0; background: rgba(10,10,10,0.95); border: 1px solid rgba(255,255,255,0.2); border-radius: 8px; z-index: 100; min-width: 80px; flex-direction: column; padding: 5px; box-shadow: 0 4px 15px rgba(0,0,0,0.5); margin-top: 5px;">
-                            <div class="conn-str-option" data-val="5" style="padding: 12px 15px; font-size: 13px; cursor: pointer; color: #F5F5F5; text-align: center; transition: 0.2s; border-radius: 4px;" onmouseover="this.style.background='rgba(255,255,255,0.1)'" onmouseout="this.style.background='transparent'">5/5</div>
-                            <div class="conn-str-option" data-val="4" style="padding: 12px 15px; font-size: 13px; cursor: pointer; color: #F5F5F5; text-align: center; transition: 0.2s; border-radius: 4px;" onmouseover="this.style.background='rgba(255,255,255,0.1)'" onmouseout="this.style.background='transparent'">4/5</div>
-                            <div class="conn-str-option" data-val="3" style="padding: 12px 15px; font-size: 13px; cursor: pointer; color: #F5F5F5; text-align: center; transition: 0.2s; border-radius: 4px;" onmouseover="this.style.background='rgba(255,255,255,0.1)'" onmouseout="this.style.background='transparent'">3/5</div>
-                            <div class="conn-str-option" data-val="2" style="padding: 12px 15px; font-size: 13px; cursor: pointer; color: #F5F5F5; text-align: center; transition: 0.2s; border-radius: 4px;" onmouseover="this.style.background='rgba(255,255,255,0.1)'" onmouseout="this.style.background='transparent'">2/5</div>
-                            <div class="conn-str-option" data-val="1" style="padding: 12px 15px; font-size: 13px; cursor: pointer; color: #F5F5F5; text-align: center; transition: 0.2s; border-radius: 4px;" onmouseover="this.style.background='rgba(255,255,255,0.1)'" onmouseout="this.style.background='transparent'">1/5</div>
-                        </div>
-                        <input type="hidden" class="conn-strength" value="${defaultStrength}">
+                    <div style="display: flex; flex-direction: column; position: relative; justify-content: center;">
+                        <div style="font-family: 'Poppins', sans-serif; font-size: 12px; letter-spacing: 1px; color: rgba(255,255,255,0.5); text-transform: uppercase; margin-bottom: 8px;">Strength</div>
+                        <input type="range" class="conn-strength strength-slider" min="1" max="5" value="${defaultStrength}" style="width: 100px;">
                     </div>
                     
                     <button type="button" class="btn-remove-conn" style="background: transparent; border: none; color: rgba(255,255,255,0.4); cursor: pointer; font-size: 18px; padding: 0 0 0 10px; line-height: 1; transition: 0.2s;">&times;</button>
@@ -4889,7 +4898,7 @@
             });
             
             targetInput.addEventListener('click', () => {
-                document.querySelectorAll('.conn-type-dropdown, .conn-strength-dropdown').forEach(d => d.style.display = 'none');
+                document.querySelectorAll('.conn-type-dropdown').forEach(d => d.style.display = 'none');
                 renderAutocomplete();
             });
             
@@ -4903,11 +4912,6 @@
                 if (typeDisplay && typeDropdown && !typeDisplay.contains(e.target) && !typeDropdown.contains(e.target)) {
                     typeDropdown.style.display = 'none';
                 }
-                const strDisplay = div.querySelector('.conn-strength-display');
-                const strDropdown = div.querySelector('.conn-strength-dropdown');
-                if (strDisplay && strDropdown && !strDisplay.contains(e.target) && !strDropdown.contains(e.target)) {
-                    strDropdown.style.display = 'none';
-                }
             });
             
             // Type dropdown
@@ -4916,7 +4920,7 @@
             const typeInput = div.querySelector('.conn-type');
             typeDisplay.onclick = () => {
                 const isVisible = typeDropdown.style.display === 'flex';
-                document.querySelectorAll('.conn-type-dropdown, .conn-autocomplete, .conn-strength-dropdown').forEach(d => d.style.display = 'none');
+                document.querySelectorAll('.conn-type-dropdown, .conn-autocomplete').forEach(d => d.style.display = 'none');
                 typeDropdown.style.display = isVisible ? 'none' : 'flex';
             };
             div.querySelectorAll('.conn-type-option').forEach(opt => {
@@ -4927,22 +4931,6 @@
                 };
             });
             
-            // Strength dropdown
-            const strDisplay = div.querySelector('.conn-strength-display');
-            const strDropdown = div.querySelector('.conn-strength-dropdown');
-            const strInput = div.querySelector('.conn-strength');
-            strDisplay.onclick = () => {
-                const isVisible = strDropdown.style.display === 'flex';
-                document.querySelectorAll('.conn-type-dropdown, .conn-autocomplete, .conn-strength-dropdown').forEach(d => d.style.display = 'none');
-                strDropdown.style.display = isVisible ? 'none' : 'flex';
-            };
-            div.querySelectorAll('.conn-str-option').forEach(opt => {
-                opt.onclick = () => {
-                    strInput.value = opt.dataset.val;
-                    strDisplay.querySelector('span').textContent = opt.textContent + '/5';
-                    strDropdown.style.display = 'none';
-                };
-            });
 
             div.querySelector('.btn-remove-conn').onclick = () => {
                 div.remove();
