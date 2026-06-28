@@ -6,11 +6,11 @@
     <title>Feed the Beast</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@100;200;300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         h1, h2, h3, p, span, div { text-wrap: pretty; }
-        body { width: 100vw; height: 100vh; overflow: hidden; background: #0a0a0a; font-family: 'Helvetica', Arial, sans-serif; transition: filter 0.5s; }
+        body { width: 100vw; height: 100vh; overflow: hidden; background: #0a0a0a; font-family: 'Poppins', sans-serif; transition: filter 0.5s; }
         body.light-mode { filter: invert(1) hue-rotate(180deg); }
         canvas { display: block; }
 
@@ -130,7 +130,7 @@
             font-size: 10px;
             line-height: 1.6;
             color: rgba(245,245,245,0.8);
-            font-family: monospace;
+            font-family: 'Courier New', monospace;
         }
         .controls-list div {
             margin-bottom: 8px;
@@ -366,16 +366,11 @@
         }
         
         #about-modal {
-            width: 100vw;
-            height: 100vh;
-            max-width: 100vw;
-            max-height: 100vh;
-            padding: 0;
-            border-radius: 0;
-            display: flex;
-            align-items: flex-start;
-            justify-content: center;
-            border: none;
+            width: 600px;
+            max-width: 90%;
+            height: auto;
+            max-height: 80vh;
+            padding: 40px 30px;
         }
 
         #add-modal.visible, #about-modal.visible {
@@ -689,7 +684,7 @@
             </div>
 
             <div id="search-wrapper" style="position: relative; display: flex; align-items: center; margin: 0; width: auto;">
-                <input type="text" id="search-input" class="info-action-btn" placeholder="[ FIND ANYTHING ]" autocomplete="off" style="margin: 0; width: 210px; cursor: text; border-radius: 10px;">
+                <input type="text" id="search-input" class="info-action-btn" placeholder="[ WHAT YOU LOOKIN FOR ]" autocomplete="off" style="margin: 0; width: 250px; cursor: text; border-radius: 10px;">
                 <div id="search-dropdown" style="display: none; position: absolute; top: 100%; left: 0; min-width: 280px; background: rgba(0,0,0,0.3); backdrop-filter: blur(25px); border: 1px solid rgba(245,245,245,0.2); border-radius: 10px; z-index: 1000; margin-top: 8px; max-height: 400px; overflow-y: auto; overflow-x: hidden; padding: 8px 0; box-shadow: 0 4px 20px rgba(0,0,0,0.5);">
                 </div>
             </div>
@@ -799,29 +794,16 @@
 
     <!-- About Modal -->
     <div id="about-modal" class="modal">
-        <span class="close-btn" id="btn-close-about" onclick="document.getElementById('about-modal').classList.remove('visible'); document.getElementById('modal-overlay').classList.remove('visible');" style="position: absolute; top: 40px; right: 40px; font-size: 32px; font-weight: 300; cursor: pointer; color: inherit; z-index: 10; line-height: 1;">&times;</span>
-        
-        <div style="position: relative; width: 100%; height: 100%; display: flex; flex-direction: column; padding: 12vh 10% 0; font-family: 'Helvetica', Arial, sans-serif;">
+        <span class="close-btn" id="btn-close-about" onclick="document.getElementById('about-modal').classList.remove('visible'); document.getElementById('modal-overlay').classList.remove('visible');" style="position: absolute; top: 40px; right: 30px; font-size: 28px; cursor: pointer; color: #F5F5F5; opacity: 0.6; transition: 0.2s; z-index: 10; line-height: 1;">&times;</span>
+        <div style="overflow-y: auto; height: 100%; padding: 0 40px; font-family: 'Poppins', sans-serif; text-align: left;">
+            <h1 style="font-weight: 600; font-size: 32px; margin-bottom: 12px; text-transform: uppercase; line-height: 1;">FEED THE BEAST</h1>
+            <p style="margin-bottom: 35px; font-style: italic; color: rgba(245,245,245,0.85); font-size: 15px; font-weight: 300;">An interactive installation that reveals the hidden network of human connections surrounding&nbsp;us.</p>
             
-            <h1 style="font-weight: 800; font-size: 15vw; line-height: 0.85; margin-bottom: 6vh; text-transform: uppercase; letter-spacing: -0.02em; word-break: keep-all; color: inherit; z-index: 2; user-select: none;">
-                FEED THE<br>BEAST
-            </h1>
+            <p style="margin-bottom: 20px; color: rgba(245,245,245,0.85); font-size: 15px; line-height: 1.6; font-weight: 300;">Each node represents a real person. Each line represents a real relationship. Together, they form a living&nbsp;organism.</p>
             
-            <div style="position: relative; width: 100%; z-index: 2;">
-                <div style="max-width: 650px; font-weight: 300; font-size: 18px; line-height: 1.6; color: inherit; opacity: 0.85;">
-                    <p style="margin-bottom: 25px;">An interactive installation that reveals the hidden<br>network of human connections surrounding us.</p>
-                    
-                    <p style="margin-bottom: 25px;">Each node represents a real person.<br>Each line represents a real relationship.<br>Together, they form a living organism.</p>
-                    
-                    <p style="margin-bottom: 25px;">Explore the system, trace paths between individuals,<br>uncover hidden links, and discover how people are<br>connected in ways that often remain unseen.</p>
-                    
-                    <p style="margin-bottom: 25px;">The organism is never complete.<br>With every new participant and every<br>new connection,<br>it grows, adapts, and reorganizes itself.</p>
-                </div>
-                
-                <div style="position: absolute; right: 0; bottom: 140px; font-size: 12px; font-weight: 300; letter-spacing: 1.5px; text-transform: uppercase; color: inherit; opacity: 0.5; user-select: none;">
-                    [ SCROLL TO EXPLORE ]
-                </div>
-            </div>
+            <p style="margin-bottom: 20px; color: rgba(245,245,245,0.85); font-size: 15px; line-height: 1.6; font-weight: 300;">Explore the system, trace paths between individuals, uncover hidden links, and discover how people are connected in ways that often remain&nbsp;unseen.</p>
+            
+            <p style="margin-bottom: 20px; color: rgba(245,245,245,0.85); font-size: 15px; line-height: 1.6; font-weight: 300;">The organism is never complete. With every new participant and every new connection, it grows, adapts, and reorganizes&nbsp;itself.</p>
         </div>
     </div>
     
@@ -1039,7 +1021,7 @@
                 border: 1px solid rgba(245,245,245,0.2);
                 border-radius: 12px;
                 padding: 4px 12px;
-                font-family: 'Helvetica', Arial, sans-serif;
+                font-family: 'Poppins', sans-serif;
                 font-weight: 300;
                 font-size: 14px;
                 color: #fff;
@@ -1070,7 +1052,7 @@
                 padding-left: 30px;
             }
             .suggested-name {
-                font-family: 'Helvetica', Arial, sans-serif;
+                font-family: 'Poppins', sans-serif;
                 font-size: 20px;
                 font-weight: 300;
                 color: #F5F5F5;
@@ -1079,7 +1061,7 @@
                 text-wrap: balance;
             }
             .suggested-meta {
-                font-family: 'Helvetica', Arial, sans-serif;
+                font-family: 'Poppins', sans-serif;
                 font-size: 14px;
                 color: rgba(245,245,245,0.6);
                 font-weight: 300;
@@ -1091,7 +1073,7 @@
                 opacity: 0.4;
             }
             .btn-connect-sleek {
-                font-family: 'Helvetica', Arial, sans-serif;
+                font-family: 'Poppins', sans-serif;
                 background: transparent;
                 color: #E6E6E6;
                 border: none;
@@ -1122,7 +1104,7 @@
                 margin-top: 24px;
             }
             .suggested-shared-label {
-                font-family: 'Helvetica', Arial, sans-serif;
+                font-family: 'Poppins', sans-serif;
                 font-size: 11px;
                 color: rgba(245,245,245,0.4);
                 text-transform: uppercase;
@@ -1130,7 +1112,7 @@
                 font-weight: 500;
             }
             .suggested-shared-pill {
-                font-family: 'Helvetica', Arial, sans-serif;
+                font-family: 'Poppins', sans-serif;
                 display: flex;
                 align-items: center;
                 background: #000;
@@ -3629,17 +3611,6 @@
         const form = document.getElementById('add-form');
         const connectionsList = document.getElementById('connections-list');
         
-        // Scroll to close About modal
-        const closeAboutOnScroll = () => {
-            const aboutModal = document.getElementById('about-modal');
-            if (aboutModal && aboutModal.classList.contains('visible')) {
-                aboutModal.classList.remove('visible');
-                document.getElementById('modal-overlay').classList.remove('visible');
-            }
-        };
-        window.addEventListener('wheel', closeAboutOnScroll);
-        window.addEventListener('touchmove', closeAboutOnScroll);
-        
         // Prevent accidental form submission on 'Enter' key
         form.addEventListener('keydown', (e) => {
             if (e.key === 'Enter') {
@@ -4812,15 +4783,15 @@
 
             div.innerHTML = `
                 <div style="flex: 1; display: flex; flex-direction: column; position: relative;">
-                    <input type="text" class="conn-target" placeholder="Search Name..." value="${defaultName}" autocomplete="off" style="font-family: 'Helvetica', Arial, sans-serif; font-weight: 300; font-size: 16px; border: none; outline: none; background: transparent; color: #F5F5F5; padding: 0; margin-bottom: 4px; width: 100%;">
-                    <div class="conn-info" style="font-family: 'Helvetica', Arial, sans-serif; font-size: 11px; color: rgba(255,255,255,0.5);">${infoString}</div>
+                    <input type="text" class="conn-target" placeholder="Search Name..." value="${defaultName}" autocomplete="off" style="font-family: 'Poppins', sans-serif; font-weight: 300; font-size: 16px; border: none; outline: none; background: transparent; color: #F5F5F5; padding: 0; margin-bottom: 4px; width: 100%;">
+                    <div class="conn-info" style="font-family: 'Poppins', sans-serif; font-size: 11px; color: rgba(255,255,255,0.5);">${infoString}</div>
                     <div class="conn-autocomplete" style="display: none; position: absolute; top: 100%; left: 0; background: rgba(10,10,10,0.95); border: 1px solid rgba(255,255,255,0.2); border-radius: 8px; z-index: 100; min-width: 200px; flex-direction: column; max-height: 400px; overflow-y: auto; box-shadow: 0 4px 15px rgba(0,0,0,0.5); margin-top: 5px;"></div>
                 </div>
                 
                 <div style="display: flex; gap: 30px; align-items: center;">
                     <div style="display: flex; flex-direction: column; position: relative;">
-                        <div style="font-family: 'Helvetica', Arial, sans-serif; font-size: 12px; letter-spacing: 1px; color: rgba(255,255,255,0.5); text-transform: uppercase; margin-bottom: 4px;">Relationship</div>
-                        <div class="conn-type-display" style="font-family: 'Helvetica', Arial, sans-serif; font-size: 16px; font-weight: 300; color: #F5F5F5; cursor: pointer; display: flex; justify-content: space-between; align-items: center; min-width: 100px;"><span>${getRelLabel(defaultType)}</span> <span style="font-size: 8px;">▼</span></div>
+                        <div style="font-family: 'Poppins', sans-serif; font-size: 12px; letter-spacing: 1px; color: rgba(255,255,255,0.5); text-transform: uppercase; margin-bottom: 4px;">Relationship</div>
+                        <div class="conn-type-display" style="font-family: 'Poppins', sans-serif; font-size: 16px; font-weight: 300; color: #F5F5F5; cursor: pointer; display: flex; justify-content: space-between; align-items: center; min-width: 100px;"><span>${getRelLabel(defaultType)}</span> <span style="font-size: 8px;">▼</span></div>
                         <div class="conn-type-dropdown" style="display: none; position: absolute; top: 100%; left: 0; background: rgba(10,10,10,0.95); border: 1px solid rgba(255,255,255,0.2); border-radius: 8px; z-index: 100; min-width: 160px; flex-direction: column; padding: 5px; box-shadow: 0 4px 15px rgba(0,0,0,0.5); margin-top: 5px;">
                             <div class="conn-type-option" data-val="friend" style="padding: 12px 15px; font-size: 13px; cursor: pointer; color: #F5F5F5; transition: 0.2s; border-radius: 4px;" onmouseover="this.style.background='rgba(255,255,255,0.1)'" onmouseout="this.style.background='transparent'">Friend</div>
                             <div class="conn-type-option" data-val="acquaintance" style="padding: 12px 15px; font-size: 13px; cursor: pointer; color: #F5F5F5; transition: 0.2s; border-radius: 4px;" onmouseover="this.style.background='rgba(255,255,255,0.1)'" onmouseout="this.style.background='transparent'">Acquaintance</div>
@@ -4833,10 +4804,10 @@
                     <div style="width: 1px; height: 24px; background: rgba(255,255,255,0.15);"></div>
 
                     <div style="display: flex; flex-direction: column; position: relative;">
-                        <div style="font-family: 'Helvetica', Arial, sans-serif; font-size: 12px; letter-spacing: 1px; color: rgba(255,255,255,0.5); text-transform: uppercase; margin-bottom: 4px;">Strength</div>
+                        <div style="font-family: 'Poppins', sans-serif; font-size: 12px; letter-spacing: 1px; color: rgba(255,255,255,0.5); text-transform: uppercase; margin-bottom: 4px;">Strength</div>
                         <div style="display: flex; align-items: center; width: 140px; height: 24px; position: relative;">
                             <input type="range" class="conn-strength strength-slider" min="1" max="5" value="${defaultStrength}" style="width: 100%;">
-                            <div class="conn-strength-label" style="position: absolute; top: 20px; font-family: 'Helvetica', Arial, sans-serif; font-size: 10px; color: rgba(255,255,255,0.7); transform: translateX(-50%); pointer-events: none;">${defaultStrength}</div>
+                            <div class="conn-strength-label" style="position: absolute; top: 20px; font-family: 'Poppins', sans-serif; font-size: 10px; color: rgba(255,255,255,0.7); transform: translateX(-50%); pointer-events: none;">${defaultStrength}</div>
                         </div>
                     </div>
                     

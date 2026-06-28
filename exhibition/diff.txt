@@ -1,0 +1,2394 @@
+diff --git a/exhibition/public/index.html b/exhibition/public/index.html
+index a5264a6..aae76d8 100644
+--- a/exhibition/public/index.html
++++ b/exhibition/public/index.html
+@@ -6,11 +6,11 @@
+     <title>Feed the Beast</title>
+     <link rel="preconnect" href="https://fonts.googleapis.com">
+     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@100;200;300;400;500;600;700&display=swap" rel="stylesheet">
++    <link href="https://fonts.googleapis.com/css2?family=PT+Mono&display=swap" rel="stylesheet">
+     <style>
+         * { margin: 0; padding: 0; box-sizing: border-box; }
+         h1, h2, h3, p, span, div { text-wrap: pretty; }
+-        body { width: 100vw; height: 100vh; overflow: hidden; background: #0a0a0a; font-family: 'Poppins', sans-serif; transition: filter 0.5s; }
++        body { width: 100vw; height: 100vh; overflow: hidden; background: #0a0a0a; font-family: 'Helvetica', Arial, sans-serif; transition: filter 0.5s; }
+         body.light-mode { filter: invert(1) hue-rotate(180deg); }
+         canvas { display: block; }
+ 
+@@ -87,7 +87,7 @@
+ 
+         .panel-body { padding: 15px; border-top: 1px solid rgba(245,245,245,0.2); margin-top: 5px; }
+         .panel.collapsed .panel-body { display: none; }
+-        .panel.collapsed .panel-header { border-bottom: none; }
++        .panel.collapsed .panel-header { border-bottom: none; padding: 15px 0 !important; }
+         .panel-icon { font-size: 12px; transition: transform 0.3s; }
+         .panel:not(.collapsed) { }
+         .panel:not(.collapsed) .panel-icon { transform: rotate(45deg); }
+@@ -130,7 +130,7 @@
+             font-size: 10px;
+             line-height: 1.6;
+             color: rgba(245,245,245,0.8);
+-            font-family: 'Courier New', monospace;
++            font-family: 'PT Mono', monospace;
+         }
+         .controls-list div {
+             margin-bottom: 8px;
+@@ -294,6 +294,8 @@
+             font-size: 12px;
+             letter-spacing: 2px;
+             text-transform: uppercase;
++            text-align: center;
++            width: 100%;
+         }
+ 
+         @keyframes pulse-bw {
+@@ -355,7 +357,7 @@
+             height: 650px;
+         }
+ 
+-        #add-modal, #about-modal {
++        #add-modal {
+             display: flex;
+             flex-direction: column;
+             overflow: hidden;
+@@ -364,16 +366,9 @@
+             transform: translate(-50%, -50%) scale(0.95);
+             transition: all 0.3s ease;
+         }
+-        
+-        #about-modal {
+-            width: 600px;
+-            max-width: 90%;
+-            height: auto;
+-            max-height: 80vh;
+-            padding: 40px 30px;
+-        }
+ 
+-        #add-modal.visible, #about-modal.visible {
++
++        #add-modal.visible {
+             opacity: 1;
+             pointer-events: auto;
+             transform: translate(-50%, -50%) scale(1);
+@@ -668,32 +663,63 @@
+     <div id="top-bar" style="flex-direction: column; gap: 16px;">
+         <div style="display: flex; gap: 10px; align-items: flex-start;">
+             <div id="path-panel" class="panel collapsed">
+-                <div class="panel-header" id="path-header">
++                <div class="panel-header" id="path-header" style="padding: 15px 20px;">
+                     <button class="info-action-btn" style="margin: 0;">[ TRACE VEIN ]</button>
+                 </div>
+-                <div class="panel-body">
+-                    <div style="display: flex; align-items: center; margin-bottom: 8px; color: rgba(245,245,245,0.7); font-size: 12px; letter-spacing: 1px;">
+-                        [<input type="text" id="start-node" list="people-list" placeholder="ORIGIN NODE" autocomplete="off" style="background: transparent; border: none; color: #F5F5F5; width: 100%; outline: none; font-size: 11px; font-family: inherit; text-align: center; text-transform: uppercase; letter-spacing: 1px; padding: 5px;">]
++                <div class="panel-body" style="padding: 20px 25px; border-top: none;">
++                    <!-- FROM field -->
++                    <div style="margin-bottom: 25px;">
++                        <div style="font-size: 10px; font-weight: 200; letter-spacing: 2px; text-transform: uppercase; margin-bottom: 8px; color: #F5F5F5;">FROM</div>
++                        <div style="display: flex; align-items: center; justify-content: center; position: relative; font-size: 18px; font-weight: 200; color: #F5F5F5;">
++                            <span>[</span>
++                            <input type="text" id="start-node" autocomplete="off" style="width: 140px; background: transparent; border: none; border-bottom: 1px solid rgba(245,245,245,0.3); outline: none; color: #F5F5F5; font-size: 13px; font-weight: 200; text-align: center; font-family: inherit; letter-spacing: 1px; margin: 0 10px; padding: 4px 0;">
++                            <span>]</span>
++                            <div id="start-dropdown" style="display: none; position: absolute; top: 100%; left: 0; right: 0; background: rgba(0,0,0,0.6); backdrop-filter: blur(25px); border: 1px solid rgba(245,245,245,0.2); border-radius: 10px; z-index: 1000; margin-top: 8px; max-height: 180px; overflow-y: auto; overflow-x: hidden; padding: 8px 0; box-shadow: 0 4px 20px rgba(0,0,0,0.5);"></div>
++                        </div>
+                     </div>
+-                    <div style="display: flex; align-items: center; margin-bottom: 15px; color: rgba(245,245,245,0.7); font-size: 12px; letter-spacing: 1px;">
+-                        [<input type="text" id="end-node" list="people-list" placeholder="TARGET NODE" autocomplete="off" style="background: transparent; border: none; color: #F5F5F5; width: 100%; outline: none; font-size: 11px; font-family: inherit; text-align: center; text-transform: uppercase; letter-spacing: 1px; padding: 5px;">]
++                    
++                    <!-- TO field -->
++                    <div style="margin-bottom: 30px;">
++                        <div style="font-size: 10px; font-weight: 200; letter-spacing: 2px; text-transform: uppercase; margin-bottom: 8px; color: #F5F5F5;">TO</div>
++                        <div style="display: flex; align-items: center; justify-content: center; position: relative; font-size: 18px; font-weight: 200; color: #F5F5F5;">
++                            <span>[</span>
++                            <input type="text" id="end-node" autocomplete="off" style="width: 140px; background: transparent; border: none; border-bottom: 1px solid rgba(245,245,245,0.3); outline: none; color: #F5F5F5; font-size: 13px; font-weight: 200; text-align: center; font-family: inherit; letter-spacing: 1px; margin: 0 10px; padding: 4px 0;">
++                            <span>]</span>
++                            <div id="end-dropdown" style="display: none; position: absolute; top: 100%; left: 0; right: 0; background: rgba(0,0,0,0.6); backdrop-filter: blur(25px); border: 1px solid rgba(245,245,245,0.2); border-radius: 10px; z-index: 1000; margin-top: 8px; max-height: 180px; overflow-y: auto; overflow-x: hidden; padding: 8px 0; box-shadow: 0 4px 20px rgba(0,0,0,0.5);"></div>
++                        </div>
+                     </div>
+-                    <button id="btn-find">Trace Path</button>
+-                    <button id="btn-reset">Reset View</button>
++                    
++                    <!-- REVEAL THE PATH button -->
++                    <button id="btn-find" class="btn-reveal-path" style="width: 100%; padding: 15px; background: transparent; border: 1px solid rgba(245,245,245,0.3); border-radius: 8px; font-size: 11px; font-weight: 500; letter-spacing: 2px; text-transform: uppercase; color: #F5F5F5; cursor: pointer; transition: 0.2s; margin-bottom: 25px;">
++                        REVEAL THE PATH
++                    </button>
++                    
++                    <!-- Divider -->
++                    <div style="display: flex; align-items: center; justify-content: center; margin-bottom: 25px;">
++                        <div style="flex: 1; height: 1px; background: rgba(245,245,245,0.2);"></div>
++                    </div>
++                    
++                    <!-- Stats Footer -->
++                    <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; margin-bottom: 25px;">
++                        <div style="font-size: 10px; font-weight: 200; letter-spacing: 2px; text-transform: uppercase; margin-bottom: 8px; color: #F5F5F5;">DISTANCE</div>
++                        <div id="path-distance-stat" style="font-size: 18px; font-weight: 300; color: #F5F5F5;">-</div>
++                    </div>
++
++                    <button id="btn-reset" style="width: 100%; padding: 10px; background: transparent; border: none; font-size: 10px; font-weight: 200; letter-spacing: 1px; text-transform: uppercase; color: rgba(245,245,245,0.5); cursor: pointer; transition: 0.2s;">Reset View</button>
+                 </div>
+             </div>
+ 
+-            <div id="search-wrapper" style="position: relative; display: flex; align-items: center; margin: 0; width: auto;">
+-                <input type="text" id="search-input" class="info-action-btn" placeholder="[ WHAT YOU LOOKIN FOR ]" autocomplete="off" style="margin: 0; width: 250px; cursor: text; border-radius: 10px;">
++            <div id="search-wrapper" style="position: relative; display: flex; align-items: center; margin-top: 15px; width: auto;">
++                <input type="text" id="search-input" class="info-action-btn" placeholder="[ FIND ANYTHING ]" autocomplete="off" style="margin: 0; width: 165px; cursor: text; border-radius: 10px;">
+                 <div id="search-dropdown" style="display: none; position: absolute; top: 100%; left: 0; min-width: 280px; background: rgba(0,0,0,0.3); backdrop-filter: blur(25px); border: 1px solid rgba(245,245,245,0.2); border-radius: 10px; z-index: 1000; margin-top: 8px; max-height: 400px; overflow-y: auto; overflow-x: hidden; padding: 8px 0; box-shadow: 0 4px 20px rgba(0,0,0,0.5);">
+                 </div>
+             </div>
+ 
+-            <button id="btn-pause" class="info-action-btn" style="margin: 0;">[ FREEZE ]</button>
++            <button id="btn-pause" class="info-action-btn" style="margin-top: 15px;">[ FREEZE ]</button>
+         </div>
+     </div>
+     
+-    <button id="btn-add-connection" class="info-action-btn" style="position: absolute; top: 20px; left: 50%; transform: translateX(-50%); margin: 0; z-index: 100;">[ FEED THE BEAST ]</button>
++    <button id="btn-add-connection" class="info-action-btn" style="position: absolute; top: 35px; left: 50%; transform: translateX(-50%); margin: 0; z-index: 100;">[ FEED THE BEAST ]</button>
+ 
+     <div id="info-panel-container">
+         <div id="info-card">
+@@ -786,27 +812,56 @@
+     </button>
+ 
+     <div style="position: absolute; bottom: 30px; right: 30px; display: flex; align-items: center; gap: 15px; z-index: 100;">
+-        <button id="btn-info" class="info-action-btn" onclick="document.getElementById('about-modal').classList.add('visible'); document.getElementById('modal-overlay').classList.add('visible');" style="margin: 0;">[ ABOUT THE BEAST ]</button>
++        <button id="btn-info" class="info-action-btn" onclick="openAboutModal()" style="margin: 0;">[ ABOUT THE BEAST ]</button>
+         <button id="btn-theme" class="info-action-btn" style="margin: 0;" title="Toggle Day/Night Mode">[ night ]</button>
+     </div>
+ 
+     <div id="modal-overlay" class="modal-overlay"></div>
+ 
+     <!-- About Modal -->
+-    <div id="about-modal" class="modal">
+-        <span class="close-btn" id="btn-close-about" onclick="document.getElementById('about-modal').classList.remove('visible'); document.getElementById('modal-overlay').classList.remove('visible');" style="position: absolute; top: 40px; right: 30px; font-size: 28px; cursor: pointer; color: #F5F5F5; opacity: 0.6; transition: 0.2s; z-index: 10; line-height: 1;">&times;</span>
+-        <div style="overflow-y: auto; height: 100%; padding: 0 40px; font-family: 'Poppins', sans-serif; text-align: left;">
+-            <h1 style="font-weight: 600; font-size: 32px; margin-bottom: 12px; text-transform: uppercase; line-height: 1;">FEED THE BEAST</h1>
+-            <p style="margin-bottom: 35px; font-style: italic; color: rgba(245,245,245,0.85); font-size: 15px; font-weight: 300;">An interactive installation that reveals the hidden network of human connections surrounding&nbsp;us.</p>
+-            
+-            <p style="margin-bottom: 20px; color: rgba(245,245,245,0.85); font-size: 15px; line-height: 1.6; font-weight: 300;">Each node represents a real person. Each line represents a real relationship. Together, they form a living&nbsp;organism.</p>
+-            
+-            <p style="margin-bottom: 20px; color: rgba(245,245,245,0.85); font-size: 15px; line-height: 1.6; font-weight: 300;">Explore the system, trace paths between individuals, uncover hidden links, and discover how people are connected in ways that often remain&nbsp;unseen.</p>
++    <div id="about-modal" style="position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.6); backdrop-filter: blur(30px); -webkit-backdrop-filter: blur(30px); z-index: 2000; display: flex; flex-direction: column; opacity: 0; pointer-events: none; transition: opacity 0.5s ease; color: #F5F5F5; font-family: 'Helvetica', Arial, sans-serif;">
++        <!-- Close Button -->
++        <span class="close-btn" id="btn-close-about" onclick="closeAboutModal()" style="position: absolute; top: 30px; right: 40px; font-size: 30px; cursor: pointer; color: #F5F5F5; opacity: 0.6; transition: 0.2s; z-index: 10; line-height: 1; font-weight: 300;">&times;</span>
++        
++        <div style="padding: 4vh 6vw 8vh 6vw; flex: 1; display: flex; flex-direction: column; justify-content: center; overflow-y: auto;">
++            <h1 style="font-weight: 900; font-size: 16vw; margin-bottom: 3vh; text-transform: uppercase; line-height: 0.85; letter-spacing: -3px; margin-top: -2vh;">FEED THE BEAST</h1>
+             
+-            <p style="margin-bottom: 20px; color: rgba(245,245,245,0.85); font-size: 15px; line-height: 1.6; font-weight: 300;">The organism is never complete. With every new participant and every new connection, it grows, adapts, and reorganizes&nbsp;itself.</p>
++            <div style="display: flex; justify-content: space-between; align-items: center; padding-left: 0.5vw; padding-right: 2vw;">
++                <div style="max-width: 700px;">
++                    <p style="margin-bottom: 25px; color: rgba(245,245,245,0.85); font-size: 18px; line-height: 1.5; font-weight: 300;">An interactive installation that reveals the hidden<br>network of human connections surrounding us.</p>
++                    
++                    <p style="margin-bottom: 25px; color: rgba(245,245,245,0.85); font-size: 18px; line-height: 1.5; font-weight: 300;">Each node represents a real person.<br>Each line represents a real relationship.<br>Together, they form a living organism.</p>
++                    
++                    <p style="margin-bottom: 25px; color: rgba(245,245,245,0.85); font-size: 18px; line-height: 1.5; font-weight: 300;">Explore the system, trace paths between individuals,<br>uncover hidden links, and discover how people are<br>connected in ways that often remain unseen.</p>
++                    
++                    <p style="margin-bottom: 0; color: rgba(245,245,245,0.85); font-size: 18px; line-height: 1.5; font-weight: 300;">The organism is never complete.<br>With every new participant and every new connection,<br>it grows, adapts, and reorganizes itself.</p>
++                </div>
++                <div style="color: #F5F5F5; font-family: 'PT Mono', monospace; font-size: 15px; letter-spacing: 2px; text-transform: uppercase; opacity: 0.5;">
++                    [ SCROLL TO EXPLORE ]
++                </div>
++            </div>
+         </div>
+     </div>
+     
++    <script>
++        function openAboutModal() {
++            const m = document.getElementById('about-modal');
++            m.style.opacity = '1';
++            m.style.pointerEvents = 'auto';
++        }
++        function closeAboutModal() {
++            const m = document.getElementById('about-modal');
++            m.style.opacity = '0';
++            m.style.pointerEvents = 'none';
++        }
++        document.getElementById('about-modal').addEventListener('wheel', (e) => {
++            closeAboutModal();
++        });
++        document.getElementById('about-modal').addEventListener('touchmove', (e) => {
++            closeAboutModal();
++        });
++    </script>
++    
+     <div id="discover-modal" class="modal" style="display: none; padding-top: 40px; padding-bottom: 20px; max-width: 95vw; width: 95vw; height: 90vh; box-sizing: border-box; flex-direction: column;">
+         <span class="close-btn" id="btn-close-discover" style="position: absolute; font-size: 32px; right: 25px; top: 15px; cursor: pointer; color: #F5F5F5;">&times;</span>
+         <h2 style="margin-bottom: 5px; font-weight: 300; font-size: 28px; text-align: center;">Discover Connections</h2>
+@@ -1021,7 +1076,7 @@
+                 border: 1px solid rgba(245,245,245,0.2);
+                 border-radius: 12px;
+                 padding: 4px 12px;
+-                font-family: 'Poppins', sans-serif;
++                font-family: 'Helvetica', Arial, sans-serif;
+                 font-weight: 300;
+                 font-size: 14px;
+                 color: #fff;
+@@ -1037,7 +1092,28 @@
+                 margin-bottom: 16px;
+                 display: flex;
+                 flex-direction: row;
++                align-items: flex-start;
++                position: relative;
++                transition: opacity 0.4s ease, transform 0.4s ease;
++            }
++            .btn-dismiss-rec {
++                position: absolute;
++                top: 8px;
++                right: 12px;
++                background: transparent !important;
++                border: none;
++                color: rgba(245, 245, 245, 0.5);
++                font-size: 18px;
++                cursor: pointer;
++                padding: 4px;
++                transition: color 0.2s;
++                width: auto !important;
++                height: auto !important;
++                min-width: unset !important;
++                display: flex;
+                 align-items: center;
++                justify-content: center;
++                z-index: 10;
+             }
+             .suggested-card-content {
+                 flex: 1;
+@@ -1048,11 +1124,12 @@
+                 width: 180px;
+                 display: flex;
+                 justify-content: center;
+-                align-items: center;
++                align-items: flex-start;
+                 padding-left: 30px;
++                padding-top: 30px;
+             }
+             .suggested-name {
+-                font-family: 'Poppins', sans-serif;
++                font-family: 'Helvetica', Arial, sans-serif;
+                 font-size: 20px;
+                 font-weight: 300;
+                 color: #F5F5F5;
+@@ -1061,7 +1138,7 @@
+                 text-wrap: balance;
+             }
+             .suggested-meta {
+-                font-family: 'Poppins', sans-serif;
++                font-family: 'Helvetica', Arial, sans-serif;
+                 font-size: 14px;
+                 color: rgba(245,245,245,0.6);
+                 font-weight: 300;
+@@ -1073,23 +1150,29 @@
+                 opacity: 0.4;
+             }
+             .btn-connect-sleek {
+-                font-family: 'Poppins', sans-serif;
++                font-family: 'Helvetica', Arial, sans-serif;
+                 background: transparent;
++                border: 1px solid transparent;
++                border-radius: 10px;
+                 color: #E6E6E6;
+-                border: none;
+-                padding: 10px;
+-                font-weight: 300;
+-                font-size: 11px;
+                 cursor: pointer;
+-                transition: 0.2s;
+-                text-transform: uppercase;
++                font-size: 11px;
+                 letter-spacing: 2px;
++                text-transform: uppercase;
++                text-align: center;
++                padding: 0 10px;
++                transition: all 0.2s ease;
+                 outline: none;
++                font-weight: 300;
++                box-sizing: border-box;
++                height: 32px;
++                line-height: 30px;
++                width: auto !important;
+             }
+             .btn-connect-sleek:hover {
+-                color: #FFF !important;
+-                background: #000 !important;
+-                transform: scale(1.02);
++                background: white;
++                color: black !important;
++                border: 1px solid #F5F5F5;
+             }
+             .btn-connect-sleek.added {
+                 color: rgba(245,245,245,0.3);
+@@ -1104,7 +1187,7 @@
+                 margin-top: 24px;
+             }
+             .suggested-shared-label {
+-                font-family: 'Poppins', sans-serif;
++                font-family: 'Helvetica', Arial, sans-serif;
+                 font-size: 11px;
+                 color: rgba(245,245,245,0.4);
+                 text-transform: uppercase;
+@@ -1112,7 +1195,7 @@
+                 font-weight: 500;
+             }
+             .suggested-shared-pill {
+-                font-family: 'Poppins', sans-serif;
++                font-family: 'Helvetica', Arial, sans-serif;
+                 display: flex;
+                 align-items: center;
+                 background: #000;
+@@ -1202,38 +1285,36 @@
+                 <input type="hidden" id="f-desc" value="">
+                 
+                 <!-- STEP 0 -->
+-                <div id="wizard-step-0" class="wizard-step active" style="height: 100%;">
+-                    <!-- Normal flow title -->
+-                    <h2 id="step-0-title">Who are we adding?</h2>
++                <div id="wizard-step-0" class="wizard-step active" style="height: 100%; display: flex; flex-direction: column; justify-content: center; padding-left: 10%;">
++                    <h2 id="step-0-title" style="font-size: 32px; margin-bottom: 40px; font-weight: 300;">Who are we adding?</h2>
+                     
+-                    <!-- Radio buttons aligned perfectly with "1. Name" (20%) -->
+-                    <div style="position: absolute; top: 20%; left: 50px; transform: translateY(-50%); z-index: 30;">
++                    <div style="width: 100%; max-width: 400px; display: flex; flex-direction: column; gap: 40px; z-index: 30;">
++                        <!-- Radio buttons -->
+                         <div style="display: flex; align-items: center; gap: 20px;">
+                             <div style="display: flex; align-items: center; gap: 10px; cursor: pointer;" onclick="setPersonType('myself')">
+                                 <div class="custom-radio active" id="radio-myself"></div>
+-                                <span style="font-size: 15px; color: #F5F5F5; font-weight: 300; letter-spacing: 0.5px;">It's me</span>
++                                <span style="font-size: 16px; color: #F5F5F5; font-weight: 300; letter-spacing: 0.5px;">Me</span>
+                             </div>
+                             <div style="width: 1px; height: 16px; background: rgba(255,255,255,0.2);"></div>
+                             <div style="display: flex; align-items: center; gap: 10px; cursor: pointer;" onclick="setPersonType('someone')">
+                                 <div class="custom-radio" id="radio-someone"></div>
+-                                <span style="font-size: 15px; color: #F5F5F5; font-weight: 300; letter-spacing: 0.5px;">Someone else</span>
++                                <span style="font-size: 16px; color: #F5F5F5; font-weight: 300; letter-spacing: 0.5px;">Someone else</span>
+                             </div>
+                         </div>
+-                    </div>
+-                    
+-                    <!-- Text input aligned perfectly with "2. Your story" (40%) -->
+-                    <div class="chapter-block" style="position: absolute; top: 40%; left: 50px; transform: translateY(-50%); width: 360px; z-index: 20; margin-top: 0;">
+-                        <label class="editorial-label" id="step-1-title">What's your name?</label>
+-                        <input type="text" id="f-name-initial" class="editorial-input" placeholder="e.g. John Doe" autocomplete="off" style="width: 100%;">
++                        
++                        <!-- Text input -->
++                        <div class="chapter-block" style="margin-bottom: 0;">
++                            <label class="editorial-label" id="step-1-title" style="font-size: 14px; margin-bottom: 15px; display: block; opacity: 0.6;">Full Name</label>
++                            <input type="text" id="f-name-initial" class="editorial-input" placeholder="e.g. John Doe" autocomplete="off" style="width: 100%; font-size: 24px; padding: 10px 0; border-bottom: 2px solid rgba(245,245,245,0.2);">
++                        </div>
+                     </div>
+                 </div>
+ 
+-                <!-- STEP 2 -->
++                <!-- STEP 2: Scanning -->
+                 <div id="wizard-step-2" class="wizard-step" style="text-align: center; height: 100%; min-height: 400px;">
+                     <div style="display: flex; flex-direction: column; justify-content: center; align-items: center; height: 100%; width: 100%;">
+                         <div class="scan-spinner"></div>
+-                        <h3 style="font-weight: 300; margin-top: 30px; letter-spacing: 1px; font-size: 24px;">Looking for existing traces...</h3>
+-                        <p id="step-2-explanation" style="color: rgba(245,245,245,0.5); font-size: 13px; margin-top: 10px;">Searching the network</p>
++                        <h3 style="font-weight: 300; margin-top: 30px; letter-spacing: 1px; font-size: 24px;">INITIALIZING NEW TRACE...</h3>
+                     </div>
+                 </div>
+ 
+@@ -1241,8 +1322,8 @@
+                 <div id="wizard-step-3" class="wizard-step" style="text-align: center; height: 100%; min-height: 400px;">
+                     <div style="display: flex; flex-direction: column; height: 100%; width: 100%;">
+                         <div style="flex: 1; display: flex; flex-direction: column; justify-content: center; align-items: center;">
+-                            <h2 id="step-3-title">Have we met before?</h2>
+-                            <p class="step-explanation" id="step-3-explanation" style="margin-bottom: 30px;">We found someone in the network who might be you.</p>
++                            <h2 id="step-3-title">Familiar signature detected.</h2>
++                            <p class="step-explanation" id="step-3-explanation" style="margin-bottom: 30px;">The organism found a matching trace in the network.</p>
+                             
+                             <div id="match-profile-card" style="background: rgba(245,245,245,0.05); border: 1px solid rgba(245,245,245,0.2); border-radius: 10px; padding: 20px; margin: 0 auto; width: 100%; max-width: 320px;">
+                                 <div id="match-name" style="font-size: 18px; font-weight: 600; margin-bottom: 8px;"></div>
+@@ -1257,131 +1338,126 @@
+                     </div>
+                 </div>
+ 
+-                <!-- STEP 4 BASICS -->
+-                <div id="wizard-step-4" class="wizard-step" style="height: 100%;">
+-                    <h2 id="step-4-title">Where does your story begin?</h2>
+-                    
+-                    <!-- Full Name Block (only visible when adding connections) -->
+-                    <div class="chapter-block" id="edit-name-group" style="display: none; position: absolute; top: 5%; left: 50px; width: calc(100% - 330px); z-index: 40;">
+-                        <label class="editorial-label">Full Name</label>
+-                        <input type="text" id="f-name" class="editorial-input" required>
+-                    </div>
++                <!-- STEP 3b: NEW REACTION (NO MATCH FOUND) -->
++                <div id="wizard-step-3b" class="wizard-step" style="text-align: left; height: 100%; display: flex; flex-direction: column; justify-content: center; padding-left: 10%;">
++                    <h2 style="font-size: 32px; margin-bottom: 20px; font-weight: 300;">The organism has accepted a new person.</h2>
++                    <p style="font-size: 18px; color: rgba(245,245,245,0.6); max-width: 500px; line-height: 1.5;">The network still knows very little about them.<br>Feed it a little more.</p>
++                </div>
+ 
+-                    <!-- 20% Block: Birth Year & Country -->
+-                    <div style="position: absolute; top: 20%; left: 50px; width: calc(100% - 330px); z-index: 30;">
+ 
+-                        <div style="display:flex; gap:20px;">
+-                            <div style="flex:1;">
+-                                <label class="editorial-label">Birth Year</label>
+-                                <input type="number" id="f-birth-year" class="editorial-input" placeholder="YYYY" min="1900" max="2026">
+-                            </div>
+-                            <div style="flex:1;">
+-                                <label class="editorial-label">Country</label>
+-                                <input type="text" id="f-country" class="editorial-input" placeholder="e.g. Israel" value="Israel">
+-                            </div>
++                <!-- STEP 4: Basic Details -->
++                <div id="wizard-step-4" class="wizard-step" style="height: 100%; display: flex; flex-direction: column; justify-content: center; padding-left: 10%;">
++                    <h2 style="font-size: 32px; margin-bottom: 40px; font-weight: 300;">Temporal Anchor.</h2>
++                    <div style="width: 100%; max-width: 400px; display: flex; gap: 30px; z-index: 30;">
++                        <div style="flex: 1;">
++                            <label class="editorial-label" style="font-size: 14px; margin-bottom: 15px; display: block; opacity: 0.6;">Birth Year</label>
++                            <input type="number" id="f-birth-year" class="editorial-input" placeholder="YYYY" min="1900" max="2026" style="font-size: 24px; padding: 10px 0; border-bottom: 2px solid rgba(245,245,245,0.2);">
++                        </div>
++                        <div style="flex: 1;">
++                            <label class="editorial-label" style="font-size: 14px; margin-bottom: 15px; display: block; opacity: 0.6;">Country</label>
++                            <input type="text" id="f-country" class="editorial-input" placeholder="e.g. Israel" value="Israel" style="font-size: 24px; padding: 10px 0; border-bottom: 2px solid rgba(245,245,245,0.2);">
+                         </div>
+                     </div>
++                </div>
+ 
+-                    <!-- 40% Block: Current City & Checkbox -->
+-                    <div style="position: absolute; top: 40%; left: 50px; width: calc(100% - 330px); z-index: 20;">
+-                        <div class="chapter-block autocomplete-wrapper" style="margin-bottom: 0px;">
+-                            <label class="editorial-label">Current City</label>
++                <!-- STEP 5: Location -->
++                <div id="wizard-step-5" class="wizard-step" style="height: 100%; display: flex; flex-direction: column; justify-content: center; padding-left: 10%;">
++                    <h2 style="font-size: 32px; margin-bottom: 40px; font-weight: 300;">Spatial Coordinates.</h2>
++                    <div style="width: 100%; max-width: 450px; display: flex; flex-direction: column; gap: 40px; z-index: 20;">
++                        <div class="chapter-block autocomplete-wrapper" style="margin-bottom: 0;">
++                            <label class="editorial-label" style="font-size: 14px; margin-bottom: 15px; display: block; opacity: 0.6;">Current City</label>
+                             <div class="tags-wrapper" id="tw-f-city" onclick="document.getElementById('f-city').focus()">
+-                                <input type="text" id="f-city" class="editorial-input auto-location" placeholder="Where do you live?">
++                                <input type="text" id="f-city" class="editorial-input auto-location" placeholder="Where do they live?" style="font-size: 20px; padding: 10px 0;">
+                             </div>
+                             <div class="autocomplete-dropdown" id="dropdown-f-city"></div>
+                             <div class="dynamic-stats" id="stats-f-city"></div>
+                         </div>
+ 
+-                        <!-- Checkbox just below -->
+-                        <div style="display: flex; align-items: center; gap: 8px; font-size: 11px; color: rgba(245,245,245,0.6); text-transform: uppercase; letter-spacing: 1px; margin-top: 5px;">
+-                            <input type="checkbox" id="f-same-city" class="white-checkbox" onchange="toggleHometown()">
+-                            <label for="f-same-city" style="cursor: pointer; margin-top: 1px;">I grew up there too.</label>
+-                        </div>
+-                    </div>
+-
+-                    <!-- 70% Block: Originally From -->
+-                    <div class="chapter-block autocomplete-wrapper" id="origin-city-wrapper" style="position: absolute; top: 62%; left: 50px; width: calc(100% - 330px); z-index: 10;">
+-                        <label class="editorial-label">Originally From</label>
+-                        <div class="tags-wrapper" id="tw-f-origin-city" onclick="document.getElementById('f-origin-city').focus()">
+-                            <input type="text" id="f-origin-city" class="editorial-input auto-location" placeholder="Hometown">
++                        <div class="chapter-block autocomplete-wrapper" style="margin-bottom: 0;">
++                            <label class="editorial-label" style="font-size: 14px; margin-bottom: 15px; display: block; opacity: 0.6;">Hometown</label>
++                            <div class="tags-wrapper" id="tw-f-origin-city" onclick="document.getElementById('f-origin-city').focus()">
++                                <input type="text" id="f-origin-city" class="editorial-input auto-location" placeholder="Where did they start?" style="font-size: 20px; padding: 10px 0;">
++                            </div>
++                            <div class="autocomplete-dropdown" id="dropdown-f-origin-city"></div>
++                            <div class="dynamic-stats" id="stats-f-origin-city"></div>
++                            <div style="display: flex; align-items: center; gap: 8px; font-size: 11px; color: rgba(245,245,245,0.6); text-transform: uppercase; letter-spacing: 1px; margin-top: 15px;">
++                                <input type="checkbox" id="f-same-city" class="white-checkbox" onchange="toggleHometown()">
++                                <label for="f-same-city" style="cursor: pointer; margin-top: 1px;">They grew up there too.</label>
++                            </div>
+                         </div>
+-                        <div class="autocomplete-dropdown" id="dropdown-f-origin-city"></div>
+-                        <div class="dynamic-stats" id="stats-f-origin-city"></div>
+                     </div>
+                 </div>
+ 
+-                <!-- STEP 5 CURRENT POSITION -->
+-                <div id="wizard-step-5" class="wizard-step" style="height: 100%;">
+-                    <h2 id="step-5-title">What keeps you busy?</h2>
+-                    
+-                    <div class="chapter-block autocomplete-wrapper" style="position: absolute; top: 20%; left: 50px; width: calc(100% - 330px); z-index: 30;">
+-                        <label class="editorial-label">Current Role</label>
+-                        <div class="tags-wrapper" id="tw-f-role" onclick="document.getElementById('f-role').focus()">
+-                            <input type="text" id="f-role" class="editorial-input auto-role" placeholder="e.g. Designer, Developer, Student">
++                <!-- STEP 6: Professional -->
++                <div id="wizard-step-6" class="wizard-step" style="height: 100%; display: flex; flex-direction: column; justify-content: center; padding-left: 10%;">
++                    <h2 style="font-size: 32px; margin-bottom: 40px; font-weight: 300;">Professional Context.</h2>
++                    <div style="width: 100%; max-width: 450px; display: flex; flex-direction: column; gap: 40px; z-index: 30;">
++                        <div class="chapter-block autocomplete-wrapper" style="margin-bottom: 0;">
++                            <label class="editorial-label" style="font-size: 14px; margin-bottom: 15px; display: block; opacity: 0.6;">Current Role</label>
++                            <div class="tags-wrapper" id="tw-f-role" onclick="document.getElementById('f-role').focus()">
++                                <input type="text" id="f-role" class="editorial-input auto-role" placeholder="e.g. Designer, Developer, Student" style="font-size: 20px; padding: 10px 0;">
++                            </div>
++                            <div class="autocomplete-dropdown" id="dropdown-f-role"></div>
++                            <div class="dynamic-stats" id="stats-f-role"></div>
+                         </div>
+-                        <div class="autocomplete-dropdown" id="dropdown-f-role"></div>
+-                        <div class="dynamic-stats" id="stats-f-role"></div>
+-                    </div>
+ 
+-                    <div class="chapter-block autocomplete-wrapper" style="position: absolute; top: 40%; left: 50px; width: calc(100% - 330px); z-index: 20;">
+-                        <label class="editorial-label">Current Workplace</label>
+-                        <div class="tags-wrapper" id="tw-f-workplace" onclick="document.getElementById('f-workplace').focus()">
+-                            <input type="text" id="f-workplace" class="editorial-input auto-work" placeholder="Company or Institution">
++                        <div class="chapter-block autocomplete-wrapper" style="margin-bottom: 0;">
++                            <label class="editorial-label" style="font-size: 14px; margin-bottom: 15px; display: block; opacity: 0.6;">Current Workplace</label>
++                            <div class="tags-wrapper" id="tw-f-workplace" onclick="document.getElementById('f-workplace').focus()">
++                                <input type="text" id="f-workplace" class="editorial-input auto-work" placeholder="Company or Institution" style="font-size: 20px; padding: 10px 0;">
++                            </div>
++                            <div class="autocomplete-dropdown" id="dropdown-f-workplace"></div>
++                            <div class="dynamic-stats" id="stats-f-workplace"></div>
+                         </div>
+-                        <div class="autocomplete-dropdown" id="dropdown-f-workplace"></div>
+-                        <div class="dynamic-stats" id="stats-f-workplace"></div>
+                     </div>
+                 </div>
+ 
+-                <!-- STEP 6 LIFE CHAPTERS & MORE -->
+-                <div id="wizard-step-6" class="wizard-step" style="height: 100%;">
+-                    <h2 style="display: flex; align-items: baseline; gap: 20px;">
+-                        Life Chapters
+-                        <span style="font-size: 12px; font-weight: 300; color: rgba(245,245,245,0.5); font-style: italic; line-height: 1.3; min-width: 250px;">* The beast grows stronger with<br>every detail you share.</span>
+-                    </h2>
+-                    
+-                    <div class="chapter-block autocomplete-wrapper" style="position: absolute; top: 20%; left: 50px; width: calc(100% - 330px); z-index: 50;">
+-                        <label class="editorial-label">High School</label>
+-                        <div class="tags-wrapper" id="tw-f-highschool" onclick="document.getElementById('f-highschool').focus()">
+-                            <input type="text" id="f-highschool" class="editorial-input auto-highschool" placeholder="School Name">
++                <!-- STEP 7: Background -->
++                <div id="wizard-step-7" class="wizard-step" style="height: 100%; display: flex; flex-direction: column; justify-content: center; padding-left: 10%;">
++                    <h2 style="font-size: 32px; margin-bottom: 40px; font-weight: 300;">Background Vectors.</h2>
++                    <div style="width: 100%; max-width: 450px; display: flex; flex-direction: column; gap: 30px; z-index: 40;">
++                        <div class="chapter-block autocomplete-wrapper" style="margin-bottom: 0;">
++                            <label class="editorial-label" style="font-size: 12px; margin-bottom: 8px; display: block; opacity: 0.6;">High School</label>
++                            <div class="tags-wrapper" id="tw-f-highschool" onclick="document.getElementById('f-highschool').focus()">
++                                <input type="text" id="f-highschool" class="editorial-input auto-highschool" placeholder="School Name" style="font-size: 18px; padding: 8px 0;">
++                            </div>
++                            <div class="autocomplete-dropdown" id="dropdown-f-highschool"></div>
++                            <div class="dynamic-stats" id="stats-f-highschool"></div>
+                         </div>
+-                        <div class="autocomplete-dropdown" id="dropdown-f-highschool"></div>
+-                        <div class="dynamic-stats" id="stats-f-highschool"></div>
+-                    </div>
+ 
+-                    <div class="chapter-block autocomplete-wrapper" style="position: absolute; top: 38%; left: 50px; width: calc(100% - 330px); z-index: 40;">
+-                        <label class="editorial-label">Military Service</label>
+-                        <div class="tags-wrapper" id="tw-f-military" onclick="document.getElementById('f-military').focus()">
+-                            <input type="text" id="f-military" class="editorial-input auto-military" placeholder="Unit, Base, or Role">
++                        <div class="chapter-block autocomplete-wrapper" style="margin-bottom: 0;">
++                            <label class="editorial-label" style="font-size: 12px; margin-bottom: 8px; display: block; opacity: 0.6;">Military Service</label>
++                            <div class="tags-wrapper" id="tw-f-military" onclick="document.getElementById('f-military').focus()">
++                                <input type="text" id="f-military" class="editorial-input auto-military" placeholder="Unit, Base, or Role" style="font-size: 18px; padding: 8px 0;">
++                            </div>
++                            <div class="autocomplete-dropdown" id="dropdown-f-military"></div>
++                            <div class="dynamic-stats" id="stats-f-military"></div>
+                         </div>
+-                        <div class="autocomplete-dropdown" id="dropdown-f-military"></div>
+-                        <div class="dynamic-stats" id="stats-f-military"></div>
+-                    </div>
+ 
+-                    <div class="chapter-block autocomplete-wrapper" style="position: absolute; top: 56%; left: 50px; width: calc(100% - 330px); z-index: 30;">
+-                        <label class="editorial-label">Higher Education</label>
+-                        <div class="tags-wrapper" id="tw-f-education" onclick="document.getElementById('f-education').focus()">
+-                            <input type="text" id="f-education" class="editorial-input auto-education" placeholder="University, College, Course">
++                        <div class="chapter-block autocomplete-wrapper" style="margin-bottom: 0;">
++                            <label class="editorial-label" style="font-size: 12px; margin-bottom: 8px; display: block; opacity: 0.6;">Higher Education</label>
++                            <div class="tags-wrapper" id="tw-f-education" onclick="document.getElementById('f-education').focus()">
++                                <input type="text" id="f-education" class="editorial-input auto-education" placeholder="University, College, Course" style="font-size: 18px; padding: 8px 0;">
++                            </div>
++                            <div class="autocomplete-dropdown" id="dropdown-f-education"></div>
++                            <div class="dynamic-stats" id="stats-f-education"></div>
+                         </div>
+-                        <div class="autocomplete-dropdown" id="dropdown-f-education"></div>
+-                        <div class="dynamic-stats" id="stats-f-education"></div>
+-                    </div>
+ 
+-                    <div class="chapter-block autocomplete-wrapper" style="position: absolute; top: 74%; left: 50px; width: calc(100% - 330px); z-index: 20;">
+-                        <label class="editorial-label">Feed the beast a little more.</label>
+-                        <div class="tags-wrapper" id="tw-f-other-value" onclick="document.getElementById('f-other-value').focus()">
+-                            <input type="text" id="f-other-value" class="editorial-input auto-other" placeholder="Mechina, Shnat Sherut, Course...">
++                        <div class="chapter-block autocomplete-wrapper" style="margin-bottom: 0;">
++                            <label class="editorial-label" style="font-size: 12px; margin-bottom: 8px; display: block; opacity: 0.6;">Other (Mechina, Shnat Sherut, etc.)</label>
++                            <div class="tags-wrapper" id="tw-f-other-value" onclick="document.getElementById('f-other-value').focus()">
++                                <input type="text" id="f-other-value" class="editorial-input auto-other" placeholder="Add tags..." style="font-size: 18px; padding: 8px 0;">
++                            </div>
++                            <div class="autocomplete-dropdown" id="dropdown-f-other-value"></div>
++                            <div class="dynamic-stats" id="stats-f-other-value"></div>
+                         </div>
+-                        <div class="autocomplete-dropdown" id="dropdown-f-other-value"></div>
+-                        <div class="dynamic-stats" id="stats-f-other-value"></div>
+                     </div>
+                 </div>
+ 
+                 <!-- STEP 8 SHARED PATHS (Suggested Connections) -->
+                 <div id="wizard-step-8" class="wizard-step">
+-                    <h2>Let's start building your network</h2>
+-                    <p class="step-explanation">We found a few people who may already be part of it.</p>
++                    <h2>Familiar traces detected.</h2>
++                    <p class="step-explanation" style="margin-top: -12px;">The organism recognizes a few people who share these attributes.</p>
+                     
+                     <div id="recommendation-list"></div>
+ 
+@@ -1390,8 +1466,8 @@
+ 
+                 <!-- STEP 9 ADD CONNECTIONS -->
+                 <div id="wizard-step-9" class="wizard-step">
+-                    <h2>Let's trace a few connections</h2>
+-                    <p class="step-explanation">Add a few people already connected to their story.</p>
++                    <h2>Build the Network</h2>
++                    <p class="step-explanation">Now it's time to help the organism understand its place in the network. Who are they connected to?</p>
+                     
+                     <div id="wizard-step-9-original-parent">
+                         <div id="connections-section" style="padding-right: 180px;">
+@@ -1416,14 +1492,21 @@
+                 <!-- STEP 10 JOINING ANIMATION -->
+                 <div id="wizard-step-10" class="wizard-step" style="display: flex; flex-direction: column; justify-content: center; align-items: center; height: 100%; text-align: center; padding: 0;">
+                     <div class="scan-spinner" style="border-top-color: #4CAF50;"></div>
+-                    <h3 style="font-weight: 300; margin-top: 30px; letter-spacing: 1px; font-size: 24px;" id="join-network-text">A new thread has entered the network.</h3>
+-                    <p style="color: rgba(245,245,245,0.5); font-size: 13px; margin-top: 10px;">The Beast has grown.</p>
++                    <h3 style="font-weight: 300; margin-top: 30px; letter-spacing: 1px; font-size: 24px;" id="join-network-text">The organism has absorbed the data.</h3>
++                    <p style="color: rgba(245,245,245,0.5); font-size: 13px; margin-top: 10px;">But the network remains incomplete. As it grows, it will find paths and connections you cannot see right now. Feed it more people to reveal the hidden links.</p>
+                 </div>
+ 
+                 </div>
++            <!-- LIVE PREVIEW AREA -->
++            <div class="wizard-preview-area" id="wizard-preview-area" style="display: none;">
++                <div id="system-status-container" style="width: 100%; height: 120px; border-bottom: 1px solid rgba(245,245,245,0.1); margin-bottom: 20px; overflow: hidden; display: flex; flex-direction: column; justify-content: flex-end; padding-bottom: 10px;">
++                    <div id="system-status-text" style="color: #4CAF50; font-family: 'PT Mono', monospace; font-size: 11px; letter-spacing: 1px; text-transform: uppercase; line-height: 1.6; opacity: 0.8;"></div>
++                </div>
++                <div id="live-network-preview">
++                    <!-- Nodes will be injected here dynamically by JS -->
++                </div>
+             </div>
+-
+-
++        </div>
+         <!-- GLOBAL FOOTER FOR WIZARD -->
+         <div id="global-wizard-footer" style="display: none; padding: 30px 40px; justify-content: space-between; align-items: center; position: absolute; bottom: 0; left: 0; right: 0; z-index: 1000; background: transparent;">
+             <button type="button" id="btn-wizard-global-back" class="info-action-btn" style="margin: 0; visibility: hidden;">[ BACK ]</button>
+@@ -2160,20 +2243,19 @@
+                                 const item = document.createElement('div');
+                                 item.className = 'search-dropdown-item';
+                                 
+-                                const nameDiv = document.createElement('div');
+-                                nameDiv.className = 'search-item-name';
+-                                nameDiv.textContent = m.name;
+-                                
+-                                const contextDiv = document.createElement('div');
+-                                contextDiv.className = 'search-item-context';
+-                                const contextParts = [];
+-                                if (m.city) contextParts.push(m.city);
+-                                if (m.role) contextParts.push(m.role);
+-                                if (m.tags) contextParts.push(m.tags);
+-                                contextDiv.textContent = contextParts.join(' • ');
+-                                
+-                                item.appendChild(nameDiv);
+-                                if (contextParts.length > 0) item.appendChild(contextDiv);
++                                item.style.display = 'flex';
++                                item.style.flexDirection = 'column';
++                                item.style.alignItems = 'flex-start';
++                                item.style.justifyContent = 'center';
++                                item.style.gap = '4px';
++
++                                const parts = [];
++                                if (m.role) parts.push(m.role);
++                                if (m.city) parts.push(m.city);
++                                const partsStr = parts.join(' • ').replace(/ ([^ ]*)$/, '&nbsp;$1');
++                                const nameStr = m.name.replace(/ ([^ ]*)$/, '&nbsp;$1');
++
++                                item.innerHTML = `<div style="font-size: 13px; font-weight: 500; color: #F5F5F5; line-height: 1;">${nameStr}</div><div style="font-size:11px; color:rgba(255,255,255,0.5); line-height: 1; margin-top: 2px;">${partsStr}</div>`;
+                                 
+                                 item.addEventListener('click', () => {
+                                     searchInput.value = m.name;
+@@ -2204,6 +2286,71 @@
+                 }
+             });
+ 
++            function setupPathDropdown(inputId, dropdownId) {
++                const input = document.getElementById(inputId);
++                const dropdown = document.getElementById(dropdownId);
++                
++                input.addEventListener('input', () => {
++                    const term = input.value.trim().toLowerCase();
++                    if (!term) {
++                        dropdown.style.display = 'none';
++                        return;
++                    }
++                    
++                    // Client-side filtering of people
++                    const matches = people.filter(n => n.name.toLowerCase().includes(term)).slice(0, 20); // Limit to 20
++                    dropdown.innerHTML = '';
++                    
++                    if (matches.length > 0) {
++                        dropdown.style.display = 'block';
++                        matches.forEach(m => {
++                            const item = document.createElement('div');
++                            item.className = 'search-dropdown-item';
++                            item.style.borderBottom = '1px solid rgba(245,245,245,0.05)';
++                            item.style.background = 'rgba(245,245,245,0.02)';
++                            item.style.display = 'flex';
++                            item.style.flexDirection = 'column';
++                            item.style.alignItems = 'flex-start';
++                            item.style.justifyContent = 'center';
++                            item.style.gap = '4px';
++                            
++                            const parts = [];
++                            if (m.role) parts.push(m.role);
++                            if (m.city) parts.push(m.city);
++                            const partsStr = parts.join(' • ').replace(/ ([^ ]*)$/, '&nbsp;$1');
++                            const nameStr = m.name.replace(/ ([^ ]*)$/, '&nbsp;$1');
++
++                            item.innerHTML = `<div style="font-size: 13px; font-weight: 500; color: #F5F5F5; line-height: 1;">${nameStr}</div><div style="font-size:11px; color:rgba(255,255,255,0.5); line-height: 1; margin-top: 2px;">${partsStr}</div>`;
++                            
++                            item.addEventListener('click', () => {
++                                input.value = m.name;
++                                dropdown.style.display = 'none';
++                            });
++                            
++                            dropdown.appendChild(item);
++                        });
++                    } else {
++                        dropdown.style.display = 'none';
++                    }
++                });
++                
++                input.addEventListener('focus', () => {
++                    if (input.value.trim().length > 0) {
++                        // trigger input event to show dropdown if it has text
++                        input.dispatchEvent(new Event('input'));
++                    }
++                });
++                
++                document.addEventListener('click', (e) => {
++                    if (e.target !== input && !dropdown.contains(e.target)) {
++                        dropdown.style.display = 'none';
++                    }
++                });
++            }
++            
++            setupPathDropdown('start-node', 'start-dropdown');
++            setupPathDropdown('end-node', 'end-dropdown');
++
+             document.getElementById('btn-pause').addEventListener('click', () => {
+                 isPaused = !isPaused;
+                 document.getElementById('btn-pause').textContent = isPaused ? "[ AWAKEN ]" : "[ FREEZE ]";
+@@ -2221,9 +2368,14 @@
+                 
+                 const path = findPath(sIdx, eIdx);
+                 if (path) { 
++                    const distanceStat = document.getElementById('path-distance-stat');
++                    if (distanceStat) distanceStat.textContent = Math.max(0, path.length - 2).toString();
++                    
+                     initiatePathReveal(path); 
+                     selectNode(eIdx, false); 
+                 } else {
++                    const distanceStat = document.getElementById('path-distance-stat');
++                    if (distanceStat) distanceStat.textContent = "-";
+                     alert("No connection path exists between these two people in the current network.");
+                 }
+             };
+@@ -2489,7 +2641,6 @@
+             });
+             
+             renderPathChain(path);
+-            drawPathLines(path);
+ 
+             // Lay them out linearly
+             const pathSpacing = 500;
+@@ -2551,100 +2702,7 @@
+         }
+ 
+         function drawPathLines(path) {
+-            // Clean up existing path lines
+-            if (pathLineSegFamily) { masterGroup.remove(pathLineSegFamily); pathLineSegFamily = null; }
+-            if (pathLineSegFriend) { masterGroup.remove(pathLineSegFriend); pathLineSegFriend = null; }
+-
+-            if (path.length < 2) return;
+-
+-            // Collect family and friend path segments
+-            const familyPoints = [], friendPoints = [];
+-
+-            for (let i = 0; i < path.length - 1; i++) {
+-                const nodeA = path[i];
+-                const nodeB = path[i + 1];
+-                const connInfo = getConnectionInfo(nodeA, nodeB);
+-                const connType = connInfo.type;
+-
+-                const posA = sortedCenters[nodeA];
+-                const posB = sortedCenters[nodeB];
+-
+-                if (connType === 'family') {
+-                    familyPoints.push(posA.clone());
+-                    familyPoints.push(posB.clone());
+-                } else {
+-                    // Friend or acquaintance
+-                    friendPoints.push(posA.clone());
+-                    friendPoints.push(posB.clone());
+-                }
+-            }
+-
+-            // Create family path line (solid white) using Cylinders for real thickness
+-            if (familyPoints.length > 0) {
+-                const group = new THREE.Group();
+-                const mat = new THREE.MeshBasicMaterial({ color: 0xFFFFFF, transparent: true, opacity: 0.95 });
+-                for (let i = 0; i < familyPoints.length; i += 2) {
+-                    const p1 = familyPoints[i];
+-                    const p2 = familyPoints[i+1];
+-                    const dist = p1.distanceTo(p2);
+-                    const geo = new THREE.CylinderGeometry(4, 4, dist, 6);
+-                    geo.translate(0, dist / 2, 0);
+-                    const cyl = new THREE.Mesh(geo, mat);
+-                    cyl.position.copy(p1);
+-                    cyl.lookAt(p2);
+-                    cyl.rotateX(Math.PI / 2);
+-                    group.add(cyl);
+-                }
+-                pathLineSegFamily = group;
+-                masterGroup.add(pathLineSegFamily);
+-            }
+-
+-            // Create friend/acquaintance path lines with dashed pattern
+-            if (friendPoints.length > 0) {
+-                // Create dashed line segments manually
+-                const dashedSegments = [];
+-                const dashLength = 20;
+-                const gapLength = 15;
+-
+-                for (let i = 0; i < friendPoints.length; i += 2) {
+-                    if (i + 1 < friendPoints.length) {
+-                        const start = friendPoints[i];
+-                        const end = friendPoints[i + 1];
+-                        const direction = new THREE.Vector3().subVectors(end, start);
+-                        const totalLength = direction.length();
+-                        direction.normalize();
+-
+-                        let currentPos = 0;
+-                        while (currentPos < totalLength) {
+-                            const segStart = start.clone().addScaledVector(direction, currentPos);
+-                            const nextPos = Math.min(currentPos + dashLength, totalLength);
+-                            const segEnd = start.clone().addScaledVector(direction, nextPos);
+-                            dashedSegments.push(segStart);
+-                            dashedSegments.push(segEnd);
+-                            currentPos = nextPos + gapLength;
+-                        }
+-                    }
+-                }
+-
+-                if (dashedSegments.length > 0) {
+-                    const group = new THREE.Group();
+-                    const mat = new THREE.MeshBasicMaterial({ color: 0xFFFFFF, transparent: true, opacity: 0.8 });
+-                    for (let i = 0; i < dashedSegments.length; i += 2) {
+-                        const p1 = dashedSegments[i];
+-                        const p2 = dashedSegments[i+1];
+-                        const dist = p1.distanceTo(p2);
+-                        const geo = new THREE.CylinderGeometry(4, 4, dist, 6);
+-                        geo.translate(0, dist / 2, 0);
+-                        const cyl = new THREE.Mesh(geo, mat);
+-                        cyl.position.copy(p1);
+-                        cyl.lookAt(p2);
+-                        cyl.rotateX(Math.PI / 2);
+-                        group.add(cyl);
+-                    }
+-                    pathLineSegFriend = group;
+-                    masterGroup.add(pathLineSegFriend);
+-                }
+-            }
++            // Function removed to prevent 3D cylinder artifacts. The standard lines will connect the nodes cleanly.
+         }
+ 
+         function selectNode(id, triggerFocus = true) {
+@@ -2864,6 +2922,13 @@
+             const searchInput = document.getElementById('search-input');
+             if (searchInput) searchInput.value = '';
+             
++            const startInput = document.getElementById('start-node');
++            if (startInput) startInput.value = '';
++            const endInput = document.getElementById('end-node');
++            if (endInput) endInput.value = '';
++            const distStat = document.getElementById('path-distance-stat');
++            if (distStat) distStat.textContent = '-';
++            
+             controls.enabled = true;
+             controls.maxPolarAngle = Math.PI; // Remove path lock
+             controls.minPolarAngle = 0;
+@@ -3741,16 +3806,31 @@
+             
+             // Path preview is now hidden as requested
+             const previewArea = document.getElementById('wizard-preview-area');
+-            if (previewArea) previewArea.style.display = 'none';
++            if (previewArea) {
++                // Show preview area only in data entry steps
++                const dataEntrySteps = ['4', '4a', '4b', '4c', '5', '5a', '6', '6a', '6b', '6c', 8, 9];
++                if (dataEntrySteps.includes(step) || dataEntrySteps.includes(String(step))) {
++                    previewArea.style.display = 'flex';
++                } else {
++                    previewArea.style.display = 'none';
++                }
++            }
+             
+             // Handle Global Footer
+             const globalFooter = document.getElementById('global-wizard-footer');
+             if (!globalFooter) return;
+ 
+-            // Steps that show the global footer: 0, 4, 5, 6, 8, 9
+-            const stepsWithFooter = [0, 4, 5, 6, 8, 9];
+-            if (stepsWithFooter.includes(step)) {
++            // Steps that show the global footer
++            const stepsWithFooter = [0, '4', '4a', '4b', '4c', '5', '5a', '6', '6a', '6b', '6c', 8, 9];
++            if (stepsWithFooter.includes(step) || stepsWithFooter.includes(String(step))) {
+                 globalFooter.style.display = 'flex';
++                // Move footer slightly left when preview is visible (preview is 40% of width)
++                const dataEntrySteps = ['4', '4a', '4b', '4c', '5', '5a', '6', '6a', '6b', '6c', 8, 9];
++                if (dataEntrySteps.includes(step) || dataEntrySteps.includes(String(step))) {
++                    globalFooter.style.right = '40%';
++                } else {
++                    globalFooter.style.right = '0';
++                }
+                 
+                 const btnBack = document.getElementById('btn-wizard-global-back');
+                 const btnNext = document.getElementById('btn-wizard-global-next');
+@@ -3758,27 +3838,35 @@
+                 // Back button logic
+                 btnBack.style.visibility = step === 0 ? 'hidden' : 'visible';
+                 btnBack.onclick = () => {
+-                    if (step === 9) {
++                    if (step === 9 || String(step) === '9') {
+                         const recList = document.getElementById('recommendation-list');
+                         if (!recList || recList.children.length === 0) {
+-                            goToWizardStep(6);
++                            goToWizardStep('6c');
+                             return;
+                         }
+                     }
+-                    const currentIndex = stepsWithFooter.indexOf(step);
++                    const currentIndex = stepsWithFooter.indexOf(String(step)) !== -1 ? stepsWithFooter.indexOf(String(step)) : stepsWithFooter.indexOf(step);
+                     if (currentIndex > 0) goToWizardStep(stepsWithFooter[currentIndex - 1]);
+                 };
+                 
+                 // Next button logic
+-                btnNext.textContent = step === 9 ? '[ JOIN THE NETWORK ]' : '[ CONTINUE ]';
++                btnNext.textContent = (step === 9 || String(step) === '9') ? '[ JOIN THE NETWORK ]' : '[ CONTINUE ]';
+                 btnNext.style.display = 'inline-block';
+                 btnNext.onclick = () => {
+-                    if (step === 0) processStep0();
+-                    else if (step === 4) processStep4();
+-                    else if (step === 5) processStep5();
+-                    else if (step === 6) processStep6();
+-                    else if (step === 8) goToWizardStep(9);
+-                    else if (step === 9) processStep9();
++                    const s = String(step);
++                    if (s === '0') processStep0();
++                    else if (s === '4') goToWizardStep('4a');
++                    else if (s === '4a') goToWizardStep('4b');
++                    else if (s === '4b') goToWizardStep('4c');
++                    else if (s === '4c') showProcessingState("Spatial coordinates acquired.", "Analyzing professional context...", 1500, '5');
++                    else if (s === '5') goToWizardStep('5a');
++                    else if (s === '5a') goToWizardStep('6');
++                    else if (s === '6') goToWizardStep('6a');
++                    else if (s === '6a') goToWizardStep('6b');
++                    else if (s === '6b') goToWizardStep('6c');
++                    else if (s === '6c') processStep6c();
++                    else if (s === '8') goToWizardStep(9);
++                    else if (s === '9') processStep9();
+                 };
+             } else {
+                 globalFooter.style.display = 'none';
+@@ -3789,12 +3877,12 @@
+             
+             // Map each step to a progress item number (1 to 4)
+             const progressMap = {
+-                0: 1,  // Name
+-                4: 2,  // Your story
+-                5: 3,  // What you do
+-                6: 3,  // What you do (optional sub-step)
+-                8: 4,  // Connections
+-                9: 4   // Finish / Confirm
++                0: 1,  
++                '4': 2, '4a': 2, '4b': 2, '4c': 2,
++                '5': 3, '5a': 3,
++                '6': 3, '6a': 3, '6b': 3, '6c': 3,
++                8: 4,  
++                9: 4   
+             };
+             
+             if (progressContainer) {
+@@ -3844,7 +3932,7 @@
+                     goToWizardStep(3);
+                 } else {
+                     document.getElementById('form-mode').value = 'add';
+-                    goToWizardStep(4);
++                    goToWizardStep('4');
+                 }
+             }, 1500);
+         }
+@@ -3860,7 +3948,7 @@
+         document.getElementById('btn-match-no').addEventListener('click', () => {
+             document.getElementById('form-mode').value = 'add';
+             document.getElementById('form-person-id').value = '';
+-            goToWizardStep(4);
++            goToWizardStep('4');
+         });
+ 
+         function getFieldValues(wrapperId, inputId) {
+@@ -3876,16 +3964,16 @@
+             return tags;
+         }
+ 
+-        function processStep4() {
+-            // Data collected later, just transition
+-            goToWizardStep(5);
+-        }
+-
+-        function processStep5() {
+-            goToWizardStep(6);
++        function showProcessingState(title, subtext, duration, nextStep) {
++            document.getElementById('wizard-step-2').querySelector('h3').textContent = title;
++            document.getElementById('step-2-explanation').textContent = subtext;
++            goToWizardStep(2);
++            setTimeout(() => {
++                goToWizardStep(nextStep);
++            }, duration);
+         }
+ 
+-        function processStep6() {
++        function processStep6c() {
+             // Serialize chapters into tags and description
+             let generatedTags = [];
+             let generatedDesc = [];
+@@ -3909,11 +3997,7 @@
+             document.getElementById('f-desc').value = generatedDesc.join('\n');
+             
+             const hasRecs = generateRecommendations();
+-            if (hasRecs) {
+-                goToWizardStep(8);
+-            } else {
+-                goToWizardStep(9);
+-            }
++            showProcessingState("Background vectors aligned.", "Mapping potential connections...", 1500, hasRecs ? 8 : 9);
+         }
+ 
+         function processStep9() {
+@@ -3956,10 +4040,75 @@
+             input.value = '';
+             if (dropdown) dropdown.style.display = 'none';
+             
++            triggerSystemStatus();
++            triggerNetworkReaction();
++            checkEarlyConnections(value);
++
+             // Focus input again
+             input.focus();
+         }
+ 
++        const systemStatusMessages = [
++            "Recognizing new patterns...",
++            "Matching existing records...",
++            "New paths detected.",
++            "Connection confidence increased.",
++            "Shared attributes found.",
++            "Scanning deeper network layers...",
++            "Analyzing vector similarity..."
++        ];
++
++        function triggerSystemStatus() {
++            const statusText = document.getElementById('system-status-text');
++            if (statusText) {
++                const msg = systemStatusMessages[Math.floor(Math.random() * systemStatusMessages.length)];
++                statusText.style.opacity = '0';
++                setTimeout(() => {
++                    statusText.textContent = "> " + msg;
++                    statusText.style.opacity = '0.8';
++                }, 300);
++            }
++        }
++
++        function triggerNetworkReaction() {
++            // Pick a random number of existing mesh nodes to "pulse"
++            if (!globalGeometry || !meshPoints) return;
++            // Let's do a subtle camera zoom or rotate to make it feel alive
++            if (!isCameraAnimating) {
++                isCameraAnimating = true;
++                const currentDist = controls.target.distanceTo(camera.position);
++                const targetDist = currentDist * (0.95 + Math.random() * 0.1);
++                camTargetPos.copy(camera.position).normalize().multiplyScalar(targetDist).add(controls.target);
++                setTimeout(() => { isCameraAnimating = false; }, 1000);
++            }
++            
++            // Highlight random paths briefly by tweaking uniforms if we had them, 
++            // or just rely on the camera movement to show life.
++            // The camera movement alone (slight nudge) gives an organic feel.
++        }
++
++        function checkEarlyConnections(tagValue) {
++            // Early connection suggestions logic
++            // Check if there are matches for this tag in `people` array
++            const lowerTag = tagValue.replace(/^#/, '').toLowerCase();
++            const matches = people.filter(p => {
++                const allText = [p.city, p.origin_city, p.role, p.workplace, p.highschool, p.military, p.education, p.prev_work, p.other]
++                    .filter(Boolean).join(' ').toLowerCase();
++                return allText.includes(lowerTag);
++            });
++            
++            if (matches.length > 0) {
++                const statusText = document.getElementById('system-status-text');
++                if (statusText) {
++                    statusText.style.opacity = '0';
++                    setTimeout(() => {
++                        statusText.innerHTML = `> <span style="color:#FFF;">Found ${matches.length} familiar traces at ${tagValue}.</span>`;
++                        statusText.style.opacity = '1';
++                    }, 300);
++                }
++            }
++        }
++
+         function setupAutocomplete(inputId, staticPrefix) {
+             const input = document.getElementById(inputId);
+             const dropdown = document.getElementById('dropdown-' + inputId);
+@@ -3968,43 +4117,168 @@
+ 
+             const PREDEFINED = {
+                 'highschool': [
+-                    'The Hebrew Reali School (Reali)', 'Alliance High School (Alliance)', 'Ironi Alef', 'Ironi Hey', 'Ironi Dalet', 'Gymnasia Herzliya', 
+-                    'Lady Davis High School (Lady Davis)', 'Tichon Hadash', 'Ort Bialik', 'Ort Kiryat Motzkin (Ort Motzkin)', 'Ort Yad Leibowitz', 
+-                    'Ort Givat Ram', 'Amal Alef', 'Amal Bet', 'Ben Zvi High School (Ben Zvi)', 'Rabin High School (Rabin)', 'Begin High School (Begin)', 
+-                    'Sharett High School (Sharett)', 'Leo Baeck Education Center (Leo Baeck)', 'Hof HaSharon High School (Hof HaSharon)', 'Kfar Hayarok', 
+-                    'Mosinson High School (Mosinson)', 'Mevo\'ot Iron High School (Mevoot Iron)', 'Hadassim Youth Village (Hadassim)', 'Ben Shemen Youth Village (Ben Shemen)', 
+-                    'Kadoorie Agricultural School (Kadoorie)', 'WIZO Nahalal', 'Ort Singalovski (Singalovski)', 'Shevach Mofet', 'Ort Yad Ginzburg (Ort Ginzburg)', 
+-                    'Boyar High School (Boyar)', 'Leyada', 'Harel High School (Harel)', 'Makif Alef', 'Makif Gimel', 'Makif Vav', 'Makif Het', 'Beer Tuvia'
++                    ',', 'Aharon Katzir High School Holon', 'Alliance High School (Alliance)', 'Alliance High School Tel Aviv', 'Alon High School Ramat Hasharon', 'Amal Alef', 'Amal Bet', 'Amal Hadera',
++                    'Amal Lady Davis Tel Aviv', 'Amal Nahariya', 'Amit Bar Ilan Gush Dan', 'Amit Kfar Batya', 'Anthroposophic School Harduf', 'Atid Lod', 'Atid Raziel Herzliya', 'Atidim High School Hod Hasharon',
++                    'Aviv High School Raanana', 'Baar Tuvia High School', 'Begin High School (Begin)', 'Begin High School Rosh HaAyin', 'Beit Yerah High School', 'Ben Gurion High School Petah Tikva', 'Ben Zvi High School (Ben Zvi)', 'Ben Zvi High School Kiryat Ono',
++                    'Blich High School', 'Boyar High School', 'Branco Weiss Beit Shemesh', 'Branco Weiss Rabin Mazkeret Batya', 'Brenner Regional High School', 'Darca Begin Gedera', 'Darca Ramon Gedera', 'De Shalit High School',
++                    'Emek Hahula High School', 'Emek Harod High School', 'Eshel Hanasi', 'Galili High School Kfar Saba', 'Gan Nahum High School Rishon LeZion', 'Golda High School Petah Tikva', 'Goldwater High School Eilat', 'Gymnasia Herzliya',
++                    'Hadash High School Herzliya', 'Harel High School Mevaseret', 'Hartman High School', 'Herzog High School Holon', 'Herzog High School Kfar Saba', 'Hof HaSharon High School', 'Hof HaSharon High School (Hof HaSharon)', 'Hugim High School',
++                    'Ironi Alef', 'Ironi Alef Tel Aviv', 'Ironi Dalet', 'Ironi Dalet Tel Aviv', 'Ironi Heh Tel Aviv', 'Ironi Hey', 'Ironi Tet Tel Aviv', 'Kadoorie Agricultural School',
++                    'Katzir High School Rehovot', 'Kfar Hayarok', 'Kiryat Hinuch Dror', 'Kiryat Sharet Holon', 'Kugel High School Holon', 'Lady Davis High School (Lady Davis)', 'Leo Baeck Education Center', 'Leo Baeck Education Center (Leo Baeck)',
++                    'Leyada Jerusalem', 'Makif Omer', 'Makif Yehud', 'Mekif Alef Ashdod', 'Mekif Alef Beersheba', 'Mekif Bet Ashdod', 'Mekif Bet Beersheba', 'Mekif Daled Ashdod',
++                    'Mekif Daled Beersheba', 'Mekif Gilo Jerusalem', 'Mekif Gimel Ashdod', 'Mekif Gimel Beersheba', 'Mekif Hey Ashdod', 'Mevo\'ot Iron High School (Mevoot Iron)', 'Mikve Israel', 'Mor MetroWest Raanana',
++                    'Mosinson High School (Mosinson)', 'Mossinzon High School Hod Hasharon', 'Ohel Shem High School', 'Ort Arad', 'Ort Bialik', 'Ort Givat Ram', 'Ort Guttman Netanya', 'Ort Kiryat Bialik',
++                    'Ort Kiryat Motzkin (Ort Motzkin)', 'Ort Psagot Karmiel', 'Ort Rehovot', 'Ort Singalovski', 'Ort Yad Leibovich', 'Ort Yad Leibowitz', 'Ostrovsky High School Raanana', 'Rabin High School (Rabin)',
++                    'Rabin High School Eilat', 'Rabin High School Kfar Saba', 'Rabin High School Modiin', 'Rothberg High School Ramat Hasharon', 'Shaked Darca High School', 'Sharet High School Netanya', 'Sharett High School (Sharett)', 'Tamar Ariel High School',
++                    'Tchernichovsky High School Netanya', 'Tefen Experimental School', 'The Democratic School Hadera', 'The Democratic School Kfar Saba', 'The Hebrew Reali School', 'The Hebrew Reali School (Reali)', 'Tichon Hadash', 'Tzvia Haifa',
++                    'Tzvia Jerusalem', 'Ulpanat Amit Noga', 'Ulpanat Tzvia', 'WIZO Nahalal', 'Yehud Comprehensive High School', 'Yeshivat Bnei Akiva Kfar Haroeh', 'Yeshivat Bnei Akiva Netiv Meir', 'Yeshivat Har Etzion',
++                    'Yigal Alon High School Rishon LeZion', 'Yuval High School Herzliya', 'Ziv High School Jerusalem'
+                 ],
+                 'military': [
+-                    'Welfare NCO (Mashakit Tash)', 'Combat Soldier (Lochem / Lochemet)', 'Education NCO (Mashakit Chinuch)', 'Operations Room Controller (Sambatzit)', 
+-                    'Commander (Mefaked / Mefakedet)', 'Intelligence Analyst (Modiin)', 'Infantry Instructor (Madrichat Chir)', 'Combat Instructor (Madrichat Krav)', 
+-                    'Training Instructor (Madricha)', 'Operations Officer (Katzat Mivtzaim)', 'Operations NCO (Mashak Mivtzaim)', 'Human Resources NCO (Mashakit Koach Adam)', 
+-                    'Personnel Coordinator (Rakamit)', 'Recruitment NCO (Mashakit Giyus)', 'Intelligence Officer (Ktzin Modiin)', 'Combat Intelligence Soldier (Isuf Kravi)', 
+-                    'Observer (Tatzpitanit)', 'Air Defense Soldier (Lochem Haganah Avirit)', 'Combat Medic (Chovesh Kravi)', 'Medic (Chovesh)', 'Driver (Nahag)', 
+-                    'Truck Driver (Nahag Masha)', 'Armored Corps Soldier (Shiryoner)', 'Artillery Soldier (Totchan)', 'Combat Engineer (Handasai Kravi)', 
+-                    'Communications Specialist (Tikshuvnik)', 'Cyber Defender (Cyber)', 'Programmer', 'Software Developer (Mefateach Tochna)', 'System Administrator', 
+-                    'Logistics Coordinator (Mashak Logistika)', 'Supply Coordinator (Mashak Aspaka)', 'Armory Specialist (Nashak)', 'Military Police Officer (Shoter Tzvai)', 
+-                    'Investigator (Hoker)', 'Dog Handler (Oketz Fighter)', 'Search and Rescue Soldier (Hilutz VeHatzala)', 'Naval Officer (Ktzin Yam)', 
+-                    'Sailor (Lochem Yam)', 'Pilot (Tayas)', 'Flight Navigator (Navat)', 'Air Traffic Controller (Pakah Tisa)', 'Intelligence Researcher (Hoker Modiin)', 
+-                    'Social Media Coordinator (Mashakit Digital)', 'Spokesperson Unit Soldier (Dover Tzahal)', 'Photographer (Tzalam Tzvai)', 'Graphic Designer (Maatzav Grafi)', 
+-                    'Psychotechnical Examiner (Me\'avchenet Psychotechnit)', 'Border Police Officer (Magavnik)', 'Paratrooper (Tzanhan)', 'Golani Soldier (Golanchik)', 
+-                    'Givati Soldier (Givaton)', 'Nahal Soldier (Nahalawi)', 'Kfir Soldier (Kfirnik)', 'Unit 8200', 'Unit 669',
+-                    'Golani', 'Givati', 'Nahal', 'Paratroopers (Tzanhanim)', 'Kfir', 'Armored Corps (Shiryon)', 'Artillery (Totchanim)', 'Combat Engineering (Handasa Kravit)',
+-                    'Air Force (Heil HaAvir)', 'Navy (Heil HaYam)', 'Home Front Command (Pikud HaOref)', 'Border Police (Magav)', 'Intelligence (Aman)', 
+-                    'General Staff Reconnaissance (Sayeret Matkal)', 'Naval Commandos (Shayetet 13)', 'Air Force Commandos (Shaldag)', 'Special Forces (Maglan)', 
+-                    'Undercover Unit (Duvdevan)', 'Reconnaissance Unit (Egoz)', 'Combat Engineering Special Forces (Yahalom)', 'K9 Unit (Oketz)', 
+-                    'Combat Search and Rescue (Unit 669)', 'Signals Intelligence (Unit 8200)', 'Counter-Terror (Lotar)'
++                    ',', '188th Armored Brigade', '214th Artillery Brigade', '282nd Artillery Brigade', '401st Armored Brigade', '460th Armored Brigade', '669 Unit', '7th Armored Brigade',
++                    '8200 Analyst', 'Adjutant Corps', 'Air Defense Array', 'Air Defense Instructor', 'Air Defense Soldier', 'Air Defense Soldier (Lochem Haganah Avirit)', 'Air Force', 'Air Traffic Controller',
++                    'Air Traffic Controller (Pakah Tisa)', 'Aircraft Technician', 'Alpine Unit', 'Ambulance Driver', 'Amiad Base', 'Anatot Base', 'Arabic Translator', 'Ariel Base',
++                    'Armored Corps', 'Armored Corps Soldier (Shiryoner)', 'Armory Specialist (Nashak)', 'Arrow Unit', 'Artillery Corps', 'Artillery Instructor', 'Artillery Soldier', 'Artillery Soldier (Totchan)',
++                    'Ashdod Naval Base', 'Atlit Naval Base', 'Avionics Technician', 'Bahad 1', 'Bahad 10', 'Bahad 11', 'Bahad 12', 'Bahad 13',
++                    'Bahad 15', 'Bahad 16', 'Bahad 20', 'Bahad 21', 'Bahad 6', 'Bahad 7', 'Bahad 8', 'Bardelas Battalion',
++                    'Basic Training Commander', 'Be\'er Sheva Base', 'Beit El Base', 'Binyamin Brigade Base', 'Biranit Base', 'Bislah', 'Bislash', 'Border Police',
++                    'Border Police Fighter', 'C4I Corps', 'C4I Soldier', 'COGAT', 'Camp Ariel Sharon', 'Camp Bar Lev', 'Camp Dayan', 'Camp Dotan',
++                    'Camp Elyakim', 'Camp Filon', 'Camp Gidonim', 'Camp Gur', 'Camp HaShalom', 'Camp Lamed Heh', 'Camp Magen Sayarim', 'Camp Matan',
++                    'Camp Moshe Dayan', 'Camp Nachshonim', 'Camp Nathan', 'Camp Ofrit', 'Camp Rabin', 'Camp Shimshon', 'Camp Shlomo', 'Camp Shmuel',
++                    'Camp Shura', 'Camp Telem', 'Camp Yadin', 'Camp Yoav', 'Caracal Battalion', 'Casualty NCO', 'Central Command', 'Classification Interviewer',
++                    'Combat Engineer', 'Combat Engineer (Handasai Kravi)', 'Combat Engineering Corps', 'Combat Engineering Instructor', 'Combat Instructor (Madrichat Krav)', 'Combat Intelligence Collection Corps', 'Combat Intelligence Instructor', 'Combat Intelligence Soldier (Isuf Kravi)',
++                    'Combat Medic', 'Combat Medic (Chovesh Kravi)', 'Combat Soldier', 'Combat Soldier (Lochem / Lochemet)', 'Commander', 'Commando', 'Communications Specialist (Tikshuvnik)', 'Communications Technician',
++                    'Company Clerk', 'Company Commander', 'Cook', 'Coordinator of Government Activities Soldier', 'Cyber Analyst', 'Cyber Defender', 'Cyber Defender (Cyber)', 'Data Analyst',
++                    'David\'s Sling Unit', 'Dental Assistant', 'Depth Corps', 'Discipline NCO', 'Dog Handler (Oketz Fighter)', 'Driver', 'Driver (Nahag)', 'Drone Operator',
++                    'Duvdevan Unit', 'Education NCO', 'Education NCO (Mashakit Chinuch)', 'Education Officer', 'Education and Youth Corps', 'Egoz Unit', 'Eilat Naval Base', 'Elyakim Base',
++                    'Ephraim Brigade Base', 'Etzion Base', 'Farsi Translator', 'Field Intelligence School', 'Field Intelligence Soldier', 'Fitness Instructor', 'Fitness Officer', 'Flight Mechanic',
++                    'Flight Navigator (Navat)', 'Foreign Relations NCO', 'GIS Analyst', 'Gibor Base', 'Givati', 'Glilot Base', 'Golani', 'Graphic Designer',
++                    'Graphic Designer (Maatzav Grafi)', 'HR Officer', 'Haifa Naval Base', 'Hatzav Unit', 'Hatzerim Airbase', 'Hatzerim Airbase Squadrons', 'Hatzerim Technical School', 'Hatzor Airbase',
++                    'Havat HaShomer', 'Heavy Truck Driver', 'Holot Base', 'Home Front Command', 'Home Front Instructor', 'Hoshen Unit', 'Human Resources NCO (Mashakit Koach Adam)', 'IDF Spokesperson\'s Unit',
++                    'IT Support Soldier', 'Infantry Instructor', 'Infantry Instructor (Madrichat Chir)', 'Infantry Soldier', 'Instructor', 'Intelligence Analyst (Modiin)', 'Intelligence NCO', 'Intelligence Officer',
++                    'Intelligence Officer (Ktzin Modiin)', 'Intelligence Researcher (Hoker Modiin)', 'Investigator', 'Investigator (Hoker)', 'Iron Dome Battalion', 'Jordan Valley Brigade Base', 'Julis Base', 'Kanaf Base',
++                    'Kastina Base', 'Kedem Battalion', 'Kela Base', 'Kerem Shalom Base', 'Keren Base', 'Kfir', 'Kirya Base', 'Kissufim Base',
++                    'Lab Technician', 'Lachish Base', 'Lahak 7', 'Legal Clerk', 'Liaison Officer', 'Liaison Unit', 'Lions of Jordan Battalion', 'Logistics Coordinator',
++                    'Logistics Coordinator (Mashak Logistika)', 'Logistics Corps', 'Logistics Officer', 'Lotar Unit', 'Lotem Unit', 'Maglan Unit', 'Mamram', 'Mapping Specialist',
++                    'Matzpen Unit', 'Medic', 'Medic (Chovesh)', 'Medical Corps', 'Medical Officer', 'Meitav Unit', 'Mental Health NCO', 'Metzach',
++                    'Michve Alon', 'Military Advocate Assistant', 'Military Intelligence Directorate', 'Military Journalist', 'Military Police Corps', 'Military Police Officer (Shoter Tzvai)', 'Military Police Soldier', 'Military Rabbinate',
++                    'Mishmar HaNegev Base', 'Missile Boat Crew Member', 'Missile Boat Flotilla', 'Mitkan Adam', 'Nabi Musa Base', 'Nafah Base', 'Naftali Base', 'Nahal',
++                    'Nahal Oz Base', 'Naval Officer (Ktzin Yam)', 'Navigator', 'Navy', 'Navy Sailor', 'Nevatim Airbase', 'Nevatim Airbase Squadrons', 'Northern Command',
++                    'Observer', 'Observer (Tatzpitanit)', 'Ofek Unit', 'Ofer Base', 'Officer', 'Oketz Unit', 'Operations NCO', 'Operations NCO (Mashak Mivtzaim)',
++                    'Operations Officer', 'Operations Officer (Katzat Mivtzaim)', 'Ovda Airbase', 'Ovda Training Base', 'Palmachim Airbase', 'Paramedic', 'Paratroopers', 'Patriot Unit',
++                    'Peleh Base', 'Personal Assistant', 'Personnel Coordinator (Rakamit)', 'Pharmacy Assistant', 'Photographer', 'Photographer (Tzalam Tzvai)', 'Pilot', 'Pilot (Tayas)',
++                    'Platoon Commander', 'Prison Instructor', 'Programmer', 'Psychotechnical Examiner (Me\'avchenet Psychotechnit)', 'Quartermaster', 'Rabbinical Corps Soldier', 'Radio Operator', 'Ram Battalion',
++                    'Ramat David Airbase', 'Ramat David Airbase Squadrons', 'Ramon Airbase', 'Ramon Airbase Squadrons', 'Ravid Base', 'Recruitment NCO (Mashakit Giyus)', 'Recruitment Office Soldier', 'Refaim Unit',
++                    'Reim Base', 'Research Analyst', 'Sailor (Lochem Yam)', 'Sambatzit', 'Sayarim Base', 'Sayeret Matkal', 'Sayfan Base', 'Sde Dov Base',
++                    'Sea Corps Training Base', 'Search and Rescue Brigade', 'Search and Rescue Soldier', 'Search and Rescue Soldier (Hilutz VeHatzala)', 'Shachar Battalion', 'Shaldag', 'Shaldag Unit', 'Shayetet 13',
++                    'Shizafon Base', 'Shomera Base', 'Shomron Brigade Base', 'Shooting Instructor', 'Signal Operator', 'Simulator Instructor', 'Snapir Unit', 'Social Media Coordinator (Mashakit Digital)',
++                    'Software Developer', 'Software Developer (Mefateach Tochna)', 'Southern Command', 'Spokesperson Soldier', 'Spokesperson Unit Soldier (Dover Tzahal)', 'Squad Commander', 'Submarine Crew Member', 'Submarine Flotilla',
++                    'Supply Coordinator (Mashak Aspaka)', 'System Administrator', 'Systems Administrator', 'Ta\'oz Battalion', 'Tank Crew Soldier', 'Tank Instructor', 'Tel HaShomer Base', 'Tel Nof Airbase',
++                    'Training Base City', 'Training Instructor (Madricha)', 'Training Officer', 'Truck Driver (Nahag Masha)', 'Tzayad Unit', 'Tze\'elim Base', 'Tzrifin Base', 'UAV Operator',
++                    'Unit 3060', 'Unit 504', 'Unit 81', 'Unit 8200', 'Unit 9900', 'Urim Base', 'Video Editor', 'Visual Intelligence Analyst',
++                    'Welfare NCO', 'Welfare NCO (Mashakit Tash)', 'Wingate Base', 'YALTAM', 'Yahalom Unit', 'Yehuda Brigade Base', 'Yiftach Base', 'Zarit Base'
+                 ],
+                 'education': [
+-                    'Tel Aviv University', 'Hebrew University of Jerusalem', 'Technion – Israel Institute of Technology', 'University of Haifa', 
+-                    'Ben-Gurion University of the Negev', 'Bar-Ilan University', 'Reichman University', 'The Open University of Israel', 
+-                    'Bezalel Academy of Arts and Design', 'Shenkar College', 'Holon Institute of Technology (HIT)', 'The College of Management Academic Studies', 
+-                    'WIZO Haifa Academy of Design', 'Sapir College', 'Hadassah Academic College', 'Ariel University', 'Ono Academic College', 
+-                    'Peres Academic Center', 'Academic College of Tel Aviv–Yaffo', 'Ruppin Academic Center', 'Tel Hai University',
+-                    'Visual Communication', 'Computer Science', 'Law', 'Engineering', 'Psychology', 'Medicine'
++                    'Academic Center for Law and Science', 'Academic College of Tel Aviv-Yaffo', 'Academic College of Tel Aviv–Yaffo', 'Accounting', 'Achva Academic College', 'Afeka Academic College of Engineering', 'Al-Qasemi Academic College', 'Amal Colleges',
++                    'Animation', 'Anthropology', 'Arab Academic College of Education Haifa', 'Arabic Language and Literature', 'Archaeology', 'Architecture', 'Ariel University', 'Art History',
++                    'Ashkelon Academic College', 'Atid Colleges', 'Avni Institute', 'Azrieli College of Engineering', 'BPM College', 'Bar-Ilan University', 'Behavioral Sciences', 'Beit Berl College',
++                    'Beit Zvi School of Performing Arts', 'Ben-Gurion University of the Negev', 'Bezalel Academy of Arts and Design', 'Bible Studies', 'Biology', 'Biomedical Engineering', 'Biotechnology', 'Bnei Brak Academic College',
++                    'Broshim Campus', 'Business Administration', 'Camera Obscura', 'Carmel Academic Center', 'Chemical Engineering', 'Chemistry', 'Civil Engineering', 'Clinical Laboratory Sciences',
++                    'Cognitive Science', 'Communication', 'Communication Disorders', 'Computer Science', 'Criminology', 'Cyber Security', 'Data Science', 'David Yellin Academic College of Education',
++                    'Dentistry', 'Digital Media', 'Early Childhood Education', 'East Asian Studies', 'Economics', 'Education', 'Efrata College', 'Electrical Engineering',
++                    'Emergency Medicine', 'Emuna College', 'Engineering', 'English Literature', 'Entrepreneurship', 'Environmental Science', 'Fashion Design', 'Film Studies',
++                    'Finance', 'Fine Arts', 'Game Design', 'Gender Studies', 'Geography', 'Gordon Academic College', 'Government', 'Graphic Design',
++                    'HIT External Studies', 'HIT Holon Institute of Technology', 'HackerU', 'Hadassah Academic College', 'Hasifa School of Communication', 'Hebrew Language', 'Hebrew Literature', 'Hebrew University of Jerusalem',
++                    'Hemdat Academic College', 'Herzog College', 'History', 'Holon Institute of Technology (HIT)', 'Human Resources', 'INT College', 'Industrial Design', 'Industrial Engineering and Management',
++                    'Information Systems', 'Interior Design', 'International Relations', 'Israel Academic College in Ramat Gan', 'Jerusalem College of Technology', 'Jewish History', 'Jewish Studies', 'John Bryce College',
++                    'Journalism', 'Kaye Academic College of Education', 'Kibbutzim College', 'Kinneret Academic College', 'Lander Institute', 'Landscape Architecture', 'Law', 'Lev Academic Center',
++                    'Levinsky-Wingate Academic College', 'Lifshitz College', 'Linguistics', 'Logistics', 'Lustig Institute', 'Maaleh School of Television Film and the Arts', 'Machon Lev', 'Machon Tal',
++                    'Mahanaim College', 'Management', 'Marine Sciences', 'Marketing', 'Materials Engineering', 'Mathematics', 'Mayanei Hayeshua Academic College', 'Mechanical Engineering',
++                    'Medical Imaging', 'Medicine', 'Michlala Jerusalem College', 'Middle Eastern Studies', 'Minshar School of Art', 'Mivchar College', 'Music', 'Musrara School of Art',
++                    'Muzik School', 'NAYA College', 'Nazareth Academic Institute', 'Netanya Academic College', 'Neuroscience', 'Nissan Nativ Acting Studio', 'Nursing', 'Nutrition Sciences',
++                    'ORT Colleges', 'Occupational Therapy', 'Ono Academic College', 'Open University External Studies', 'Open University of Israel', 'Oranim Academic College', 'Orot Israel College', 'Peres Academic Center',
++                    'Pharmacy', 'Philosophy', 'Physical Education', 'Physics', 'Physiotherapy', 'Political Science', 'Product Management', 'Psychology',
++                    'Public Health', 'Public Policy', 'Ramat Gan College', 'Real Estate', 'Reichman University', 'Reidman College', 'Rimon School of Music', 'Ruppin Academic Center',
++                    'SCE Shamoon College of Engineering', 'SELA College', 'Sakhnin College', 'Sam Spiegel Film and Television School', 'Sapir Academic College', 'Sapir College', 'Sapir School of Audio and Visual Arts', 'Schechter Institute',
++                    'Shaanan College', 'Shalem College', 'Shenkar College', 'Social Work', 'Sociology', 'Software Engineering', 'Special Education', 'Sports Science',
++                    'Statistics', 'Studio 6B', 'Sustainability', 'Tal Campus JCT', 'Talmud Studies', 'Talpiot Academic College', 'Teaching Certificate', 'Technion Continuing Education',
++                    'Technion – Israel Institute of Technology', 'Tel Aviv University', 'Tel Hai University', 'Tel-Hai Academic College', 'Television Studies', 'The Academic College of Emek Yezreel External Studies', 'The College of Management Academic Studies', 'The Hebrew University of Jerusalem',
++                    'The Max Stern Yezreel Valley College', 'The Open University of Israel', 'Theater Studies', 'Thelma Yellin High School of the Arts', 'Tourism and Hospitality', 'UX/UI Design', 'University of Haifa', 'Urban Planning',
++                    'Visual Communication', 'WIZO Haifa Academy of Design', 'Weizmann Institute of Science', 'Western Galilee College', 'Wingate Institute', 'Yoram Loewenstein Studio', 'Zefat Academic College'
++                ],
++                'role': [
++                    'Account Manager', 'Accountant', 'Actor', 'Administrative Assistant', 'Architect', 'Automation Engineer', 'Backend Developer', 'Banker',
++                    'Barista', 'Bartender', 'Biomedical Engineer', 'Bookkeeper', 'Brand Manager', 'Bus Driver', 'Business Development Manager', 'CEO',
++                    'CTO', 'Carpenter', 'Chef', 'Civil Engineer', 'Construction Manager', 'Content Designer', 'Content Writer', 'Cook',
++                    'Copywriter', 'Customer Success Manager', 'Customer Support Representative', 'Data Analyst', 'Data Scientist', 'Delivery Driver', 'Dentist', 'Designer',
++                    'DevOps Engineer', 'Developer', 'Digital Marketing Specialist', 'Doctor', 'Electrical Engineer', 'Electrician', 'Engineer', 'Event Manager',
++                    'Financial Analyst', 'Flight Attendant', 'Frontend Developer', 'Full Stack Developer', 'Graphic Designer', 'HR Manager', 'High School Teacher', 'Hotel Manager',
++                    'Industrial Engineer', 'Insurance Agent', 'Interior Designer', 'Investment Advisor', 'Journalist', 'Kindergarten Teacher', 'Lawyer', 'Lecturer',
++                    'Legal Intern', 'Logistics Coordinator', 'Manager', 'Marketing Manager', 'Mechanical Engineer', 'Mobile Developer', 'Motion Designer', 'Musician',
++                    'Nurse', 'Occupational Therapist', 'Office Manager', 'Operations Manager', 'PPC Manager', 'Paramedic', 'Payroll Accountant', 'Pharmacist',
++                    'Photographer', 'Physiotherapist', 'Pilot', 'Plumber', 'Producer', 'Product Designer', 'Product Manager', 'Project Manager',
++                    'Psychologist', 'QA Engineer', 'Real Estate Agent', 'Receptionist', 'Recruiter', 'Researcher', 'Restaurant Manager', 'SEO Specialist',
++                    'Sales Manager', 'School Counselor', 'Security Guard', 'Self Employed', 'Social Media Manager', 'Social Worker', 'Software Engineer', 'Speech Therapist',
++                    'Student', 'Talent Acquisition Specialist', 'Teacher', 'Truck Driver', 'UI Designer', 'UX Designer', 'Veterinarian', 'Video Editor',
++                    'Videographer', 'Visual Communication Designer', 'Waiter', 'Warehouse Manager'
+                 ],
+-                'role': ['Student', 'Designer', 'Engineer', 'Developer', 'Manager', 'Teacher', 'Self Employed', 'CEO', 'CTO']
++                'city': [
++                    'Acre', 'Afikim', 'Afula', 'Almagor', 'Alonei Abba', 'Amir', 'Amirim', 'Arad',
++                    'Ashdod', 'Ashdot Yaakov Ihud', 'Ashdot Yaakov Meuhad', 'Ashkelon', 'Avnei Eitan', 'Barkai', 'Bat Yam', 'Beeri',
++                    'Beersheba', 'Beit Alfa', 'Beit Hillel', 'Beit Lehem HaGlilit', 'Ben Ami', 'Bnei Atarot', 'Bnei Brak', 'Bnei Yehuda',
++                    'Bustan HaGalil', 'Dalia', 'Dan', 'Degania Alef', 'Degania Bet', 'Dimona', 'Dishon', 'Dovev',
++                    'Eilat', 'Eilon', 'Ein Gev', 'Ein Harod Ihud', 'Ein Harod Meuhad', 'Ein Shemer', 'Ein Yaakov', 'Elifaz',
++                    'Even Menachem', 'Gan Shmuel', 'Gesher', 'Geva', 'Givat Haim Ihud', 'Givat Haim Meuhad', 'Givatayim', 'Gonen',
++                    'Goren', 'Hadera', 'Haifa', 'Hanita', 'Hatzerim', 'Hazorea', 'Heftziba', 'Herzliya',
++                    'Hod Hasharon', 'Holon', 'Hosen', 'Ilaniya', 'Jerusalem', 'Kabri', 'Karmiel', 'Kerem Ben Zimra',
++                    'Keshet', 'Ketura', 'Kfar Aza', 'Kfar Baruch', 'Kfar Blum', 'Kfar Saba', 'Kfar Szold', 'Kfar Yehoshua',
++                    'Kinneret', 'Kiryat Ata', 'Kiryat Bialik', 'Kiryat Gat', 'Kiryat Motzkin', 'Kiryat Yam', 'Kissufim', 'Lehavot HaBashan',
++                    'Lod', 'Lohamei HaGetaot', 'Lotan', 'Maagan', 'Maagan Michael', 'Maayan Baruch', 'Magen', 'Manot',
++                    'Margaliot', 'Meona', 'Migdal HaEmek', 'Mishmar HaEmek', 'Mishmar HaSharon', 'Modiin-Maccabim-Reut', 'Nahalal', 'Nahariya',
++                    'Natur', 'Nazareth', 'Nes Ziona', 'Netanya', 'Netiv HaShayara', 'Netua', 'Nir Oz', 'Nirim',
++                    'Nov', 'Odem', 'Or Yehuda', 'Petah Tikva', 'Raanana', 'Rahat', 'Ramat Gan', 'Ramla',
++                    'Ramot', 'Regba', 'Rehovot', 'Reim', 'Revivim', 'Rishon LeZion', 'Rosh HaAyin', 'Rosh Hanikra',
++                    'Safed', 'Safsufa', 'Sakhnin', 'Samar', 'Sde Boker', 'Sde Nehemia', 'Sderot', 'Sdot Yam',
++                    'Shaar HaGolan', 'Shavei Tzion', 'Shomera', 'Shtula', 'Snir', 'Tamra', 'Tel Aviv-Yafo', 'Tel Yosef',
++                    'Tiberias', 'Timorim', 'Tzeelim', 'Umm al-Fahm', 'Yad Mordechai', 'Yagur', 'Yavne', 'Yehiam',
++                    'Yehud-Monosson', 'Yokneam Illit', 'Yonatan', 'Yotvata', 'Yuval', 'Zarit'
++                ],
++                'workplace': [
++                    'Amazon', 'Amdocs', 'Apple', 'AppsFlyer', 'Arkia', 'Ayalon Insurance', 'Bank Hapoalim', 'Bank Leumi',
++                    'Bezeq', 'Cal', 'Castro', 'Cellcom', 'Check Point', 'Clal Insurance', 'Clalit Health Services', 'Coca-Cola Israel',
++                    'CyberArk', 'Dan Bus Company', 'Delta Galil', 'Egged', 'El Al', 'Elbit Systems', 'FOX Group', 'First International Bank',
++                    'Fiverr', 'Globes', 'Golf & Co', 'Google', 'HOT', 'Haaretz', 'Hadassah Medical Center', 'Harel Insurance',
++                    'IAI', 'IBM', 'IMI Systems', 'Ichilov Medical Center', 'Intel', 'Isracard', 'Israel Aerospace Industries', 'Israel Discount Bank',
++                    'Israel Electric Corporation', 'Israel Railways', 'JFrog', 'Kaltura', 'Kan 11', 'Keshet 12', 'Leumit Health Services', 'Lightricks',
++                    'MAX', 'Maccabi Healthcare Services', 'Maccabi Tel Aviv FC', 'Mako', 'Mekorot', 'Menora Mivtachim', 'Meta', 'Meuhedet',
++                    'Microsoft', 'Migdal Insurance', 'Mizrahi Tefahot Bank', 'Mobileye', 'Monday.com', 'N12', 'NVIDIA', 'Netafim',
++                    'Oracle Israel', 'Osem-Nestle', 'Outbrain', 'Palo Alto Networks Israel', 'Partner', 'Payoneer', 'Pelephone', 'Phoenix Holdings',
++                    'Playtika', 'Rafael', 'Rami Levy', 'Redis', 'Reshet 13', 'Riskified', 'SAP', 'SentinelOne Israel',
++                    'Sheba Medical Center', 'Shufersal', 'Similarweb', 'SodaStream', 'Strauss Group', 'Super-Pharm', 'Taboola', 'Tempo',
++                    'Terminal X', 'Teva', 'TheMarker', 'Tnuva', 'Victory', 'WalkMe', 'Wix', 'Wiz',
++                    'Yes', 'Ynet', 'Yohananof', 'eToro'
++                ],
++                'prevwork': [
++                    'Amazon', 'Amdocs', 'Apple', 'AppsFlyer', 'Arkia', 'Ayalon Insurance', 'Bank Hapoalim', 'Bank Leumi',
++                    'Bezeq', 'Cal', 'Castro', 'Cellcom', 'Check Point', 'Clal Insurance', 'Clalit Health Services', 'Coca-Cola Israel',
++                    'CyberArk', 'Dan Bus Company', 'Delta Galil', 'Egged', 'El Al', 'Elbit Systems', 'FOX Group', 'First International Bank',
++                    'Fiverr', 'Globes', 'Golf & Co', 'Google', 'HOT', 'Haaretz', 'Hadassah Medical Center', 'Harel Insurance',
++                    'IAI', 'IBM', 'IMI Systems', 'Ichilov Medical Center', 'Intel', 'Isracard', 'Israel Aerospace Industries', 'Israel Discount Bank',
++                    'Israel Electric Corporation', 'Israel Railways', 'JFrog', 'Kaltura', 'Kan 11', 'Keshet 12', 'Leumit Health Services', 'Lightricks',
++                    'MAX', 'Maccabi Healthcare Services', 'Maccabi Tel Aviv FC', 'Mako', 'Mekorot', 'Menora Mivtachim', 'Meta', 'Meuhedet',
++                    'Microsoft', 'Migdal Insurance', 'Mizrahi Tefahot Bank', 'Mobileye', 'Monday.com', 'N12', 'NVIDIA', 'Netafim',
++                    'Oracle Israel', 'Osem-Nestle', 'Outbrain', 'Palo Alto Networks Israel', 'Partner', 'Payoneer', 'Pelephone', 'Phoenix Holdings',
++                    'Playtika', 'Rafael', 'Rami Levy', 'Redis', 'Reshet 13', 'Riskified', 'SAP', 'SentinelOne Israel',
++                    'Sheba Medical Center', 'Shufersal', 'Similarweb', 'SodaStream', 'Strauss Group', 'Super-Pharm', 'Taboola', 'Tempo',
++                    'Terminal X', 'Teva', 'TheMarker', 'Tnuva', 'Victory', 'WalkMe', 'Wix', 'Wiz',
++                    'Yes', 'Ynet', 'Yohananof', 'eToro'
++                ],
++                'dynamic:other-category': [
++                    'Ariel', 'Bnei Akiva', 'Bnei David Eli', 'Ein Prat Mechina', 'Ezra', 'Garin Nahal', 'Garin Tzabar', 'Garinei Oded',
++                    'HaNoar HaOved VeHaLomed', 'HaShomer HaTzair', 'HaTzofim', 'Hanoar Haleumi', 'Maccabi Tzair', 'Machanot HaOlim', 'Mechinat Adamit', 'Mechinat Amei Chai',
++                    'Mechinat Arava', 'Mechinat Bina', 'Mechinat Derech Eretz Ashalim', 'Mechinat Derech Eretz Kmehin', 'Mechinat Gal', 'Mechinat Hanaton', 'Mechinat Haruv', 'Mechinat Kol Ami',
++                    'Mechinat Lachish', 'Mechinat Nachshon', 'Mechinat Nirim', 'Mechinat Rabin', 'Mechinat Tavor', 'Noam', 'Noar HaIhud HaHaklai', 'Noar Telem'
++                ]
+             };
+ 
+             input.addEventListener('input', (e) => {
+@@ -4056,11 +4330,18 @@
+                 const normalizeSchool = (e) => {
+                     const lower = e.toLowerCase();
+                     if (lower === 'haifa university' || lower === 'university of haifa') return 'University of Haifa';
+-                    if (lower === 'kadoorie' || lower === 'kadoorie school' || lower === 'kadoorie agricultural school') return 'Kadoorie Agricultural School (Kadoorie)';
++                    if (lower === 'kadoorie' || lower === 'kadoorie school' || lower === 'kadoorie agricultural school') return 'Kadoorie';
+                     return toTitleCase(e);
+                 };
+                 
+-                const splitAndCount = (value, isCity = false, isSchool = false) => {
++                const normalizeRole = (r) => {
++                    const lower = r.toLowerCase();
++                    if (lower.includes('operations room controller') || lower.includes('sambatzit') || lower.includes('samabtzit')) return 'Sambatzit';
++                    if (lower === 'commander' || lower === 'mefaked' || lower === 'mefakedet' || lower === 'מפקד') return 'Commander';
++                    return toTitleCase(r);
++                };
++                
++                const splitAndCount = (value, isCity = false, isSchool = false, isRole = false) => {
+                     if (!value) return;
+                     const parts = value.split(/\||\/|,|\s-\s|—|\n/);
+                     parts.forEach(p => {
+@@ -4068,6 +4349,7 @@
+                         if (cleanVal) {
+                             if (isCity) cleanVal = normalizeCity(cleanVal);
+                             else if (isSchool) cleanVal = normalizeSchool(cleanVal);
++                            else if (isRole) cleanVal = normalizeRole(cleanVal);
+                             else cleanVal = toTitleCase(cleanVal);
+                             counts[cleanVal] = (counts[cleanVal] || 0) + 1;
+                         }
+@@ -4076,10 +4358,16 @@
+                 
+                 people.forEach(p => {
+                     // Check direct fields
+-                    if (prefix === 'city' && p.city) {
+-                        splitAndCount(p.city, true, false);
++                    if (prefix === 'city') {
++                        if (p.city) splitAndCount(p.city, true, false);
++                        if (p.originCity) {
++                            splitAndCount(p.originCity, true, false);
++                        } else if (p.description) {
++                            const m = p.description.match(/\[Originally from (.*?)\]/);
++                            if (m) splitAndCount(m[1], true, false);
++                        }
+                     } else if (prefix === 'role' && p.role) {
+-                        splitAndCount(p.role, false, false);
++                        splitAndCount(p.role, false, false, true);
+                     }
+                     
+                     // Check tags
+@@ -4090,7 +4378,7 @@
+                             // Check for new format: "category: value"
+                             if (t.toLowerCase().startsWith(prefix + ':')) {
+                                 let cleanVal = t.substring(prefix.length + 1).trim();
+-                                splitAndCount(cleanVal, prefix === 'city' || prefix === 'origin-city', prefix === 'education' || prefix === 'highschool');
++                                splitAndCount(cleanVal, prefix === 'city' || prefix === 'origin-city', prefix === 'education' || prefix === 'highschool', prefix === 'role');
+                             }
+                         });
+                     }
+@@ -4348,11 +4636,11 @@
+             const synonymGroups = [
+                 { type: 'degree', words: ['design', 'visual communication', 'designer', 'ux', 'ui', 'עיצוב', 'תקשורת חזותית', 'מעצבת', 'מעצב'] },
+                 { type: 'uni', words: ['haifa university', 'university of haifa', 'wizo', 'אוניברסיטת חיפה', 'ויצו חיפה'] },
+-                { type: 'city', words: ['ilaniya', 'ilania', 'אילניה', 'מושב אילניה'] },
+-                { type: 'city', words: ['akko', 'acre', 'עכו'] },
+-                { type: 'city', words: ['tzfat', 'safed', 'צפת'] },
+-                { type: 'city', words: ['pardes hanna', 'pardes hanna karkur', 'pardes hanna-karkur', 'פרדס חנה', 'פרדס חנה כרכור'] },
+-                { type: 'city', words: ['zikhron yaakov', 'zikhron ya\'akov', 'זכרון יעקב'] },
++                { type: 'small_town', words: ['ilaniya', 'ilania', 'אילניה', 'מושב אילניה'] },
++                { type: 'small_town', words: ['akko', 'acre', 'עכו'] },
++                { type: 'small_town', words: ['tzfat', 'safed', 'צפת'] },
++                { type: 'small_town', words: ['pardes hanna', 'pardes hanna karkur', 'pardes hanna-karkur', 'פרדס חנה', 'פרדס חנה כרכור'] },
++                { type: 'small_town', words: ['zikhron yaakov', 'zikhron ya\'akov', 'זכרון יעקב'] },
+                 { type: 'degree', words: ['computer science', 'מדעי המחשב', 'cs', 'software engineering', 'הנדסת תוכנה'] },
+                 { type: 'degree', words: ['electrical engineering', 'הנדסת חשמל', 'ee'] },
+                 { type: 'degree', words: ['industrial engineering', 'הנדסת תעשייה וניהול', 'תעשייה וניהול'] },
+@@ -4380,19 +4668,699 @@
+                 { type: 'uni', words: ['reichman university', 'idc', 'רייכמן', 'הבינתחומי'] },
+                 { type: 'uni', words: ['shenkar', 'שנקר'] },
+                 { type: 'uni', words: ['bezalel', 'בצלאל', 'bezalel academy'] },
+-                { type: 'uni', words: ['colman', 'המכללה למינהל', 'מכללה למנהל', 'the college of management'] },
+-                { type: 'uni', words: ['open university', 'האוניברסיטה הפתוחה'] },
+-                { type: 'uni', words: ['hit', 'holon institute of technology', 'מכון טכנולוגי חולון'] },
+-                { type: 'army_unit', words: ['operations room controller', 'sambatzit', 'סמבצית'] },
+-                { type: 'company', words: ['google'] }, { type: 'company', words: ['microsoft'] }, { type: 'company', words: ['apple'] }, { type: 'company', words: ['amazon'] }, { type: 'company', words: ['nvidia'] }, { type: 'company', words: ['intel'] }, { type: 'company', words: ['meta', 'facebook'] }, { type: 'company', words: ['ibm'] }, { type: 'company', words: ['salesforce'] }, { type: 'company', words: ['monday.com', 'monday'] }, { type: 'company', words: ['wix'] }, { type: 'company', words: ['fiverr'] }, { type: 'company', words: ['check point', 'checkpoint'] }, { type: 'company', words: ['cyberark'] }, { type: 'company', words: ['nice'] }, { type: 'company', words: ['amdocs'] }, { type: 'company', words: ['playtika'] }, { type: 'company', words: ['etoro'] }, { type: 'company', words: ['taboola'] }, { type: 'company', words: ['outbrain'] },
+-                { type: 'army_unit', words: ['golani'] }, { type: 'army_unit', words: ['givati'] }, { type: 'army_unit', words: ['nahal'] }, { type: 'army_unit', words: ['paratroopers', 'tzanhanim'] }, { type: 'army_unit', words: ['kfir'] }, { type: 'army_unit', words: ['armored corps', 'shiryon'] }, { type: 'army_unit', words: ['artillery', 'totchanim'] }, { type: 'army_unit', words: ['combat engineering', 'handasa kravit'] }, { type: 'army_unit', words: ['air force', 'heil haavir'] }, { type: 'army_unit', words: ['navy', 'heil hayam'] }, { type: 'army_unit', words: ['home front command', 'pikud haoref'] }, { type: 'army_unit', words: ['border police', 'magav'] }, { type: 'army_unit', words: ['intelligence', 'aman'] }, { type: 'army_unit', words: ['sayeret matkal', 'general staff reconnaissance'] }, { type: 'army_unit', words: ['shayetet 13', 'naval commandos'] }, { type: 'army_unit', words: ['shaldag', 'air force commandos'] }, { type: 'army_unit', words: ['maglan', 'special forces'] }, { type: 'army_unit', words: ['duvdevan', 'undercover unit'] }, { type: 'army_unit', words: ['egoz', 'reconnaissance unit'] }, { type: 'army_unit', words: ['yahalom', 'combat engineering special forces'] }, { type: 'army_unit', words: ['oketz', 'k9 unit'] }, { type: 'army_unit', words: ['unit 669', 'combat search and rescue'] }, { type: 'army_unit', words: ['unit 8200', '8200', 'signals intelligence'] }, { type: 'army_unit', words: ['lotar', 'counter-terror'] },
+-                { type: 'army_base', words: ['bahad 1'] }, { type: 'army_base', words: ['bahad 7'] }, { type: 'army_base', words: ['bahad 12'] }, { type: 'army_base', words: ['glilot'] }, { type: 'army_base', words: ['kirya'] }, { type: 'army_base', words: ['tel hashomer'] }, { type: 'army_base', words: ['ir habahadim'] }, { type: 'army_base', words: ['tzrifin'] }, { type: 'army_base', words: ['nevatim'] }, { type: 'army_base', words: ['hatzerim'] }, { type: 'army_base', words: ['ramat david'] }, { type: 'army_base', words: ['palmachim'] }, { type: 'army_base', words: ['ramon'] }, { type: 'army_base', words: ['ovda'] }, { type: 'army_base', words: ['ze\'elim', 'zeelim'] }, { type: 'army_base', words: ['re\'im', 'reim'] }, { type: 'army_base', words: ['urim'] }, { type: 'army_base', words: ['nafah'] }, { type: 'army_base', words: ['saar 474'] }, { type: 'army_base', words: ['barak 188'] }, { type: 'army_base', words: ['golani 1'] }, { type: 'army_base', words: ['givati 84'] }, { type: 'army_base', words: ['nahal 933'] }, { type: 'army_base', words: ['tzanhanim 35'] }, { type: 'army_base', words: ['kfir 900'] }, { type: 'army_base', words: ['harel 10'] }, { type: 'army_base', words: ['alexandroni 3'] }, { type: 'army_base', words: ['carmeli 2'] },
+-                { type: 'high_school', words: ['reali'] }, { type: 'high_school', words: ['alliance'] }, { type: 'high_school', words: ['gymnasia herzliya', 'gymnasia'] }, { type: 'high_school', words: ['leo baeck'] }, { type: 'high_school', words: ['thelma yellin'] }, { type: 'high_school', words: ['kfar hayarok'] }, { type: 'high_school', words: ['mosinson'] }, { type: 'high_school', words: ['hadassim'] }, { type: 'high_school', words: ['ben shemen'] }, { type: 'high_school', words: ['kadoorie'] }, { type: 'high_school', words: ['wizo nahalal'] }, { type: 'high_school', words: ['shevach mofet'] }, { type: 'high_school', words: ['boyar'] }, { type: 'high_school', words: ['leyada'] }, { type: 'high_school', words: ['harel'] }, { type: 'high_school', words: ['ort singalovski'] }, { type: 'high_school', words: ['ort bialik'] }, { type: 'high_school', words: ['ort motzkin'] }, { type: 'high_school', words: ['ort ginzburg'] }, { type: 'high_school', words: ['ort'] }, { type: 'high_school', words: ['amal'] }, { type: 'high_school', words: ['atid'] }, { type: 'high_school', words: ['darca'] }, { type: 'high_school', words: ['branco weiss'] }, { type: 'high_school', words: ['ironi alef'] }, { type: 'high_school', words: ['ironi bet'] }, { type: 'high_school', words: ['ironi gimel'] }, { type: 'high_school', words: ['ironi dalet'] }, { type: 'high_school', words: ['ironi hey'] }, { type: 'high_school', words: ['ironi vav'] }, { type: 'high_school', words: ['makif alef'] }, { type: 'high_school', words: ['makif bet'] }, { type: 'high_school', words: ['makif gimel'] }, { type: 'high_school', words: ['makif dalet'] }, { type: 'high_school', words: ['makif hey'] }, { type: 'high_school', words: ['makif vav'] }, { type: 'high_school', words: ['makif zayin'] }, { type: 'high_school', words: ['makif het'] }, { type: 'high_school', words: ['rabin'] }, { type: 'high_school', words: ['begin'] }, { type: 'high_school', words: ['blich', 'בליך'] }, { type: 'high_school', words: ['misgav', 'משגב'] }, { type: 'high_school', words: ['yifat', 'יפעת'] },
++                { type: 'big_city', words: ['tel aviv-yafo', 'tel aviv', 'תל אביב-יפו', 'תל אביב'] }, { type: 'big_city', words: ['jerusalem', 'ירושלים'] }, { type: 'big_city', words: ['haifa', 'haiffa', 'חיפה', 'חייפה'] }, { type: 'big_city', words: ['rishon lezion', 'rishon', 'ראשון לציון', 'ראשון'] }, { type: 'big_city', words: ['petah tikva', 'פתח תקווה'] }, { type: 'big_city', words: ['ashdod', 'אשדוד'] }, { type: 'big_city', words: ['netanya', 'נתניה'] }, { type: 'big_city', words: ['bnei brak', 'בני ברק'] }, { type: 'big_city', words: ['beer sheva', 'b7', 'באר שבע', 'ב"ש'] }, { type: 'big_city', words: ['holon', 'חולון'] }, { type: 'big_city', words: ['ramat gan', 'רמת גן'] }, { type: 'big_city', words: ['ashkelon', 'אשקלון'] }, { type: 'big_city', words: ['rehovot', 'רחובות'] }, { type: 'big_city', words: ['bat yam', 'בת ים'] }, { type: 'big_city', words: ['beit shemesh', 'בית שמש'] }, { type: 'big_city', words: ['kfar saba', 'כפר סבא'] }, { type: 'big_city', words: ['herzliya', 'הרצליה'] }, { type: 'big_city', words: ['hadera', 'חדרה'] }, { type: 'big_city', words: ['modiin-maccabim-reut', 'modiin', 'מודיעין-מכבים-רעות', 'מודיעין'] }, { type: 'big_city', words: ['nazareth', 'נצרת'] }, { type: 'big_city', words: ['lod', 'לוד'] }, { type: 'big_city', words: ['ramla', 'רמלה'] }, { type: 'big_city', words: ['raanana', 'רעננה'] }, { type: 'big_city', words: ['rahat', 'רהט'] }, { type: 'big_city', words: ['givatayim', 'גבעתיים'] }, { type: 'big_city', words: ['hod hasharon', 'הוד השרון'] }, { type: 'big_city', words: ['nahariya', 'נהריה'] }, { type: 'big_city', words: ['kiryat ata', 'קרית אתא'] }, { type: 'big_city', words: ['umm al-fahm', 'אום אל-פחם'] }, { type: 'big_city', words: ['kiryat gat', 'קרית גת'] }, { type: 'big_city', words: ['eilat', 'אילת'] }, { type: 'small_town', words: ['ilaniya', 'ilania', 'ilanya', 'illania', 'אילניה', 'מושב אילניה', 'אילנייה'] },
++                { type: 'uni', words: ['technion', 'technion - israel institute of technology', 'הטכניון', 'טכניון'] }, { type: 'uni', words: ['hebrew university of jerusalem', 'hebrew university', 'huji', 'האוניברסיטה העברית', 'העברית'] }, { type: 'uni', words: ['weizmann institute of science', 'weizmann', 'weizmann institute', 'מכון ויצמן'] }, { type: 'uni', words: ['tel aviv university', 'tau', 'אוניברסיטת תל אביב', 'אוניברסיטת ת"א'] }, { type: 'uni', words: ['bar-ilan university', 'bar ilan', 'biu', 'אוניברסיטת בר אילן', 'בר אילן'] }, { type: 'uni', words: ['university of haifa', 'haifa university', 'haifa universiti', 'אוניברסיטת חיפה'] }, { type: 'uni', words: ['ben-gurion university of the negev', 'ben gurion', 'ben gurion university', 'bgu', 'אוניברסיטת בן גוריון', 'בן גוריון'] }, { type: 'uni', words: ['open university of israel', 'open university', 'openuiversty', 'האוניברסיטה הפתוחה'] }, { type: 'uni', words: ['ariel university', 'אוניברסיטת אריאל'] }, { type: 'uni', words: ['reichman university', 'idc herzliya', 'idc', 'אוניברסיטת רייכמן', 'הבינתחומי'] }, { type: 'uni', words: ['bezalel', 'bezalel academy of arts and design', 'בצלאל'] }, { type: 'uni', words: ['shenkar', 'shenkar college of engineering, design and art', 'שנקר'] }, { type: 'uni', words: ['hit', 'holon institute of technology', 'מכון טכנולוגי חולון'] }, { type: 'uni', words: ['colman', 'college of management academic studies', 'המכללה למנהל'] }, { type: 'uni', words: ['ruppin', 'ruppin academic center', 'המרכז האקדמי רופין'] }, { type: 'uni', words: ['sapir', 'sapir academic college', 'מכללת ספיר'] }, { type: 'uni', words: ['tel hai', 'tel hai college', 'מכללת תל חי'] }, { type: 'uni', words: ['kinneret', 'kinneret college on the sea of galilee', 'מכללת כנרת'] }, { type: 'uni', words: ['afeka', 'afeka college of engineering', 'מכללת אפקה'] }, { type: 'uni', words: ['sce', 'sami shamoon college of engineering', 'מכללת סמי שמעון'] },
++                { type: 'degree', words: ['computer science', 'cs'] }, { type: 'degree', words: ['software engineering', 'swe'] }, { type: 'degree', words: ['information systems'] }, { type: 'degree', words: ['data science'] }, { type: 'degree', words: ['electrical engineering', 'ee'] }, { type: 'degree', words: ['mechanical engineering'] }, { type: 'degree', words: ['industrial engineering', 'industrial engineering & management'] }, { type: 'degree', words: ['civil engineering'] }, { type: 'degree', words: ['chemical engineering'] }, { type: 'degree', words: ['biomedical engineering'] }, { type: 'degree', words: ['aerospace engineering'] }, { type: 'degree', words: ['mathematics', 'math'] }, { type: 'degree', words: ['physics'] }, { type: 'degree', words: ['biology', 'life sciences'] }, { type: 'degree', words: ['chemistry'] }, { type: 'degree', words: ['medicine', 'md'] }, { type: 'degree', words: ['nursing'] }, { type: 'degree', words: ['pharmacy'] }, { type: 'degree', words: ['psychology'] }, { type: 'degree', words: ['cognitive science'] }, { type: 'degree', words: ['neuroscience'] }, { type: 'degree', words: ['law', 'llb'] }, { type: 'degree', words: ['business administration', 'mba', 'bba'] }, { type: 'degree', words: ['economics'] }, { type: 'degree', words: ['accounting'] }, { type: 'degree', words: ['finance'] }, { type: 'degree', words: ['political science'] }, { type: 'degree', words: ['international relations'] }, { type: 'degree', words: ['sociology'] }, { type: 'degree', words: ['anthropology'] }, { type: 'degree', words: ['communications', 'communication'] }, { type: 'degree', words: ['philosophy'] }, { type: 'degree', words: ['history'] }, { type: 'degree', words: ['literature'] }, { type: 'degree', words: ['education'] }, { type: 'degree', words: ['social work'] }, { type: 'degree', words: ['architecture'] }, { type: 'degree', words: ['design', 'visual communication'] }, { type: 'degree', words: ['music'] }, { type: 'degree', words: ['theater', 'theatre'] }, { type: 'degree', words: ['cinema', 'film'] }, { type: 'degree', words: ['fine arts', 'art'] }, { type: 'army_base', words: ['glilot'] }, { type: 'army_base', words: ['kirya'] }, { type: 'army_base', words: ['tel hashomer'] }, { type: 'army_base', words: ['ir habahadim'] }, { type: 'army_base', words: ['tzrifin'] }, { type: 'army_base', words: ['nevatim'] }, { type: 'army_base', words: ['hatzerim'] }, { type: 'army_base', words: ['ramat david'] },
++                { type: 'army_unit', words: ['tzanhanim', 'paratroopers'] }, { type: 'army_unit', words: ['golani'] }, { type: 'army_unit', words: ['nahal'] }, { type: 'army_unit', words: ['givati'] }, { type: 'army_unit', words: ['kfir'] }, { type: 'army_unit', words: ['shiryon', 'armored corps'] }, { type: 'army_unit', words: ['totchanim', 'artillery corps'] }, { type: 'army_unit', words: ['handasa kravit', 'combat engineering'] }, { type: 'army_unit', words: ['issuf kravi', 'combat intelligence'] }, { type: 'army_unit', words: ['pikud haoref', 'home front command'] }, { type: 'army_unit', words: ['magav', 'border police'] }, { type: 'army_unit', words: ['sayeret matkal'] }, { type: 'army_unit', words: ['shayetet 13'] }, { type: 'army_unit', words: ['shaldag'] }, { type: 'army_unit', words: ['669'] }, { type: 'army_unit', words: ['maglan'] }, { type: 'army_unit', words: ['duvdevan'] }, { type: 'army_unit', words: ['egoz'] }, { type: 'army_unit', words: ['rimon'] }, { type: 'army_unit', words: ['oketz'] }, { type: 'army_unit', words: ['yahalom'] }, { type: 'army_unit', words: ['unit 8200', '8200'] }, { type: 'army_unit', words: ['unit 9900', '9900'] }, { type: 'army_unit', words: ['unit 504', '504'] }, { type: 'army_unit', words: ['amam'] }, { type: 'army_unit', words: ['hativa 828', 'bislamach'] }, { type: 'army_unit', words: ['karakal'] }, { type: 'army_unit', words: ['bardelas'] }, { type: 'army_unit', words: ['arayot hayarden'] }, { type: 'army_unit', words: ['lavi habika'] }, { type: 'army_unit', words: ['tayas', 'aircrew'] }, { type: 'army_unit', words: ['hovlim', 'naval academy'] }, { type: 'army_unit', words: ['tzolelot', 'submarines'] }, { type: 'army_unit', words: ['bakara avirit', 'air traffic control'] }, { type: 'army_unit', words: ['haganah avirit', 'air defense'] }, { type: 'army_unit', words: ['kipat barzel', 'iron dome'] }, { type: 'army_unit', words: ['chel hayam', 'navy'] }, { type: 'army_unit', words: ['chel haavir', 'air force'] }, { type: 'army_unit', words: ['sambatzit', 'sambazit', 'samabtzit', 'sambatzeet', 'operations room controller'] }, { type: 'army_unit', words: ['commander', 'mefaked', 'mefakedet', 'מפקד', 'מפקדת'] },
++                { type: 'army_base', words: ['tel hashomer'] }, { type: 'army_base', words: ['tzrifin'] }, { type: 'army_base', words: ['kirya', 'hakirya'] }, { type: 'army_base', words: ['glilot'] }, { type: 'army_base', words: ['shiryon base', 'shizafon'] }, { type: 'army_base', words: ['bahad 1'] }, { type: 'army_base', words: ['bahad 20'] }, { type: 'army_base', words: ['bahad 7'] }, { type: 'army_base', words: ['bahad 10'] }, { type: 'army_base', words: ['bahad 11'] }, { type: 'army_base', words: ['bahad 15'] }, { type: 'army_base', words: ['julish'] }, { type: 'army_base', words: ['palmachim'] }, { type: 'army_base', words: ['tel nof'] }, { type: 'army_base', words: ['hatzerim'] }, { type: 'army_base', words: ['ramat david'] }, { type: 'army_base', words: ['nevatim'] }, { type: 'army_base', words: ['ovda'] }, { type: 'army_base', words: ['ramon'] }, { type: 'army_base', words: ['sde dov'] }, { type: 'army_base', words: ['haifa naval base'] }, { type: 'army_base', words: ['ashdod naval base'] }, { type: 'army_base', words: ['eilat naval base'] }, { type: 'army_base', words: ['mitkan adam'] }, { type: 'army_base', words: ['shivta'] }, { type: 'army_base', words: ['tzelim'] }, { type: 'army_base', words: ['elyakim'] }, { type: 'army_base', words: ['batzap'] }, { type: 'army_base', words: ['michve alon'] }, { type: 'army_base', words: ['havat hashomer'] }, { type: 'army_base', words: ['sirkin'] }, { type: 'army_base', words: ['sdot micha'] },
++                { type: 'high_school', words: ['reali'] }, { type: 'high_school', words: ['alliance'] }, { type: 'high_school', words: ['gymnasia herzliya', 'gymnasia'] }, { type: 'high_school', words: ['leo baeck'] }, { type: 'high_school', words: ['thelma yellin'] }, { type: 'high_school', words: ['kfar hayarok'] }, { type: 'high_school', words: ['mosinson'] }, { type: 'high_school', words: ['hadassim'] }, { type: 'high_school', words: ['ben shemen'] }, { type: 'high_school', words: ['kadoorie', 'kadoori', 'kaduri', 'kadoore', 'kadoory'] }, { type: 'high_school', words: ['wizo nahalal'] }, { type: 'high_school', words: ['shevach mofet'] }, { type: 'high_school', words: ['boyar'] }, { type: 'high_school', words: ['leyada'] }, { type: 'high_school', words: ['harel'] }, { type: 'high_school', words: ['ort singalovski'] }, { type: 'high_school', words: ['ort bialik'] }, { type: 'high_school', words: ['ort motzkin'] }, { type: 'high_school', words: ['ort ginzburg'] }, { type: 'high_school', words: ['ort'] }, { type: 'high_school', words: ['amal'] }, { type: 'high_school', words: ['atid'] }, { type: 'high_school', words: ['darca'] }, { type: 'high_school', words: ['branco weiss'] }, { type: 'high_school', words: ['ironi alef'] }, { type: 'high_school', words: ['ironi bet'] }, { type: 'high_school', words: ['ironi gimel'] }, { type: 'high_school', words: ['ironi dalet'] }, { type: 'high_school', words: ['ironi hey'] }, { type: 'high_school', words: ['ironi vav'] }, { type: 'high_school', words: ['makif alef'] }, { type: 'high_school', words: ['makif bet'] }, { type: 'high_school', words: ['makif gimel'] }, { type: 'high_school', words: ['makif dalet'] }, { type: 'high_school', words: ['makif hey'] }, { type: 'high_school', words: ['makif vav'] }, { type: 'high_school', words: ['makif zayin'] }, { type: 'high_school', words: ['makif het'] }, { type: 'high_school', words: ['rabin'] }, { type: 'high_school', words: ['begin'] }, { type: 'high_school', words: ['blich', 'בליך'] }, { type: 'high_school', words: ['misgav', 'משגב'] }, { type: 'high_school', words: ['yifat', 'יפעת'] },
+                 { type: 'mechina', words: ['derech eretz - nitzana', 'nitzana'] }, { type: 'mechina', words: ['derech eretz - kmehin', 'kmehin'] }, { type: 'mechina', words: ['derech eretz - ein yahav', 'ein yahav'] }, { type: 'mechina', words: ['derech eretz - ashalim', 'ashalim'] }, { type: 'mechina', words: ['bnei david'] }, { type: 'mechina', words: ['ein prat'] }, { type: 'mechina', words: ['nachshon'] }, { type: 'mechina', words: ['mechinat rabin', 'rabin'] }, { type: 'mechina', words: ['gal'] }, { type: 'mechina', words: ['maayan baruch'] }, { type: 'mechina', words: ['tavor'] }, { type: 'mechina', words: ['lachish'] }, { type: 'mechina', words: ['arava'] }, { type: 'mechina', words: ['yachad'] }, { type: 'mechina', words: ['hanegev'] }, { type: 'mechina', words: ['aderet'] }, { type: 'mechina', words: ['keshet yehuda'] }, { type: 'mechina', words: ['haruach haisraelit'] }, { type: 'mechina', words: ['meitar'] }, { type: 'mechina', words: ['kol ami'] }
+-            ];
++            ,
++                { type: 'small_town', words: ['afikim'] },
++                { type: 'small_town', words: ['almagor'] },
++                { type: 'small_town', words: ['alonei abba'] },
++                { type: 'small_town', words: ['amir'] },
++                { type: 'small_town', words: ['amirim'] },
++                { type: 'small_town', words: ['ashdot yaakov ihud'] },
++                { type: 'small_town', words: ['ashdot yaakov meuhad'] },
++                { type: 'small_town', words: ['avnei eitan'] },
++                { type: 'small_town', words: ['barkai'] },
++                { type: 'small_town', words: ['beeri'] },
++                { type: 'small_town', words: ['beit alfa'] },
++                { type: 'small_town', words: ['beit hillel'] },
++                { type: 'small_town', words: ['beit lehem haglilit'] },
++                { type: 'small_town', words: ['ben ami'] },
++                { type: 'small_town', words: ['bnei atarot'] },
++                { type: 'small_town', words: ['bnei yehuda'] },
++                { type: 'small_town', words: ['bustan hagalil'] },
++                { type: 'small_town', words: ['dalia'] },
++                { type: 'small_town', words: ['dan'] },
++                { type: 'small_town', words: ['degania alef'] },
++                { type: 'small_town', words: ['degania bet'] },
++                { type: 'small_town', words: ['dishon'] },
++                { type: 'small_town', words: ['dovev'] },
++                { type: 'small_town', words: ['eilon'] },
++                { type: 'small_town', words: ['ein gev'] },
++                { type: 'small_town', words: ['ein harod ihud'] },
++                { type: 'small_town', words: ['ein harod meuhad'] },
++                { type: 'small_town', words: ['ein shemer'] },
++                { type: 'small_town', words: ['ein yaakov'] },
++                { type: 'small_town', words: ['elifaz'] },
++                { type: 'small_town', words: ['even menachem'] },
++                { type: 'small_town', words: ['gan shmuel'] },
++                { type: 'small_town', words: ['gesher'] },
++                { type: 'small_town', words: ['geva'] },
++                { type: 'small_town', words: ['givat haim ihud'] },
++                { type: 'small_town', words: ['givat haim meuhad'] },
++                { type: 'small_town', words: ['gonen'] },
++                { type: 'small_town', words: ['goren'] },
++                { type: 'small_town', words: ['hanita'] },
++                { type: 'small_town', words: ['hatzerim'] },
++                { type: 'small_town', words: ['hazorea'] },
++                { type: 'small_town', words: ['heftziba'] },
++                { type: 'small_town', words: ['hosen'] },
++                { type: 'small_town', words: ['ilaniya'] },
++                { type: 'small_town', words: ['kabri'] },
++                { type: 'small_town', words: ['kerem ben zimra'] },
++                { type: 'small_town', words: ['keshet'] },
++                { type: 'small_town', words: ['ketura'] },
++                { type: 'small_town', words: ['kfar aza'] },
++                { type: 'small_town', words: ['kfar baruch'] },
++                { type: 'small_town', words: ['kfar blum'] },
++                { type: 'small_town', words: ['kfar szold'] },
++                { type: 'small_town', words: ['kfar yehoshua'] },
++                { type: 'small_town', words: ['kinneret'] },
++                { type: 'small_town', words: ['kissufim'] },
++                { type: 'small_town', words: ['lehavot habashan'] },
++                { type: 'small_town', words: ['lohamei hagetaot'] },
++                { type: 'small_town', words: ['lotan'] },
++                { type: 'small_town', words: ['maagan'] },
++                { type: 'small_town', words: ['maagan michael'] },
++                { type: 'small_town', words: ['maayan baruch'] },
++                { type: 'small_town', words: ['magen'] },
++                { type: 'small_town', words: ['manot'] },
++                { type: 'small_town', words: ['margaliot'] },
++                { type: 'small_town', words: ['meona'] },
++                { type: 'small_town', words: ['mishmar haemek'] },
++                { type: 'small_town', words: ['mishmar hasharon'] },
++                { type: 'small_town', words: ['nahalal'] },
++                { type: 'small_town', words: ['natur'] },
++                { type: 'small_town', words: ['netiv hashayara'] },
++                { type: 'small_town', words: ['netua'] },
++                { type: 'small_town', words: ['nir oz'] },
++                { type: 'small_town', words: ['nirim'] },
++                { type: 'small_town', words: ['nov'] },
++                { type: 'small_town', words: ['odem'] },
++                { type: 'small_town', words: ['ramot'] },
++                { type: 'small_town', words: ['regba'] },
++                { type: 'small_town', words: ['reim'] },
++                { type: 'small_town', words: ['revivim'] },
++                { type: 'small_town', words: ['rosh hanikra'] },
++                { type: 'small_town', words: ['safsufa'] },
++                { type: 'small_town', words: ['samar'] },
++                { type: 'small_town', words: ['sde boker'] },
++                { type: 'small_town', words: ['sde nehemia'] },
++                { type: 'small_town', words: ['sdot yam'] },
++                { type: 'small_town', words: ['shaar hagolan'] },
++                { type: 'small_town', words: ['shavei tzion'] },
++                { type: 'small_town', words: ['shomera'] },
++                { type: 'small_town', words: ['shtula'] },
++                { type: 'small_town', words: ['snir'] },
++                { type: 'small_town', words: ['tel yosef'] },
++                { type: 'small_town', words: ['timorim'] },
++                { type: 'small_town', words: ['tzeelim'] },
++                { type: 'small_town', words: ['yad mordechai'] },
++                { type: 'small_town', words: ['yagur'] },
++                { type: 'small_town', words: ['yehiam'] },
++                { type: 'small_town', words: ['yonatan'] },
++                { type: 'small_town', words: ['yotvata'] },
++                { type: 'small_town', words: ['yuval'] },
++                { type: 'small_town', words: ['zarit'] },
++                { type: 'big_city', words: ['acre'] },
++                { type: 'big_city', words: ['afula'] },
++                { type: 'big_city', words: ['arad'] },
++                { type: 'big_city', words: ['ashdod'] },
++                { type: 'big_city', words: ['ashkelon'] },
++                { type: 'big_city', words: ['bat yam'] },
++                { type: 'big_city', words: ['beersheba'] },
++                { type: 'big_city', words: ['bnei brak'] },
++                { type: 'big_city', words: ['dimona'] },
++                { type: 'big_city', words: ['eilat'] },
++                { type: 'big_city', words: ['givatayim'] },
++                { type: 'big_city', words: ['hadera'] },
++                { type: 'big_city', words: ['haifa'] },
++                { type: 'big_city', words: ['herzliya'] },
++                { type: 'big_city', words: ['hod hasharon'] },
++                { type: 'big_city', words: ['holon'] },
++                { type: 'big_city', words: ['jerusalem'] },
++                { type: 'big_city', words: ['karmiel'] },
++                { type: 'big_city', words: ['kfar saba'] },
++                { type: 'big_city', words: ['kiryat ata'] },
++                { type: 'big_city', words: ['kiryat bialik'] },
++                { type: 'big_city', words: ['kiryat gat'] },
++                { type: 'big_city', words: ['kiryat motzkin'] },
++                { type: 'big_city', words: ['kiryat yam'] },
++                { type: 'big_city', words: ['lod'] },
++                { type: 'big_city', words: ['migdal haemek'] },
++                { type: 'big_city', words: ['modiin-maccabim-reut'] },
++                { type: 'big_city', words: ['nahariya'] },
++                { type: 'big_city', words: ['nazareth'] },
++                { type: 'big_city', words: ['nes ziona'] },
++                { type: 'big_city', words: ['netanya'] },
++                { type: 'big_city', words: ['or yehuda'] },
++                { type: 'big_city', words: ['petah tikva'] },
++                { type: 'big_city', words: ['raanana'] },
++                { type: 'big_city', words: ['rahat'] },
++                { type: 'big_city', words: ['ramat gan'] },
++                { type: 'big_city', words: ['ramla'] },
++                { type: 'big_city', words: ['rehovot'] },
++                { type: 'big_city', words: ['rishon lezion'] },
++                { type: 'big_city', words: ['rosh haayin'] },
++                { type: 'big_city', words: ['safed'] },
++                { type: 'big_city', words: ['sakhnin'] },
++                { type: 'big_city', words: ['sderot'] },
++                { type: 'big_city', words: ['tamra'] },
++                { type: 'big_city', words: ['tel aviv-yafo'] },
++                { type: 'big_city', words: ['tiberias'] },
++                { type: 'big_city', words: ['umm al-fahm'] },
++                { type: 'big_city', words: ['yavne'] },
++                { type: 'big_city', words: ['yehud-monosson'] },
++                { type: 'big_city', words: ['yokneam illit'] },
++                { type: 'high_school', words: ['aharon katzir high school holon'] },
++                { type: 'high_school', words: ['alliance high school tel aviv'] },
++                { type: 'high_school', words: ['alon high school ramat hasharon'] },
++                { type: 'high_school', words: ['amal hadera'] },
++                { type: 'high_school', words: ['amal lady davis tel aviv'] },
++                { type: 'high_school', words: ['amal nahariya'] },
++                { type: 'high_school', words: ['amit bar ilan gush dan'] },
++                { type: 'high_school', words: ['amit kfar batya'] },
++                { type: 'high_school', words: ['anthroposophic school harduf'] },
++                { type: 'high_school', words: ['atid lod'] },
++                { type: 'high_school', words: ['atid raziel herzliya'] },
++                { type: 'high_school', words: ['atidim high school hod hasharon'] },
++                { type: 'high_school', words: ['aviv high school raanana'] },
++                { type: 'high_school', words: ['baar tuvia high school'] },
++                { type: 'high_school', words: ['begin high school rosh haayin'] },
++                { type: 'high_school', words: ['beit yerah high school'] },
++                { type: 'high_school', words: ['ben gurion high school petah tikva'] },
++                { type: 'high_school', words: ['ben zvi high school kiryat ono'] },
++                { type: 'high_school', words: ['blich high school'] },
++                { type: 'high_school', words: ['boyar high school'] },
++                { type: 'high_school', words: ['branco weiss beit shemesh'] },
++                { type: 'high_school', words: ['branco weiss rabin mazkeret batya'] },
++                { type: 'high_school', words: ['brenner regional high school'] },
++                { type: 'high_school', words: ['darca begin gedera'] },
++                { type: 'high_school', words: ['darca ramon gedera'] },
++                { type: 'high_school', words: ['de shalit high school'] },
++                { type: 'high_school', words: ['emek hahula high school'] },
++                { type: 'high_school', words: ['emek harod high school'] },
++                { type: 'high_school', words: ['eshel hanasi'] },
++                { type: 'high_school', words: ['galili high school kfar saba'] },
++                { type: 'high_school', words: ['gan nahum high school rishon lezion'] },
++                { type: 'high_school', words: ['golda high school petah tikva'] },
++                { type: 'high_school', words: ['goldwater high school eilat'] },
++                { type: 'high_school', words: ['gymnasia herzliya'] },
++                { type: 'high_school', words: ['hadash high school herzliya'] },
++                { type: 'high_school', words: ['harel high school mevaseret'] },
++                { type: 'high_school', words: ['hartman high school'] },
++                { type: 'high_school', words: ['herzog high school holon'] },
++                { type: 'high_school', words: ['herzog high school kfar saba'] },
++                { type: 'high_school', words: ['hof hasharon high school'] },
++                { type: 'high_school', words: ['hugim high school'] },
++                { type: 'high_school', words: ['ironi alef tel aviv'] },
++                { type: 'high_school', words: ['ironi dalet tel aviv'] },
++                { type: 'high_school', words: ['ironi heh tel aviv'] },
++                { type: 'high_school', words: ['ironi tet tel aviv'] },
++                { type: 'high_school', words: ['kadoorie agricultural school'] },
++                { type: 'high_school', words: ['katzir high school rehovot'] },
++                { type: 'high_school', words: ['kiryat hinuch dror'] },
++                { type: 'high_school', words: ['kiryat sharet holon'] },
++                { type: 'high_school', words: ['kugel high school holon'] },
++                { type: 'high_school', words: ['leo baeck education center'] },
++                { type: 'high_school', words: ['leyada jerusalem'] },
++                { type: 'high_school', words: ['makif omer'] },
++                { type: 'high_school', words: ['makif yehud'] },
++                { type: 'high_school', words: ['mekif alef ashdod'] },
++                { type: 'high_school', words: ['mekif alef beersheba'] },
++                { type: 'high_school', words: ['mekif bet ashdod'] },
++                { type: 'high_school', words: ['mekif bet beersheba'] },
++                { type: 'high_school', words: ['mekif daled ashdod'] },
++                { type: 'high_school', words: ['mekif daled beersheba'] },
++                { type: 'high_school', words: ['mekif gilo jerusalem'] },
++                { type: 'high_school', words: ['mekif gimel ashdod'] },
++                { type: 'high_school', words: ['mekif gimel beersheba'] },
++                { type: 'high_school', words: ['mekif hey ashdod'] },
++                { type: 'high_school', words: ['mikve israel'] },
++                { type: 'high_school', words: ['mor metrowest raanana'] },
++                { type: 'high_school', words: ['mossinzon high school hod hasharon'] },
++                { type: 'high_school', words: ['ohel shem high school'] },
++                { type: 'high_school', words: ['ort arad'] },
++                { type: 'high_school', words: ['ort guttman netanya'] },
++                { type: 'high_school', words: ['ort kiryat bialik'] },
++                { type: 'high_school', words: ['ort psagot karmiel'] },
++                { type: 'high_school', words: ['ort rehovot'] },
++                { type: 'high_school', words: ['ort singalovski'] },
++                { type: 'high_school', words: ['ort yad leibovich'] },
++                { type: 'high_school', words: ['ostrovsky high school raanana'] },
++                { type: 'high_school', words: ['rabin high school eilat'] },
++                { type: 'high_school', words: ['rabin high school kfar saba'] },
++                { type: 'high_school', words: ['rabin high school modiin'] },
++                { type: 'high_school', words: ['rothberg high school ramat hasharon'] },
++                { type: 'high_school', words: ['shaked darca high school'] },
++                { type: 'high_school', words: ['sharet high school netanya'] },
++                { type: 'high_school', words: ['tamar ariel high school'] },
++                { type: 'high_school', words: ['tchernichovsky high school netanya'] },
++                { type: 'high_school', words: ['tefen experimental school'] },
++                { type: 'high_school', words: ['the democratic school hadera'] },
++                { type: 'high_school', words: ['the democratic school kfar saba'] },
++                { type: 'high_school', words: ['the hebrew reali school'] },
++                { type: 'high_school', words: ['tzvia haifa'] },
++                { type: 'high_school', words: ['tzvia jerusalem'] },
++                { type: 'high_school', words: ['ulpanat amit noga'] },
++                { type: 'high_school', words: ['ulpanat tzvia'] },
++                { type: 'high_school', words: ['wizo nahalal'] },
++                { type: 'high_school', words: ['yehud comprehensive high school'] },
++                { type: 'high_school', words: ['yeshivat bnei akiva kfar haroeh'] },
++                { type: 'high_school', words: ['yeshivat bnei akiva netiv meir'] },
++                { type: 'high_school', words: ['yeshivat har etzion'] },
++                { type: 'high_school', words: ['yigal alon high school rishon lezion'] },
++                { type: 'high_school', words: ['yuval high school herzliya'] },
++                { type: 'high_school', words: ['ziv high school jerusalem'] },
++                { type: 'army_unit', words: ['188th armored brigade'] },
++                { type: 'army_unit', words: ['214th artillery brigade'] },
++                { type: 'army_unit', words: ['282nd artillery brigade'] },
++                { type: 'army_unit', words: ['401st armored brigade'] },
++                { type: 'army_unit', words: ['460th armored brigade'] },
++                { type: 'army_unit', words: ['669 unit'] },
++                { type: 'army_unit', words: ['7th armored brigade'] },
++                { type: 'army_unit', words: ['adjutant corps'] },
++                { type: 'army_unit', words: ['air defense array'] },
++                { type: 'army_unit', words: ['air force'] },
++                { type: 'army_unit', words: ['alpine unit'] },
++                { type: 'army_unit', words: ['armored corps'] },
++                { type: 'army_unit', words: ['arrow unit'] },
++                { type: 'army_unit', words: ['artillery corps'] },
++                { type: 'army_unit', words: ['bahad 1'] },
++                { type: 'army_unit', words: ['bahad 10'] },
++                { type: 'army_unit', words: ['bahad 11'] },
++                { type: 'army_unit', words: ['bahad 12'] },
++                { type: 'army_unit', words: ['bahad 13'] },
++                { type: 'army_unit', words: ['bahad 15'] },
++                { type: 'army_unit', words: ['bahad 16'] },
++                { type: 'army_unit', words: ['bahad 20'] },
++                { type: 'army_unit', words: ['bahad 21'] },
++                { type: 'army_unit', words: ['bahad 6'] },
++                { type: 'army_unit', words: ['bahad 7'] },
++                { type: 'army_unit', words: ['bahad 8'] },
++                { type: 'army_unit', words: ['bardelas battalion'] },
++                { type: 'army_unit', words: ['border police'] },
++                { type: 'army_unit', words: ['c4i corps'] },
++                { type: 'army_unit', words: ['cogat'] },
++                { type: 'army_unit', words: ['caracal battalion'] },
++                { type: 'army_unit', words: ['central command'] },
++                { type: 'army_unit', words: ['combat engineering corps'] },
++                { type: 'army_unit', words: ['combat intelligence collection corps'] },
++                { type: 'army_unit', words: ['commando'] },
++                { type: 'army_unit', words: ['david\'s sling unit'] },
++                { type: 'army_unit', words: ['depth corps'] },
++                { type: 'army_unit', words: ['duvdevan unit'] },
++                { type: 'army_unit', words: ['education and youth corps'] },
++                { type: 'army_unit', words: ['egoz unit'] },
++                { type: 'army_unit', words: ['field intelligence school'] },
++                { type: 'army_unit', words: ['givati'] },
++                { type: 'army_unit', words: ['golani'] },
++                { type: 'army_unit', words: ['hatzav unit'] },
++                { type: 'army_unit', words: ['hatzerim airbase squadrons'] },
++                { type: 'army_unit', words: ['havat hashomer'] },
++                { type: 'army_unit', words: ['home front command'] },
++                { type: 'army_unit', words: ['hoshen unit'] },
++                { type: 'army_unit', words: ['idf spokesperson\'s unit'] },
++                { type: 'army_unit', words: ['iron dome battalion'] },
++                { type: 'army_unit', words: ['kedem battalion'] },
++                { type: 'army_unit', words: ['kfir'] },
++                { type: 'army_unit', words: ['lahak 7'] },
++                { type: 'army_unit', words: ['liaison unit'] },
++                { type: 'army_unit', words: ['lions of jordan battalion'] },
++                { type: 'army_unit', words: ['logistics corps'] },
++                { type: 'army_unit', words: ['lotar unit'] },
++                { type: 'army_unit', words: ['lotem unit'] },
++                { type: 'army_unit', words: ['maglan unit'] },
++                { type: 'army_unit', words: ['mamram'] },
++                { type: 'army_unit', words: ['matzpen unit'] },
++                { type: 'army_unit', words: ['medical corps'] },
++                { type: 'army_unit', words: ['meitav unit'] },
++                { type: 'army_unit', words: ['metzach'] },
++                { type: 'army_unit', words: ['michve alon'] },
++                { type: 'army_unit', words: ['military intelligence directorate'] },
++                { type: 'army_unit', words: ['military police corps'] },
++                { type: 'army_unit', words: ['military rabbinate'] },
++                { type: 'army_unit', words: ['missile boat flotilla'] },
++                { type: 'army_unit', words: ['nahal'] },
++                { type: 'army_unit', words: ['navy'] },
++                { type: 'army_unit', words: ['nevatim airbase squadrons'] },
++                { type: 'army_unit', words: ['northern command'] },
++                { type: 'army_unit', words: ['ofek unit'] },
++                { type: 'army_unit', words: ['oketz unit'] },
++                { type: 'army_unit', words: ['paratroopers'] },
++                { type: 'army_unit', words: ['patriot unit'] },
++                { type: 'army_unit', words: ['ram battalion'] },
++                { type: 'army_unit', words: ['ramat david airbase squadrons'] },
++                { type: 'army_unit', words: ['ramon airbase squadrons'] },
++                { type: 'army_unit', words: ['refaim unit'] },
++                { type: 'army_unit', words: ['sayeret matkal'] },
++                { type: 'army_unit', words: ['sea corps training base'] },
++                { type: 'army_unit', words: ['search and rescue brigade'] },
++                { type: 'army_unit', words: ['shachar battalion'] },
++                { type: 'army_unit', words: ['shaldag'] },
++                { type: 'army_unit', words: ['shaldag unit'] },
++                { type: 'army_unit', words: ['shayetet 13'] },
++                { type: 'army_unit', words: ['snapir unit'] },
++                { type: 'army_unit', words: ['southern command'] },
++                { type: 'army_unit', words: ['submarine flotilla'] },
++                { type: 'army_unit', words: ['ta\'oz battalion'] },
++                { type: 'army_unit', words: ['tzayad unit'] },
++                { type: 'army_unit', words: ['unit 3060'] },
++                { type: 'army_unit', words: ['unit 504'] },
++                { type: 'army_unit', words: ['unit 81'] },
++                { type: 'army_unit', words: ['unit 8200'] },
++                { type: 'army_unit', words: ['unit 9900'] },
++                { type: 'army_unit', words: ['yaltam'] },
++                { type: 'army_unit', words: ['yahalom unit'] },
++                { type: 'army_base', words: ['amiad base'] },
++                { type: 'army_base', words: ['anatot base'] },
++                { type: 'army_base', words: ['ariel base'] },
++                { type: 'army_base', words: ['ashdod naval base'] },
++                { type: 'army_base', words: ['atlit naval base'] },
++                { type: 'army_base', words: ['bahad 1'] },
++                { type: 'army_base', words: ['bahad 10'] },
++                { type: 'army_base', words: ['bahad 11'] },
++                { type: 'army_base', words: ['bahad 13'] },
++                { type: 'army_base', words: ['bahad 15'] },
++                { type: 'army_base', words: ['bahad 16'] },
++                { type: 'army_base', words: ['bahad 20'] },
++                { type: 'army_base', words: ['bahad 21'] },
++                { type: 'army_base', words: ['bahad 6'] },
++                { type: 'army_base', words: ['bahad 7'] },
++                { type: 'army_base', words: ['be\'er sheva base'] },
++                { type: 'army_base', words: ['beit el base'] },
++                { type: 'army_base', words: ['binyamin brigade base'] },
++                { type: 'army_base', words: ['biranit base'] },
++                { type: 'army_base', words: ['bislah'] },
++                { type: 'army_base', words: ['bislash'] },
++                { type: 'army_base', words: ['camp ariel sharon'] },
++                { type: 'army_base', words: ['camp bar lev'] },
++                { type: 'army_base', words: ['camp dayan'] },
++                { type: 'army_base', words: ['camp dotan'] },
++                { type: 'army_base', words: ['camp elyakim'] },
++                { type: 'army_base', words: ['camp filon'] },
++                { type: 'army_base', words: ['camp gidonim'] },
++                { type: 'army_base', words: ['camp gur'] },
++                { type: 'army_base', words: ['camp hashalom'] },
++                { type: 'army_base', words: ['camp lamed heh'] },
++                { type: 'army_base', words: ['camp magen sayarim'] },
++                { type: 'army_base', words: ['camp matan'] },
++                { type: 'army_base', words: ['camp moshe dayan'] },
++                { type: 'army_base', words: ['camp nachshonim'] },
++                { type: 'army_base', words: ['camp nathan'] },
++                { type: 'army_base', words: ['camp ofrit'] },
++                { type: 'army_base', words: ['camp rabin'] },
++                { type: 'army_base', words: ['camp shimshon'] },
++                { type: 'army_base', words: ['camp shlomo'] },
++                { type: 'army_base', words: ['camp shmuel'] },
++                { type: 'army_base', words: ['camp shura'] },
++                { type: 'army_base', words: ['camp telem'] },
++                { type: 'army_base', words: ['camp yadin'] },
++                { type: 'army_base', words: ['camp yoav'] },
++                { type: 'army_base', words: ['eilat naval base'] },
++                { type: 'army_base', words: ['elyakim base'] },
++                { type: 'army_base', words: ['ephraim brigade base'] },
++                { type: 'army_base', words: ['etzion base'] },
++                { type: 'army_base', words: ['gibor base'] },
++                { type: 'army_base', words: ['glilot base'] },
++                { type: 'army_base', words: ['haifa naval base'] },
++                { type: 'army_base', words: ['hatzerim airbase'] },
++                { type: 'army_base', words: ['hatzerim technical school'] },
++                { type: 'army_base', words: ['hatzor airbase'] },
++                { type: 'army_base', words: ['havat hashomer'] },
++                { type: 'army_base', words: ['holot base'] },
++                { type: 'army_base', words: ['jordan valley brigade base'] },
++                { type: 'army_base', words: ['julis base'] },
++                { type: 'army_base', words: ['kanaf base'] },
++                { type: 'army_base', words: ['kastina base'] },
++                { type: 'army_base', words: ['kela base'] },
++                { type: 'army_base', words: ['kerem shalom base'] },
++                { type: 'army_base', words: ['keren base'] },
++                { type: 'army_base', words: ['kirya base'] },
++                { type: 'army_base', words: ['kissufim base'] },
++                { type: 'army_base', words: ['lachish base'] },
++                { type: 'army_base', words: ['michve alon'] },
++                { type: 'army_base', words: ['mishmar hanegev base'] },
++                { type: 'army_base', words: ['mitkan adam'] },
++                { type: 'army_base', words: ['nabi musa base'] },
++                { type: 'army_base', words: ['nafah base'] },
++                { type: 'army_base', words: ['naftali base'] },
++                { type: 'army_base', words: ['nahal oz base'] },
++                { type: 'army_base', words: ['nevatim airbase'] },
++                { type: 'army_base', words: ['ofer base'] },
++                { type: 'army_base', words: ['ovda airbase'] },
++                { type: 'army_base', words: ['ovda training base'] },
++                { type: 'army_base', words: ['palmachim airbase'] },
++                { type: 'army_base', words: ['peleh base'] },
++                { type: 'army_base', words: ['ramat david airbase'] },
++                { type: 'army_base', words: ['ramon airbase'] },
++                { type: 'army_base', words: ['ravid base'] },
++                { type: 'army_base', words: ['reim base'] },
++                { type: 'army_base', words: ['sayarim base'] },
++                { type: 'army_base', words: ['sayfan base'] },
++                { type: 'army_base', words: ['sde dov base'] },
++                { type: 'army_base', words: ['shizafon base'] },
++                { type: 'army_base', words: ['shomera base'] },
++                { type: 'army_base', words: ['shomron brigade base'] },
++                { type: 'army_base', words: ['tel hashomer base'] },
++                { type: 'army_base', words: ['tel nof airbase'] },
++                { type: 'army_base', words: ['training base city'] },
++                { type: 'army_base', words: ['tze\'elim base'] },
++                { type: 'army_base', words: ['tzrifin base'] },
++                { type: 'army_base', words: ['urim base'] },
++                { type: 'army_base', words: ['wingate base'] },
++                { type: 'army_base', words: ['yehuda brigade base'] },
++                { type: 'army_base', words: ['yiftach base'] },
++                { type: 'army_base', words: ['zarit base'] },
++                { type: 'uni', words: ['academic center for law and science'] },
++                { type: 'uni', words: ['academic college of tel aviv-yaffo'] },
++                { type: 'uni', words: ['achva academic college'] },
++                { type: 'uni', words: ['afeka academic college of engineering'] },
++                { type: 'uni', words: ['al-qasemi academic college'] },
++                { type: 'uni', words: ['amal colleges'] },
++                { type: 'uni', words: ['arab academic college of education haifa'] },
++                { type: 'uni', words: ['ariel university'] },
++                { type: 'uni', words: ['ashkelon academic college'] },
++                { type: 'uni', words: ['atid colleges'] },
++                { type: 'uni', words: ['avni institute'] },
++                { type: 'uni', words: ['azrieli college of engineering'] },
++                { type: 'uni', words: ['bpm college'] },
++                { type: 'uni', words: ['bar-ilan university'] },
++                { type: 'uni', words: ['beit berl college'] },
++                { type: 'uni', words: ['beit zvi school of performing arts'] },
++                { type: 'uni', words: ['ben-gurion university of the negev'] },
++                { type: 'uni', words: ['bezalel academy of arts and design'] },
++                { type: 'uni', words: ['bnei brak academic college'] },
++                { type: 'uni', words: ['broshim campus'] },
++                { type: 'uni', words: ['camera obscura'] },
++                { type: 'uni', words: ['carmel academic center'] },
++                { type: 'uni', words: ['david yellin academic college of education'] },
++                { type: 'uni', words: ['efrata college'] },
++                { type: 'uni', words: ['emuna college'] },
++                { type: 'uni', words: ['gordon academic college'] },
++                { type: 'uni', words: ['hit external studies'] },
++                { type: 'uni', words: ['hit holon institute of technology'] },
++                { type: 'uni', words: ['hackeru'] },
++                { type: 'uni', words: ['hadassah academic college'] },
++                { type: 'uni', words: ['hasifa school of communication'] },
++                { type: 'uni', words: ['hemdat academic college'] },
++                { type: 'uni', words: ['herzog college'] },
++                { type: 'uni', words: ['int college'] },
++                { type: 'uni', words: ['israel academic college in ramat gan'] },
++                { type: 'uni', words: ['jerusalem college of technology'] },
++                { type: 'uni', words: ['john bryce college'] },
++                { type: 'uni', words: ['kaye academic college of education'] },
++                { type: 'uni', words: ['kibbutzim college'] },
++                { type: 'uni', words: ['kinneret academic college'] },
++                { type: 'uni', words: ['lander institute'] },
++                { type: 'uni', words: ['lev academic center'] },
++                { type: 'uni', words: ['levinsky-wingate academic college'] },
++                { type: 'uni', words: ['lifshitz college'] },
++                { type: 'uni', words: ['lustig institute'] },
++                { type: 'uni', words: ['maaleh school of television film and the arts'] },
++                { type: 'uni', words: ['machon lev'] },
++                { type: 'uni', words: ['machon tal'] },
++                { type: 'uni', words: ['mahanaim college'] },
++                { type: 'uni', words: ['mayanei hayeshua academic college'] },
++                { type: 'uni', words: ['michlala jerusalem college'] },
++                { type: 'uni', words: ['minshar school of art'] },
++                { type: 'uni', words: ['mivchar college'] },
++                { type: 'uni', words: ['musrara school of art'] },
++                { type: 'uni', words: ['muzik school'] },
++                { type: 'uni', words: ['naya college'] },
++                { type: 'uni', words: ['nazareth academic institute'] },
++                { type: 'uni', words: ['netanya academic college'] },
++                { type: 'uni', words: ['nissan nativ acting studio'] },
++                { type: 'uni', words: ['ort colleges'] },
++                { type: 'uni', words: ['ono academic college'] },
++                { type: 'uni', words: ['open university external studies'] },
++                { type: 'uni', words: ['open university of israel'] },
++                { type: 'uni', words: ['oranim academic college'] },
++                { type: 'uni', words: ['orot israel college'] },
++                { type: 'uni', words: ['peres academic center'] },
++                { type: 'uni', words: ['ramat gan college'] },
++                { type: 'uni', words: ['reichman university'] },
++                { type: 'uni', words: ['reidman college'] },
++                { type: 'uni', words: ['rimon school of music'] },
++                { type: 'uni', words: ['ruppin academic center'] },
++                { type: 'uni', words: ['sce shamoon college of engineering'] },
++                { type: 'uni', words: ['sela college'] },
++                { type: 'uni', words: ['sakhnin college'] },
++                { type: 'uni', words: ['sam spiegel film and television school'] },
++                { type: 'uni', words: ['sapir academic college'] },
++                { type: 'uni', words: ['sapir school of audio and visual arts'] },
++                { type: 'uni', words: ['schechter institute'] },
++                { type: 'uni', words: ['shaanan college'] },
++                { type: 'uni', words: ['shalem college'] },
++                { type: 'uni', words: ['shenkar college'] },
++                { type: 'uni', words: ['studio 6b'] },
++                { type: 'uni', words: ['tal campus jct'] },
++                { type: 'uni', words: ['talpiot academic college'] },
++                { type: 'uni', words: ['technion continuing education'] },
++                { type: 'uni', words: ['technion – israel institute of technology'] },
++                { type: 'uni', words: ['tel aviv university'] },
++                { type: 'uni', words: ['tel-hai academic college'] },
++                { type: 'uni', words: ['the academic college of emek yezreel external studies'] },
++                { type: 'uni', words: ['the college of management academic studies'] },
++                { type: 'uni', words: ['the hebrew university of jerusalem'] },
++                { type: 'uni', words: ['the max stern yezreel valley college'] },
++                { type: 'uni', words: ['thelma yellin high school of the arts'] },
++                { type: 'uni', words: ['university of haifa'] },
++                { type: 'uni', words: ['wizo haifa academy of design'] },
++                { type: 'uni', words: ['weizmann institute of science'] },
++                { type: 'uni', words: ['western galilee college'] },
++                { type: 'uni', words: ['wingate institute'] },
++                { type: 'uni', words: ['yoram loewenstein studio'] },
++                { type: 'uni', words: ['zefat academic college'] },
++                { type: 'degree', words: ['accounting'] },
++                { type: 'degree', words: ['animation'] },
++                { type: 'degree', words: ['anthropology'] },
++                { type: 'degree', words: ['arabic language and literature'] },
++                { type: 'degree', words: ['archaeology'] },
++                { type: 'degree', words: ['architecture'] },
++                { type: 'degree', words: ['art history'] },
++                { type: 'degree', words: ['behavioral sciences'] },
++                { type: 'degree', words: ['bible studies'] },
++                { type: 'degree', words: ['biology'] },
++                { type: 'degree', words: ['biomedical engineering'] },
++                { type: 'degree', words: ['biotechnology'] },
++                { type: 'degree', words: ['business administration'] },
++                { type: 'degree', words: ['chemical engineering'] },
++                { type: 'degree', words: ['chemistry'] },
++                { type: 'degree', words: ['civil engineering'] },
++                { type: 'degree', words: ['clinical laboratory sciences'] },
++                { type: 'degree', words: ['cognitive science'] },
++                { type: 'degree', words: ['communication'] },
++                { type: 'degree', words: ['communication disorders'] },
++                { type: 'degree', words: ['computer science'] },
++                { type: 'degree', words: ['criminology'] },
++                { type: 'degree', words: ['cyber security'] },
++                { type: 'degree', words: ['data science'] },
++                { type: 'degree', words: ['dentistry'] },
++                { type: 'degree', words: ['digital media'] },
++                { type: 'degree', words: ['early childhood education'] },
++                { type: 'degree', words: ['east asian studies'] },
++                { type: 'degree', words: ['economics'] },
++                { type: 'degree', words: ['education'] },
++                { type: 'degree', words: ['electrical engineering'] },
++                { type: 'degree', words: ['emergency medicine'] },
++                { type: 'degree', words: ['english literature'] },
++                { type: 'degree', words: ['entrepreneurship'] },
++                { type: 'degree', words: ['environmental science'] },
++                { type: 'degree', words: ['fashion design'] },
++                { type: 'degree', words: ['film studies'] },
++                { type: 'degree', words: ['finance'] },
++                { type: 'degree', words: ['fine arts'] },
++                { type: 'degree', words: ['game design'] },
++                { type: 'degree', words: ['gender studies'] },
++                { type: 'degree', words: ['geography'] },
++                { type: 'degree', words: ['government'] },
++                { type: 'degree', words: ['graphic design'] },
++                { type: 'degree', words: ['hebrew language'] },
++                { type: 'degree', words: ['hebrew literature'] },
++                { type: 'degree', words: ['history'] },
++                { type: 'degree', words: ['human resources'] },
++                { type: 'degree', words: ['industrial design'] },
++                { type: 'degree', words: ['industrial engineering and management'] },
++                { type: 'degree', words: ['information systems'] },
++                { type: 'degree', words: ['interior design'] },
++                { type: 'degree', words: ['international relations'] },
++                { type: 'degree', words: ['jewish history'] },
++                { type: 'degree', words: ['jewish studies'] },
++                { type: 'degree', words: ['journalism'] },
++                { type: 'degree', words: ['landscape architecture'] },
++                { type: 'degree', words: ['law'] },
++                { type: 'degree', words: ['linguistics'] },
++                { type: 'degree', words: ['logistics'] },
++                { type: 'degree', words: ['management'] },
++                { type: 'degree', words: ['marine sciences'] },
++                { type: 'degree', words: ['marketing'] },
++                { type: 'degree', words: ['materials engineering'] },
++                { type: 'degree', words: ['mathematics'] },
++                { type: 'degree', words: ['mechanical engineering'] },
++                { type: 'degree', words: ['medical imaging'] },
++                { type: 'degree', words: ['medicine'] },
++                { type: 'degree', words: ['middle eastern studies'] },
++                { type: 'degree', words: ['music'] },
++                { type: 'degree', words: ['neuroscience'] },
++                { type: 'degree', words: ['nursing'] },
++                { type: 'degree', words: ['nutrition sciences'] },
++                { type: 'degree', words: ['occupational therapy'] },
++                { type: 'degree', words: ['pharmacy'] },
++                { type: 'degree', words: ['philosophy'] },
++                { type: 'degree', words: ['physical education'] },
++                { type: 'degree', words: ['physics'] },
++                { type: 'degree', words: ['physiotherapy'] },
++                { type: 'degree', words: ['political science'] },
++                { type: 'degree', words: ['product management'] },
++                { type: 'degree', words: ['psychology'] },
++                { type: 'degree', words: ['public health'] },
++                { type: 'degree', words: ['public policy'] },
++                { type: 'degree', words: ['real estate'] },
++                { type: 'degree', words: ['social work'] },
++                { type: 'degree', words: ['sociology'] },
++                { type: 'degree', words: ['software engineering'] },
++                { type: 'degree', words: ['special education'] },
++                { type: 'degree', words: ['sports science'] },
++                { type: 'degree', words: ['statistics'] },
++                { type: 'degree', words: ['sustainability'] },
++                { type: 'degree', words: ['talmud studies'] },
++                { type: 'degree', words: ['teaching certificate'] },
++                { type: 'degree', words: ['television studies'] },
++                { type: 'degree', words: ['theater studies'] },
++                { type: 'degree', words: ['tourism and hospitality'] },
++                { type: 'degree', words: ['ux/ui design'] },
++                { type: 'degree', words: ['urban planning'] },
++                { type: 'degree', words: ['visual communication'] },
++                { type: 'mechina', words: ['ariel'] },
++                { type: 'mechina', words: ['bnei akiva'] },
++                { type: 'mechina', words: ['bnei david eli'] },
++                { type: 'mechina', words: ['ein prat mechina'] },
++                { type: 'mechina', words: ['ezra'] },
++                { type: 'mechina', words: ['garin nahal'] },
++                { type: 'mechina', words: ['garin tzabar'] },
++                { type: 'mechina', words: ['garinei oded'] },
++                { type: 'mechina', words: ['hanoar haoved vehalomed'] },
++                { type: 'mechina', words: ['hashomer hatzair'] },
++                { type: 'mechina', words: ['hatzofim'] },
++                { type: 'mechina', words: ['hanoar haleumi'] },
++                { type: 'mechina', words: ['maccabi tzair'] },
++                { type: 'mechina', words: ['machanot haolim'] },
++                { type: 'mechina', words: ['mechinat adamit'] },
++                { type: 'mechina', words: ['mechinat amei chai'] },
++                { type: 'mechina', words: ['mechinat arava'] },
++                { type: 'mechina', words: ['mechinat bina'] },
++                { type: 'mechina', words: ['mechinat derech eretz ashalim'] },
++                { type: 'mechina', words: ['mechinat derech eretz kmehin'] },
++                { type: 'mechina', words: ['mechinat gal'] },
++                { type: 'mechina', words: ['mechinat hanaton'] },
++                { type: 'mechina', words: ['mechinat haruv'] },
++                { type: 'mechina', words: ['mechinat kol ami'] },
++                { type: 'mechina', words: ['mechinat lachish'] },
++                { type: 'mechina', words: ['mechinat nachshon'] },
++                { type: 'mechina', words: ['mechinat nirim'] },
++                { type: 'mechina', words: ['mechinat rabin'] },
++                { type: 'mechina', words: ['mechinat tavor'] },
++                { type: 'mechina', words: ['noam'] },
++                { type: 'mechina', words: ['noar haihud hahaklai'] },
++                { type: 'mechina', words: ['noar telem'] }];
+             const genericRoles = ['softwareengineer', 'fullstackdeveloper', 'frontenddeveloper', 'backenddeveloper', 'mobiledeveloper', 'iosdeveloper', 'androiddeveloper', 'webdeveloper', 'gamedeveloper', 'devopsengineer', 'sitelieliabilityengineer', 'sre', 'cloudengineer', 'cloudarchitect', 'solutionsarchitect', 'dataengineer', 'dataanalyst', 'datascientist', 'machinelearningengineer', 'aiengineer', 'airesearcher', 'promptengineer', 'cybersecurityanalyst', 'cybersecurityengineer', 'informationsecuritymanager', 'penetrationtester', 'socanalyst', 'qaengineer', 'automationengineer', 'testengineer', 'productmanager', 'technicalproductmanager', 'projectmanager', 'programmanager', 'scrummaster', 'businessanalyst', 'systemsanalyst', 'uxdesigner', 'uidesigner', 'uxresearcher', 'productdesigner', 'servicedesigner', 'interactiondesigner', 'technicalwriter', 'solutionsconsultant', 'customersuccessmanager', 'technicalsupportengineer', 'salesengineer', 'presalesengineer', 'itmanager', 'itadministrator', 'databaseadministrator', 'dba', 'networkengineer', 'embeddedsystemsengineer', 'hardwareengineer', 'electronicsengineer', 'roboticsengineer', 'computervisionengineer', 'blockchaindeveloper', 'arvrdeveloper', 'marketingmanager', 'digitalmarketingmanager', 'brandmanager', 'marketingdirector', 'chiefmarketingofficer', 'cmo', 'performancemarketingmanager', 'growthmarketingmanager', 'productmarketingmanager', 'contentmarketingmanager', 'socialmediamanager', 'communitymanager', 'influencermarketingmanager', 'emailmarketingspecialist', 'seospecialist', 'semspecialist', 'ppcspecialist', 'marketingspecialist', 'marketingcoordinator', 'marketinganalyst', 'marketresearchanalyst', 'brandstrategist', 'creativestrategist', 'communicationsmanager', 'publicrelationsmanager', 'prmanager', 'prspecialist', 'mediaplanner', 'mediabuyer', 'campaignmanager', 'advertisingmanager', 'copywriter', 'contentcreator', 'contentmanager', 'contentstrategist', 'creativedirector', 'artdirector', 'graphicdesigner', 'uxwriter', 'crmmanager', 'partnershipmanager', 'businessdevelopmentmanager', 'eventmanager', 'eventproducer', 'ecommercemanager', 'affiliatemarketingmanager', 'influencerrelationsmanager', 'marketingconsultant', 'freelancer', 'welfarenco', 'mashakittash', 'combatsoldier', 'lochem', 'lochemet', 'educationnco', 'mashakitchinuch', 'operationsroomcontroller', 'sambatzit', 'commander', 'mefaked', 'mefakedet', 'intelligenceanalyst', 'modiin', 'infantryinstructor', 'madrichatchir', 'combatinstructor', 'madrichatkrav', 'traininginstructor', 'madricha', 'operationsnco', 'mashakmivtzaim', 'humanresourcesnco', 'mashakitkoachadam', 'הייטק', 'hightech', 'hitech', 'high-tech', 'hi-tech', 'tech', 'טק', 'student', 'סטודנט', 'סטודנטית', 'manager', 'מנהל', 'מנהלת', 'friend', 'friends', 'חבר', 'חברה', 'חברים', 'family', 'משפחה', 'colleague', 'קולגה', 'partner', 'בן זוג', 'בת זוג', 'ex', 'אקס', 'אקסית'];
+             
+-            const p1Tags = p1.tags ? (Array.isArray(p1.tags) ? p1.tags : p1.tags.split(',').map(t=>t.trim().toLowerCase()).filter(Boolean)) : [];
++            const p1Tags = p1.tags ? (Array.isArray(p1.tags) ? p1.tags.map(t=>t.trim().toLowerCase()) : p1.tags.split(',').map(t=>t.trim().toLowerCase()).filter(Boolean)) : [];
+             const p1TagsCleaned = p1Tags.map(t => t.replace(/.*?:/, '').replace(/^#/, ''));
+             const p1Text = ' ' + [(p1.city||'').toLowerCase(), (p1.originCity||'').toLowerCase(), (p1.role||'').toLowerCase(), (p1.description||'').toLowerCase(), ...p1TagsCleaned].join(' ').replace(/[,.!]/g, ' ') + ' ';
+             const p1Years = p1Tags.map(t => t.replace(/^#/, '')).filter(t => /^(19|20)\d{2}$/.test(t));
+@@ -4411,13 +5379,13 @@
+             
+             const p2Tags = p2.tags ? (Array.isArray(p2.tags) ? p2.tags : p2.tags.split(',').map(t=>t.trim().toLowerCase()).filter(Boolean)) : [];
+             const p2TagsCleaned = p2Tags.map(t => t.replace(/.*?:/, '').replace(/^#/, ''));
+-            const p2Text = ' ' + [(p2.city||'').toLowerCase(), (p2.role||'').toLowerCase(), ...p2TagsCleaned].join(' ').replace(/[,.!]/g, ' ') + ' ';
++            const p2Text = ' ' + [(p2.city||'').toLowerCase(), (p2.originCity||'').toLowerCase(), (p2.role||'').toLowerCase(), (p2.description||'').toLowerCase(), ...p2TagsCleaned].join(' ').replace(/[,.!]/g, ' ') + ' ';
+             const p2Years = p2Tags.map(t => t.replace(/^#/, '')).filter(t => /^(19|20)\d{2}$/.test(t));
+             const p2Age = p2.age ? parseInt(p2.age) : null;
+             const p2CityLower = p2.city ? p2.city.toLowerCase() : '';
+             const p2RoleLower = p2.role ? p2.role.toLowerCase() : '';
+             
+-            let shared = { uni: 0, degree: 0, company: 0, city: 0, army_unit: 0, army_base: 0, high_school: 0, mechina: 0 };
++            let shared = { uni: 0, degree: 0, company: 0, big_city: 0, small_town: 0, army_unit: 0, army_base: 0, high_school: 0, mechina: 0 };
+             let genericSchoolMatch = false;
+             let sharedStrings = [];
+             
+@@ -4440,7 +5408,8 @@
+             const isSameCity = (p1CityLower && p2CityLower && (p2CityLower.includes(p1CityLower) || p1CityLower.includes(p2CityLower)));
+             
+             if (shared.company > 0) score += 35;
+-            if (shared.city > 0) score += 35;
++            if (shared.small_town > 0) score += 35;
++            if (shared.big_city > 0) score += 5;
+             if (shared.high_school > 0) {
+                 if (genericSchoolMatch && !isSameCity) score += 5;
+                 else if (isSimilarAge) score += 45;
+@@ -4458,14 +5427,45 @@
+             else if (shared.uni > 0) score += 15;
+             if (shared.degree > 0 && shared.uni === 0) score += 15;
+             
+-            if (p1CityLower && p2CityLower) {
+-                if ((p2CityLower.includes(p1CityLower) || p1CityLower.includes(p2CityLower)) && !ignoreCities.includes(p1CityLower) && !ignoreCities.includes(p2CityLower)) {
+-                    score += 5; // Reduced from 15 to prevent generic city matches
+-                }
++            
++            const p1Cities = [p1CityLower, p1.originCity ? p1.originCity.toLowerCase() : ''].filter(Boolean);
++            const p2Cities = [p2CityLower, p2.originCity ? p2.originCity.toLowerCase() : ''];
++            if (p2.description) {
++                const m = p2.description.match(/\[Originally from (.*?)\]/);
++                if (m) p2Cities.push(m[1].toLowerCase());
+             }
++            const p2CitiesClean = p2Cities.filter(Boolean);
++            
++            p1Cities.forEach(c1 => {
++                p2CitiesClean.forEach(c2 => {
++                    let matchedGroup = null;
++                    // Check if c1 and c2 share a synonym group
++                    const groupMatch = synonymGroups.find(g => (g.type === 'big_city' || g.type === 'small_town') && g.words.some(w => c1.includes(w)) && g.words.some(w => c2.includes(w)));
++                    
++                    if (groupMatch || c1.includes(c2) || c2.includes(c1)) {
++                        if (!ignoreCities.includes(c1) && !ignoreCities.includes(c2)) {
++                            const isBigCity = groupMatch ? groupMatch.type === 'big_city' : synonymGroups.filter(g => g.type === 'big_city').some(g => g.words.some(w => c1.includes(w) || c2.includes(w)));
++                            if (!isBigCity) {
++                                score += 35; // Small place gets high score
++                                shared.small_town++;
++                                sharedStrings.push(groupMatch ? groupMatch.words[0] : c1);
++                            } else {
++                                score += 5; // Big city gets low score
++                                sharedStrings.push(groupMatch ? groupMatch.words[0] : c1);
++                            }
++                        }
++                    }
++                });
++            });
+             if (p1RoleLower && p2RoleLower) {
+-                if (p2RoleLower === p1RoleLower) score += 5;
+-                else if (p2RoleLower.includes(p1RoleLower) || p1RoleLower.includes(p2RoleLower)) score += 2;
++                if (p2RoleLower === p1RoleLower) {
++                    score += 15;
++                    sharedStrings.push(p1RoleLower);
++                }
++                else if (p2RoleLower.includes(p1RoleLower) || p1RoleLower.includes(p2RoleLower)) {
++                    score += 15;
++                    sharedStrings.push(p1RoleLower);
++                }
+                 else {
+                     const fWords = p1RoleLower.split(/\s+/).filter(w => w.length > 2);
+                     const pWords = p2RoleLower.split(/\s+/).filter(w => w.length > 2);
+@@ -4477,7 +5477,7 @@
+             p2Tags.forEach(t => {
+                 const cleanTag = t.replace(/^#/, '');
+                 const match = p1Tags.find(p1t => {
+-                    const cleanP1 = p1t.replace(/^#/, '');
++                    const cleanP1 = p1t.replace(/.*?:/, '').replace(/^#/, '');
+                     return cleanTag === cleanP1 || 
+                            (cleanTag.length > 3 && cleanP1.includes(cleanTag)) || 
+                            (cleanP1.length > 3 && cleanTag.includes(cleanP1));
+@@ -4502,6 +5502,8 @@
+             return { score, sharedConcepts: finalShared };
+         }
+ 
++        let globalPendingRecs = [];
++        
+         function generateRecommendations() {
+             let tags = document.getElementById('f-tags').value.split(',').map(t => t.trim()).filter(Boolean);
+             const desc = document.getElementById('f-desc').value.trim();
+@@ -4535,62 +5537,98 @@
+             });
+             
+             scores.sort((a, b) => b.score - a.score);
+-            let pendingRecs = scores.map(s => ({person: s.person, shared: s.shared}));
++            globalPendingRecs = scores.map(s => ({person: s.person, shared: s.shared}));
+             
+             const recList = document.getElementById('recommendation-list');
+             recList.innerHTML = '';
+             
+-            if (pendingRecs.length === 0) {
++            if (globalPendingRecs.length === 0) {
+                 return false;
+             }
+             
+-            const recsToRender = pendingRecs.slice(0, 5);
+-            recsToRender.forEach(rec => {
+-                const p = rec.person;
+-                const sharedConcepts = rec.shared || [];
+-                const div = document.createElement('div');
+-                div.className = 'suggested-card';
+-                
+-                let sharedHTML = '';
+-                if (sharedConcepts.length > 0) {
+-                    const pillsHTML = sharedConcepts.map(c => {
+-                        const match = c.match(/\(([^)]+)\)/);
+-                        const shortLabel = match ? match[1] : c;
+-                        return `<span class="suggested-shared-pill">${shortLabel}</span>`;
+-                    }).join('');
+-                    sharedHTML = `
+-                        <div class="suggested-shared-wrap">
+-                            <span class="suggested-shared-label">SHARED PATHS</span>
+-                            <div style="display: flex; gap: 8px; flex-wrap: wrap;">${pillsHTML}</div>
+-                        </div>
+-                    `;
+-                }
+-
+-                const metaStr = `${p.role || 'Unknown'} <span>•</span> ${p.city || 'Unknown'}`;
+-                // Bulletproof anti-orphan: replace the last space with a non-breaking space
+-                const metaNoOrphans = metaStr.replace(/ ([^ ]*)$/, '&nbsp;$1');
++            // Render up to 5 initial cards
++            for (let i = 0; i < 5 && globalPendingRecs.length > 0; i++) {
++                renderSingleRecommendation(globalPendingRecs.shift(), recList);
++            }
++            return true;
++        }
+ 
+-                div.innerHTML = `
+-                    <div class="suggested-card-content">
+-                        <div class="suggested-name">${p.name.replace(/ ([^ ]*)$/, '&nbsp;$1')}</div>
+-                        <div class="suggested-meta">${metaNoOrphans}</div>
+-                        ${sharedHTML}
+-                    </div>
+-                    <div class="suggested-card-action">
+-                        <button type="button" class="btn-connect-sleek" data-id="${p.id}">[ CONNECT ]</button>
++        function renderSingleRecommendation(rec, container) {
++            const p = rec.person;
++            const sharedConcepts = rec.shared || [];
++            const div = document.createElement('div');
++            div.className = 'suggested-card';
++            
++            let sharedHTML = '';
++            if (sharedConcepts.length > 0) {
++                const uniqueConcepts = [];
++                sharedConcepts.forEach(c => {
++                    const match = c.match(/\(([^)]+)\)/);
++                    let label = match ? match[1] : c;
++                    label = label.charAt(0).toUpperCase() + label.slice(1);
++                    
++                    // deduplicate
++                    const exists = uniqueConcepts.some(existing => {
++                        const l1 = existing.toLowerCase();
++                        const l2 = label.toLowerCase();
++                        return l1 === l2 || (l1.length > 5 && (l1.includes(l2) || l2.includes(l1)));
++                    });
++                    if (!exists) uniqueConcepts.push(label);
++                });
++                
++                const pillsHTML = uniqueConcepts.map(label => {
++                    return `<span class="suggested-shared-pill">${label}</span>`;
++                }).join('');
++                sharedHTML = `
++                    <div class="suggested-shared-wrap">
++                        <span class="suggested-shared-label">SHARED PATHS</span>
++                        <div style="display: flex; gap: 8px; flex-wrap: wrap;">${pillsHTML}</div>
+                     </div>
+                 `;
+-                recList.appendChild(div);
+-                
+-                div.querySelector('.btn-connect-sleek').addEventListener('click', (e) => {
+-                    const id = parseInt(e.target.dataset.id);
+-                    addConnectionEntry(id, 'acquaintance', 3);
+-                    e.target.textContent = '[ ADDED ]';
+-                    e.target.classList.add('added');
+-                    e.target.disabled = true;
+-                });
++            }
++
++            const metaStr = `${p.role || 'Unknown'} <span>•</span> ${p.city || 'Unknown'}`;
++            // Bulletproof anti-orphan: replace the last space with a non-breaking space
++            const metaNoOrphans = metaStr.replace(/ ([^ ]*)$/, '&nbsp;$1');
++
++            div.innerHTML = `
++                <button type="button" class="btn-dismiss-rec">×</button>
++                <div class="suggested-card-content">
++                    <div class="suggested-name">${p.name.replace(/ ([^ ]*)$/, '&nbsp;$1')}</div>
++                    <div class="suggested-meta">${metaNoOrphans}</div>
++                    ${sharedHTML}
++                </div>
++                <div class="suggested-card-action">
++                    <button type="button" class="btn-connect-sleek" data-id="${p.id}">[ CONNECT ]</button>
++                </div>
++            `;
++            container.appendChild(div);
++            
++            const removeCardAndReplenish = () => {
++                div.style.opacity = '0';
++                div.style.transform = 'scale(0.95)';
++                setTimeout(() => {
++                    div.remove();
++                    if (globalPendingRecs.length > 0) {
++                        renderSingleRecommendation(globalPendingRecs.shift(), container);
++                    }
++                }, 400);
++            };
++
++            div.querySelector('.btn-dismiss-rec').addEventListener('click', () => {
++                removeCardAndReplenish();
++            });
++            
++            div.querySelector('.btn-connect-sleek').addEventListener('click', (e) => {
++                const id = parseInt(e.target.dataset.id);
++                addConnectionEntry(id, 'acquaintance', 3);
++                e.target.textContent = '[ ADDED ]';
++                e.target.classList.add('added');
++                e.target.disabled = true;
++                setTimeout(() => {
++                    removeCardAndReplenish();
++                }, 600); // Give user a brief moment to see it was added
+             });
+-            return true;
+         }
+ 
+         function openModal(mode, personData = null, defaultConnectionNodeId = null) {
+@@ -4783,15 +5821,15 @@
+ 
+             div.innerHTML = `
+                 <div style="flex: 1; display: flex; flex-direction: column; position: relative;">
+-                    <input type="text" class="conn-target" placeholder="Search Name..." value="${defaultName}" autocomplete="off" style="font-family: 'Poppins', sans-serif; font-weight: 300; font-size: 16px; border: none; outline: none; background: transparent; color: #F5F5F5; padding: 0; margin-bottom: 4px; width: 100%;">
+-                    <div class="conn-info" style="font-family: 'Poppins', sans-serif; font-size: 11px; color: rgba(255,255,255,0.5);">${infoString}</div>
++                    <input type="text" class="conn-target" placeholder="Search Name..." value="${defaultName}" autocomplete="off" style="font-family: 'Helvetica', Arial, sans-serif; font-weight: 300; font-size: 16px; border: none; outline: none; background: transparent; color: #F5F5F5; padding: 0; margin-bottom: 4px; width: 100%;">
++                    <div class="conn-info" style="font-family: 'Helvetica', Arial, sans-serif; font-size: 11px; color: rgba(255,255,255,0.5);">${infoString}</div>
+                     <div class="conn-autocomplete" style="display: none; position: absolute; top: 100%; left: 0; background: rgba(10,10,10,0.95); border: 1px solid rgba(255,255,255,0.2); border-radius: 8px; z-index: 100; min-width: 200px; flex-direction: column; max-height: 400px; overflow-y: auto; box-shadow: 0 4px 15px rgba(0,0,0,0.5); margin-top: 5px;"></div>
+                 </div>
+                 
+                 <div style="display: flex; gap: 30px; align-items: center;">
+                     <div style="display: flex; flex-direction: column; position: relative;">
+-                        <div style="font-family: 'Poppins', sans-serif; font-size: 12px; letter-spacing: 1px; color: rgba(255,255,255,0.5); text-transform: uppercase; margin-bottom: 4px;">Relationship</div>
+-                        <div class="conn-type-display" style="font-family: 'Poppins', sans-serif; font-size: 16px; font-weight: 300; color: #F5F5F5; cursor: pointer; display: flex; justify-content: space-between; align-items: center; min-width: 100px;"><span>${getRelLabel(defaultType)}</span> <span style="font-size: 8px;">▼</span></div>
++                        <div style="font-family: 'Helvetica', Arial, sans-serif; font-size: 12px; letter-spacing: 1px; color: rgba(255,255,255,0.5); text-transform: uppercase; margin-bottom: 4px;">Relationship</div>
++                        <div class="conn-type-display" style="font-family: 'Helvetica', Arial, sans-serif; font-size: 16px; font-weight: 300; color: #F5F5F5; cursor: pointer; display: flex; justify-content: space-between; align-items: center; min-width: 100px;"><span>${getRelLabel(defaultType)}</span> <span style="font-size: 8px;">▼</span></div>
+                         <div class="conn-type-dropdown" style="display: none; position: absolute; top: 100%; left: 0; background: rgba(10,10,10,0.95); border: 1px solid rgba(255,255,255,0.2); border-radius: 8px; z-index: 100; min-width: 160px; flex-direction: column; padding: 5px; box-shadow: 0 4px 15px rgba(0,0,0,0.5); margin-top: 5px;">
+                             <div class="conn-type-option" data-val="friend" style="padding: 12px 15px; font-size: 13px; cursor: pointer; color: #F5F5F5; transition: 0.2s; border-radius: 4px;" onmouseover="this.style.background='rgba(255,255,255,0.1)'" onmouseout="this.style.background='transparent'">Friend</div>
+                             <div class="conn-type-option" data-val="acquaintance" style="padding: 12px 15px; font-size: 13px; cursor: pointer; color: #F5F5F5; transition: 0.2s; border-radius: 4px;" onmouseover="this.style.background='rgba(255,255,255,0.1)'" onmouseout="this.style.background='transparent'">Acquaintance</div>
+@@ -4804,10 +5842,10 @@
+                     <div style="width: 1px; height: 24px; background: rgba(255,255,255,0.15);"></div>
+ 
+                     <div style="display: flex; flex-direction: column; position: relative;">
+-                        <div style="font-family: 'Poppins', sans-serif; font-size: 12px; letter-spacing: 1px; color: rgba(255,255,255,0.5); text-transform: uppercase; margin-bottom: 4px;">Strength</div>
++                        <div style="font-family: 'Helvetica', Arial, sans-serif; font-size: 12px; letter-spacing: 1px; color: rgba(255,255,255,0.5); text-transform: uppercase; margin-bottom: 4px;">Strength</div>
+                         <div style="display: flex; align-items: center; width: 140px; height: 24px; position: relative;">
+                             <input type="range" class="conn-strength strength-slider" min="1" max="5" value="${defaultStrength}" style="width: 100%;">
+-                            <div class="conn-strength-label" style="position: absolute; top: 20px; font-family: 'Poppins', sans-serif; font-size: 10px; color: rgba(255,255,255,0.7); transform: translateX(-50%); pointer-events: none;">${defaultStrength}</div>
++                            <div class="conn-strength-label" style="position: absolute; top: 20px; font-family: 'Helvetica', Arial, sans-serif; font-size: 10px; color: rgba(255,255,255,0.7); transform: translateX(-50%); pointer-events: none;">${defaultStrength}</div>
+                         </div>
+                     </div>
+                     
