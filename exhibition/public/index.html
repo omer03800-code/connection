@@ -709,7 +709,7 @@
             </div>
 
             <div id="search-wrapper" style="position: relative; display: flex; align-items: center; margin: 0; width: auto;">
-                <input type="text" id="search-input" class="info-action-btn" placeholder="[ FIND ANYTHING ]" autocomplete="off" style="margin: 0; width: 210px; cursor: text; border-radius: 10px;">
+                <input type="text" id="search-input" class="info-action-btn" placeholder="[ FIND ANYTHING ]" autocomplete="off" style="margin: 0; width: 170px; cursor: text; border-radius: 10px;">
                 <div id="search-dropdown" style="display: none; position: absolute; top: 100%; left: 0; min-width: 280px; background: rgba(0,0,0,0.3); backdrop-filter: blur(25px); border: 1px solid rgba(245,245,245,0.2); border-radius: 10px; z-index: 1000; margin-top: 8px; max-height: 400px; overflow-y: auto; overflow-x: hidden; padding: 8px 0; box-shadow: 0 4px 20px rgba(0,0,0,0.5);">
                 </div>
             </div>
@@ -1385,12 +1385,11 @@
                 <!-- STEP 5a HIGH SCHOOL -->
                 <div id="wizard-step-5a" class="wizard-step" style="height: 100%;">
                     <h2 style="display: flex; align-items: baseline; gap: 20px;">
-                        High School
-                        <span style="font-size: 12px; font-weight: 300; color: rgba(245,245,245,0.5); font-style: italic; line-height: 1.3; min-width: 250px;">* The beast grows stronger with<br>every detail you share.</span>
+                        School
                     </h2>
                     
-                    <div class="chapter-block autocomplete-wrapper" style="position: absolute; top: 20%; left: 50px; width: calc(100% - 330px); z-index: 50;">
-                        <label class="editorial-label">High School</label>
+                    <div class="chapter-block autocomplete-wrapper" style="position: absolute; top: 40%; left: 50px; width: calc(100% - 330px); z-index: 50;">
+                        <label class="editorial-label">School</label>
                         <div class="tags-wrapper" id="tw-f-highschool" onclick="document.getElementById('f-highschool').focus()">
                             <input type="text" id="f-highschool" class="editorial-input auto-highschool" placeholder="School Name">
                         </div>
@@ -1405,7 +1404,7 @@
                         Military Service
                     </h2>
                     
-                    <div class="chapter-block autocomplete-wrapper" style="position: absolute; top: 20%; left: 50px; width: calc(100% - 330px); z-index: 40;">
+                    <div class="chapter-block autocomplete-wrapper" style="position: absolute; top: 40%; left: 50px; width: calc(100% - 330px); z-index: 40;">
                         <label class="editorial-label">Military Service</label>
                         <div class="tags-wrapper" id="tw-f-military" onclick="document.getElementById('f-military').focus()">
                             <input type="text" id="f-military" class="editorial-input auto-military" placeholder="Unit, Base, or Role">
@@ -1438,7 +1437,7 @@
                     </h2>
                     <p class="step-explanation">Youth movement, Mechina, Shnat Sherut, volunteering, etc.</p>
 
-                    <div class="chapter-block autocomplete-wrapper" style="position: absolute; top: 25%; left: 50px; width: calc(100% - 330px); z-index: 20;">
+                    <div class="chapter-block autocomplete-wrapper" style="position: absolute; top: 40%; left: 50px; width: calc(100% - 330px); z-index: 20;">
                         <label class="editorial-label">Other Chapters</label>
                         <div class="tags-wrapper" id="tw-f-other-value" onclick="document.getElementById('f-other-value').focus()">
                             <input type="text" id="f-other-value" class="editorial-input auto-other" placeholder="Mechina, Shnat Sherut, Course...">
@@ -3195,7 +3194,7 @@
             }
 
             // Check for Feed More popup
-            const existingPopup = document.getElementById('feed-more-popup');
+            const existingPopup = document.getElementById('feed-more-popup-v2');
             if (existingPopup) existingPopup.remove();
             
             if (window._isPartialAdd) {
@@ -3204,7 +3203,7 @@
                 const popupCopy = completeness > 65 ? "Keep feeding to grow their network!" : "There's nothing to discover yet.";
                 
                 const feedMorePopup = document.createElement('div');
-                feedMorePopup.id = 'feed-more-popup';
+                feedMorePopup.id = 'feed-more-popup-v2';
                 feedMorePopup.style.cssText = "position: absolute; left: 80px; top: -10px; width: max-content; padding: 20px 25px; background: rgba(255, 255, 255, 0.95) !important; backdrop-filter: blur(15px) !important; -webkit-backdrop-filter: blur(15px) !important; border-radius: 12px; pointer-events: auto; text-align: center; box-shadow: 0 10px 40px rgba(0,0,0,0.6); z-index: 100; color: #0a0a0a !important;";
                 feedMorePopup.innerHTML = `
                     <div style="font-size: 14px; font-weight: 300; margin-bottom: 15px; opacity: 0.9;">${popupCopy}</div>
@@ -3221,7 +3220,7 @@
         document.getElementById('btn-close-card').onclick = () => {
             document.getElementById('info-panel-container').classList.remove('visible');
             window._isPartialAdd = false;
-            const existingPopup = document.getElementById('feed-more-popup');
+            const existingPopup = document.getElementById('feed-more-popup-v2');
             if (existingPopup) existingPopup.remove();
             selectedNodeId = null;
         };
@@ -4033,15 +4032,12 @@
 
         function processStep4a() {
             window._isPartialAdd = true;
-            const addForm = document.getElementById('add-form');
-            if (addForm) {
-                addForm.dispatchEvent(new Event('submit', { cancelable: true, bubbles: true }));
-            }
+            processStep6(true);
         }
 
         // Logic to resume the wizard for a partially added user
         window.resumeFeedMore = function() {
-            const existingPopup = document.getElementById('feed-more-popup');
+            const existingPopup = document.getElementById('feed-more-popup-v2');
             if (existingPopup) existingPopup.remove();
             window._isPartialAdd = false;
             
@@ -4090,6 +4086,10 @@
                     }
                 });
             };
+            
+            // Add Location (Important for first session feed)
+            addField(getFieldValues('tw-f-city', 'f-city'), 'city');
+            addField(getFieldValues('tw-f-origin-city', 'f-origin-city'), 'origin-city');
             
             // Add Role
             addField(getFieldValues('tw-f-role', 'f-role'), 'role');
@@ -4674,7 +4674,8 @@
             
             if (p1CityLower && p2CityLower) {
                 if ((p2CityLower.includes(p1CityLower) || p1CityLower.includes(p2CityLower)) && !ignoreCities.includes(p1CityLower) && !ignoreCities.includes(p2CityLower)) {
-                    score += 5; // Reduced from 15 to prevent generic city matches
+                    score += 15; // Increased back to 15 to allow recommendations for kibbutz/moshav
+                    sharedStrings.push(p1CityLower);
                 }
             }
             if (p1RoleLower && p2RoleLower) {
@@ -5286,7 +5287,7 @@
                     const percentIncrease = (((newR/oldR)**3) - 1) * 100;
                     
                     const notif = document.createElement('div');
-                    notif.style.cssText = 'position:fixed; top:50%; left:50%; transform:translate(-50%,-50%); background:rgba(0,0,0,0.85); color:#F5F5F5; padding:35px 50px; border-radius: 10px; font-size:28px; text-align:center; z-index:9999; backdrop-filter:blur(20px); opacity:0; transition:opacity 0.8s ease-in-out; font-weight: 300; pointer-events: none; border: 1px solid rgba(245,245,245,0.2); box-shadow: 0 20px 50px rgba(0,0,0,0.5); letter-spacing: 1px;';
+                    notif.style.cssText = 'position:fixed; top:50%; left:50%; transform:translate(-50%,-50%); background:rgba(255,255,255,0.95) !important; color:#0a0a0a !important; padding:35px 50px; border-radius: 12px; font-size:28px; text-align:center; z-index:9999; backdrop-filter:blur(20px) !important; -webkit-backdrop-filter:blur(20px) !important; opacity:0; transition:opacity 0.8s ease-in-out; font-weight: 300; pointer-events: none; border: 1px solid rgba(0,0,0,0.1); box-shadow: 0 20px 50px rgba(0,0,0,0.5); letter-spacing: 1px;';
                     notif.innerHTML = `Welcome to the Network!<br><span style="font-size:15px; opacity:0.6; display:block; margin-top:12px; letter-spacing: 0.5px;">Network volume increased by ${percentIncrease.toFixed(1)}%</span>`;
                     if (mode === 'edit') {
                         notif.innerHTML = `Feed Successful!<br><span style="font-size:15px; opacity:0.6; display:block; margin-top:12px; letter-spacing: 0.5px;">Network volume increased by ${percentIncrease.toFixed(1)}%</span>`;
