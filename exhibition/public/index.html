@@ -39,6 +39,26 @@
             color: rgba(245, 245, 245, 1);
             text-shadow: 0 0 8px rgba(245,245,245,0.4);
         }
+        
+        .btn-feed-more {
+            background: rgba(0, 0, 0, 0.05);
+            border: 1px dashed rgba(0,0,0,0.2);
+            color: #0a0a0a;
+            font-family: 'Helvetica', sans-serif;
+            font-size: 10px;
+            font-weight: 500;
+            letter-spacing: 1px;
+            padding: 8px 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            text-transform: uppercase;
+        }
+        .btn-feed-more:hover {
+            background: rgba(0,0,0,0.1);
+            color: #000;
+            border-color: rgba(0,0,0,0.4);
+        }
 
 
 
@@ -767,6 +787,7 @@
                 <button id="btn-sec-connect" style="flex: 1; background: white; color: black; border: none; border-radius: 10px; padding: 6px; font-weight: bold; font-size: 10px; cursor: pointer;">Connect</button>
             </div>
         </div>
+        </div>
     </div>
     
     <div id="conn-secondary-card" style="position: relative; display: none; background: rgba(0, 0, 0, 0.25);
@@ -880,6 +901,9 @@
             .editorial-input:focus {
                 border-bottom-color: #F5F5F5;
             }
+            .editorial-input::placeholder {
+                color: rgba(245, 245, 245, 0.25);
+            }
             .editorial-label {
                 font-size: 11px;
                 text-transform: uppercase;
@@ -903,7 +927,7 @@
                 flex-direction: column;
                 justify-content: flex-start;
             }
-            #wizard-step-0, #wizard-step-1, #wizard-step-4, #wizard-step-5, #wizard-step-6, #wizard-step-8 {
+            #wizard-step-0, #wizard-step-1, #wizard-step-4, #wizard-step-4a, #wizard-step-5, #wizard-step-6, #wizard-step-8 {
                 padding-right: 280px; /* Shortened inputs further */
             }
             .wizard-preview-area {
@@ -1288,44 +1312,50 @@
                     <!-- 20% Block: Birth Year & Country -->
                     <div style="position: absolute; top: 20%; left: 50px; width: calc(100% - 330px); z-index: 30;">
 
-                        <div style="display:flex; gap:20px;">
-                            <div style="flex:1;">
+                        <div style="display:flex; flex-direction: column; gap:80px;">
+                            <div>
                                 <label class="editorial-label">Birth Year</label>
                                 <input type="number" id="f-birth-year" class="editorial-input" placeholder="YYYY" min="1900" max="2026">
                             </div>
-                            <div style="flex:1;">
+                            <div>
                                 <label class="editorial-label">Country</label>
                                 <input type="text" id="f-country" class="editorial-input" placeholder="e.g. Israel" value="Israel">
                             </div>
                         </div>
                     </div>
+                </div>
 
-                    <!-- 40% Block: Current City & Checkbox -->
-                    <div style="position: absolute; top: 40%; left: 50px; width: calc(100% - 330px); z-index: 20;">
-                        <div class="chapter-block autocomplete-wrapper" style="margin-bottom: 0px;">
-                            <label class="editorial-label">Current City</label>
-                            <div class="tags-wrapper" id="tw-f-city" onclick="document.getElementById('f-city').focus()">
-                                <input type="text" id="f-city" class="editorial-input auto-location" placeholder="Where do you live?">
+                <!-- STEP 4a LOCATIONS -->
+                <div id="wizard-step-4a" class="wizard-step" style="height: 100%;">
+                    <h2 id="step-4a-title">Where are you located?</h2>
+                    <!-- Current City & Checkbox and Originally From -->
+                    <div style="position: absolute; top: 20%; left: 50px; width: calc(100% - 330px); z-index: 20; display: flex; flex-direction: column; gap: 80px;">
+                        <div>
+                            <div class="chapter-block autocomplete-wrapper" style="margin-bottom: 0px;">
+                                <label class="editorial-label">Current City</label>
+                                <div class="tags-wrapper" id="tw-f-city" onclick="document.getElementById('f-city').focus()">
+                                    <input type="text" id="f-city" class="editorial-input auto-location" placeholder="Where do you live?">
+                                </div>
+                                <div class="autocomplete-dropdown" id="dropdown-f-city"></div>
+                                <div class="dynamic-stats" id="stats-f-city"></div>
                             </div>
-                            <div class="autocomplete-dropdown" id="dropdown-f-city"></div>
-                            <div class="dynamic-stats" id="stats-f-city"></div>
+
+                            <!-- Checkbox just below -->
+                            <div style="display: flex; align-items: center; gap: 8px; font-size: 11px; color: rgba(245,245,245,0.6); text-transform: uppercase; letter-spacing: 1px; margin-top: 5px;">
+                                <input type="checkbox" id="f-same-city" class="white-checkbox" onchange="toggleHometown()">
+                                <label for="f-same-city" style="cursor: pointer; margin-top: 1px;">I grew up there too.</label>
+                            </div>
                         </div>
 
-                        <!-- Checkbox just below -->
-                        <div style="display: flex; align-items: center; gap: 8px; font-size: 11px; color: rgba(245,245,245,0.6); text-transform: uppercase; letter-spacing: 1px; margin-top: 5px;">
-                            <input type="checkbox" id="f-same-city" class="white-checkbox" onchange="toggleHometown()">
-                            <label for="f-same-city" style="cursor: pointer; margin-top: 1px;">I grew up there too.</label>
+                        <!-- Originally From -->
+                        <div class="chapter-block autocomplete-wrapper" id="origin-city-wrapper">
+                            <label class="editorial-label">Originally From</label>
+                            <div class="tags-wrapper" id="tw-f-origin-city" onclick="document.getElementById('f-origin-city').focus()">
+                                <input type="text" id="f-origin-city" class="editorial-input auto-location" placeholder="Hometown">
+                            </div>
+                            <div class="autocomplete-dropdown" id="dropdown-f-origin-city"></div>
+                            <div class="dynamic-stats" id="stats-f-origin-city"></div>
                         </div>
-                    </div>
-
-                    <!-- 70% Block: Originally From -->
-                    <div class="chapter-block autocomplete-wrapper" id="origin-city-wrapper" style="position: absolute; top: 62%; left: 50px; width: calc(100% - 330px); z-index: 10;">
-                        <label class="editorial-label">Originally From</label>
-                        <div class="tags-wrapper" id="tw-f-origin-city" onclick="document.getElementById('f-origin-city').focus()">
-                            <input type="text" id="f-origin-city" class="editorial-input auto-location" placeholder="Hometown">
-                        </div>
-                        <div class="autocomplete-dropdown" id="dropdown-f-origin-city"></div>
-                        <div class="dynamic-stats" id="stats-f-origin-city"></div>
                     </div>
                 </div>
 
@@ -1352,10 +1382,10 @@
                     </div>
                 </div>
 
-                <!-- STEP 6 LIFE CHAPTERS & MORE -->
-                <div id="wizard-step-6" class="wizard-step" style="height: 100%;">
+                <!-- STEP 5a HIGH SCHOOL -->
+                <div id="wizard-step-5a" class="wizard-step" style="height: 100%;">
                     <h2 style="display: flex; align-items: baseline; gap: 20px;">
-                        Life Chapters
+                        High School
                         <span style="font-size: 12px; font-weight: 300; color: rgba(245,245,245,0.5); font-style: italic; line-height: 1.3; min-width: 250px;">* The beast grows stronger with<br>every detail you share.</span>
                     </h2>
                     
@@ -1367,8 +1397,15 @@
                         <div class="autocomplete-dropdown" id="dropdown-f-highschool"></div>
                         <div class="dynamic-stats" id="stats-f-highschool"></div>
                     </div>
+                </div>
 
-                    <div class="chapter-block autocomplete-wrapper" style="position: absolute; top: 38%; left: 50px; width: calc(100% - 330px); z-index: 40;">
+                <!-- STEP 5b MILITARY -->
+                <div id="wizard-step-5b" class="wizard-step" style="height: 100%;">
+                    <h2 style="display: flex; align-items: baseline; gap: 20px;">
+                        Military Service
+                    </h2>
+                    
+                    <div class="chapter-block autocomplete-wrapper" style="position: absolute; top: 20%; left: 50px; width: calc(100% - 330px); z-index: 40;">
                         <label class="editorial-label">Military Service</label>
                         <div class="tags-wrapper" id="tw-f-military" onclick="document.getElementById('f-military').focus()">
                             <input type="text" id="f-military" class="editorial-input auto-military" placeholder="Unit, Base, or Role">
@@ -1376,18 +1413,33 @@
                         <div class="autocomplete-dropdown" id="dropdown-f-military"></div>
                         <div class="dynamic-stats" id="stats-f-military"></div>
                     </div>
+                </div>
 
-                    <div class="chapter-block autocomplete-wrapper" style="position: absolute; top: 56%; left: 50px; width: calc(100% - 330px); z-index: 30;">
+                <!-- STEP 6 UNIVERSITY -->
+                <div id="wizard-step-6" class="wizard-step" style="height: 100%;">
+                    <h2 style="display: flex; align-items: baseline; gap: 20px;">
+                        Higher Education
+                    </h2>
+
+                    <div class="chapter-block autocomplete-wrapper" style="position: absolute; top: 20%; left: 50px; width: calc(100% - 330px); z-index: 30;">
                         <label class="editorial-label">Higher Education</label>
                         <div class="tags-wrapper" id="tw-f-education" onclick="document.getElementById('f-education').focus()">
-                            <input type="text" id="f-education" class="editorial-input auto-education" placeholder="University, College, Course">
+                            <input type="text" id="f-education" class="editorial-input auto-education" placeholder="University, College, Degree">
                         </div>
                         <div class="autocomplete-dropdown" id="dropdown-f-education"></div>
                         <div class="dynamic-stats" id="stats-f-education"></div>
                     </div>
+                </div>
 
-                    <div class="chapter-block autocomplete-wrapper" style="position: absolute; top: 74%; left: 50px; width: calc(100% - 330px); z-index: 20;">
-                        <label class="editorial-label">Feed the beast a little more.</label>
+                <!-- STEP 7 OTHER CHAPTERS -->
+                <div id="wizard-step-7" class="wizard-step" style="height: 100%;">
+                    <h2 style="display: flex; align-items: baseline; gap: 20px;">
+                        Other Chapters
+                    </h2>
+                    <p class="step-explanation">Youth movement, Mechina, Shnat Sherut, volunteering, etc.</p>
+
+                    <div class="chapter-block autocomplete-wrapper" style="position: absolute; top: 25%; left: 50px; width: calc(100% - 330px); z-index: 20;">
+                        <label class="editorial-label">Other Chapters</label>
                         <div class="tags-wrapper" id="tw-f-other-value" onclick="document.getElementById('f-other-value').focus()">
                             <input type="text" id="f-other-value" class="editorial-input auto-other" placeholder="Mechina, Shnat Sherut, Course...">
                         </div>
@@ -1445,7 +1497,8 @@
         <!-- GLOBAL FOOTER FOR WIZARD -->
         <div id="global-wizard-footer" style="display: none; padding: 30px 40px; justify-content: space-between; align-items: center; position: absolute; bottom: 0; left: 0; right: 0; z-index: 1000; background: transparent;">
             <button type="button" id="btn-wizard-global-back" class="info-action-btn" style="margin: 0; visibility: hidden;">[ BACK ]</button>
-            <div style="display: flex; align-items: center; white-space: nowrap;">
+            <div style="display: flex; align-items: center; gap: 15px; white-space: nowrap;">
+                <button type="button" id="btn-wizard-global-feed" class="info-action-btn" style="margin: 0; display: none;">[ FEED IT ]</button>
                 <button type="button" id="btn-wizard-global-next" class="info-action-btn" style="margin: 0;">[ CONTINUE ]</button>
             </div>
         </div>
@@ -1522,6 +1575,18 @@
         // --- Data (filled from API) ---
         let userNames = [];
         let people = [];
+        
+        function getPersonCompleteness(person) {
+            let completeness = 0.05; // Name is always present
+            if (person.age) completeness += 0.025;
+            if (person.country) completeness += 0.025;
+            if (person.city) completeness += 0.025;
+            if (person.role) completeness += 0.05;
+            if (person.description) completeness += 0.05;
+            if (person.tags && person.tags.length > 0) completeness += 0.025;
+            if (person.connections && person.connections.length > 0) completeness += 0.025;
+            return completeness;
+        }
         let dbIdToIdx = {};
         let numStrands = 0;
         let rootIdx = -1;
@@ -1710,7 +1775,10 @@
             pointData = [];
             graphAdjacency = Array.from({ length: numStrands }, () => []);
 
-            const maxSpread = 300.0 + (numStrands * 3.5); // Grows dynamically with people count
+            let totalCompleteness = 0;
+            people.forEach(p => totalCompleteness += getPersonCompleteness(p));
+            
+            const maxSpread = 300.0 + (totalCompleteness * 3.5); // Grows dynamically based on how much data is provided
             masterGroup.scale.set(1, 1, 1);
 
             particleCount = numStrands * pPerStrand;
@@ -2841,7 +2909,7 @@
                 // camera variables are already defined above (dir)
                 controls.autoRotate = false;
                 camTargetLookAt.copy(C);
-                camTargetPos.copy(C).add(dir.multiplyScalar(650)); // View from outside looking in
+                camTargetPos.copy(C).add(dir.multiplyScalar(350)); // View from outside looking in
                 isCameraAnimating = true;
             }
 
@@ -3126,6 +3194,25 @@
                 suggDiv.style.display = 'none';
             }
 
+            // Check for Feed More popup
+            const existingPopup = document.getElementById('feed-more-popup');
+            if (existingPopup) existingPopup.remove();
+            
+            if (window._isPartialAdd) {
+                const person = people[index];
+                const completeness = getPersonCompleteness(person);
+                const popupCopy = completeness > 65 ? "Keep feeding to grow their network!" : "There's nothing to discover yet.";
+                
+                const feedMorePopup = document.createElement('div');
+                feedMorePopup.id = 'feed-more-popup';
+                feedMorePopup.style.cssText = "position: absolute; left: 80px; top: -10px; width: max-content; padding: 20px 25px; background: rgba(255, 255, 255, 0.95) !important; backdrop-filter: blur(15px) !important; -webkit-backdrop-filter: blur(15px) !important; border-radius: 12px; pointer-events: auto; text-align: center; box-shadow: 0 10px 40px rgba(0,0,0,0.6); z-index: 100; color: #0a0a0a !important;";
+                feedMorePopup.innerHTML = `
+                    <div style="font-size: 14px; font-weight: 300; margin-bottom: 15px; opacity: 0.9;">${popupCopy}</div>
+                    <button class="btn-feed-more" onclick="window.resumeFeedMore()">[ FEED ME MORE ]</button>
+                `;
+                labelObjects[index].element.appendChild(feedMorePopup);
+            }
+            
             document.getElementById('info-panel-container').classList.add('visible');
             selectedNodeId = index;
         }
@@ -3133,6 +3220,9 @@
         // Remove navigation buttons logic
         document.getElementById('btn-close-card').onclick = () => {
             document.getElementById('info-panel-container').classList.remove('visible');
+            window._isPartialAdd = false;
+            const existingPopup = document.getElementById('feed-more-popup');
+            if (existingPopup) existingPopup.remove();
             selectedNodeId = null;
         };
 
@@ -3381,7 +3471,7 @@
                                 camTargetLookAt.set(0, 0, 0);
                                 const flyProgress = Math.min(1.0, timeSinceStart / 1.5);
                                 const ease = 1 - Math.pow(1 - flyProgress, 3); // easeOutCubic
-                                camTargetPos.set(0, 0, THREE.MathUtils.lerp(1800, 300, ease));
+                                camTargetPos.set(0, 0, THREE.MathUtils.lerp(1800, 180, ease));
                                 
                             } else {
                                 // Set target for everyone else into a massive ring facing the camera
@@ -3731,23 +3821,30 @@
         
         window.toggleHometown = function() {
             const isSame = document.getElementById('f-same-city').checked;
-            const cityInput = document.getElementById('f-city');
+            const originCityWrapper = document.getElementById('tw-f-origin-city');
+            const cityWrapper = document.getElementById('tw-f-city');
             const originCityInput = document.getElementById('f-origin-city');
             
             if (isSame) {
-                originCityInput.value = cityInput.value;
-                originCityInput.disabled = true;
-                originCityInput.style.opacity = '0.5';
+                // Clear existing tags in origin
+                originCityWrapper.querySelectorAll('.tag-item').forEach(t => t.remove());
+                // Copy tags from city
+                cityWrapper.querySelectorAll('.tag-item').forEach(t => {
+                    const txt = t.querySelector('span').textContent;
+                    addTag('tw-f-origin-city', 'f-origin-city', txt);
+                });
+                originCityWrapper.style.opacity = '0.5';
+                originCityWrapper.style.pointerEvents = 'none'; // disable interaction
+                originCityInput.value = '';
             } else {
-                originCityInput.disabled = false;
-                originCityInput.style.opacity = '1';
-                if (originCityInput.value === cityInput.value) {
-                    originCityInput.value = '';
-                }
+                originCityWrapper.style.opacity = '1';
+                originCityWrapper.style.pointerEvents = 'auto';
             }
-        }
+        };
         
         // Auto-fill origin if typing in current city while checkbox is checked
+        // Since we use tags now, we should observe changes in the city tags instead of just the input.
+        // But for simplicity, if they uncheck it, they can just edit.
         document.getElementById('f-city').addEventListener('input', function() {
             if (document.getElementById('f-same-city').checked) {
                 document.getElementById('f-origin-city').value = this.value;
@@ -3776,13 +3873,14 @@
             const globalFooter = document.getElementById('global-wizard-footer');
             if (!globalFooter) return;
 
-            // Steps that show the global footer: 0, 4, 5, 6, 8, 9
-            const stepsWithFooter = [0, 4, 5, 6, 8, 9];
+            // Steps that show the global footer: 0, 4, 4a, 5, 5a, 5b, 6, 7, 8, 9
+            const stepsWithFooter = [0, 4, '4a', 5, '5a', '5b', 6, 7, 8, 9];
             if (stepsWithFooter.includes(step)) {
                 globalFooter.style.display = 'flex';
                 
                 const btnBack = document.getElementById('btn-wizard-global-back');
                 const btnNext = document.getElementById('btn-wizard-global-next');
+                const btnFeed = document.getElementById('btn-wizard-global-feed');
                 
                 // Back button logic
                 btnBack.style.visibility = step === 0 ? 'hidden' : 'visible';
@@ -3798,15 +3896,37 @@
                     if (currentIndex > 0) goToWizardStep(stepsWithFooter[currentIndex - 1]);
                 };
                 
+                // Feed button logic (only on phases 5, 5a, 5b, 6, 7)
+                if (['5', '5a', '5b', '6', '7'].includes(String(step))) {
+                    btnFeed.style.display = 'inline-block';
+                    btnFeed.onclick = () => window.saveAndFeed();
+                } else {
+                    btnFeed.style.display = 'none';
+                }
+
                 // Next button logic
-                btnNext.textContent = step === 9 ? '[ JOIN THE NETWORK ]' : '[ CONTINUE ]';
+                if (step === 9) btnNext.textContent = '[ JOIN THE NETWORK ]';
+                else if (step === '4a') btnNext.textContent = '[ FEED IT ]';
+                else btnNext.textContent = '[ CONTINUE ]';
+                
                 btnNext.style.display = 'inline-block';
                 btnNext.onclick = () => {
                     if (step === 0) processStep0();
                     else if (step === 4) processStep4();
-                    else if (step === 5) processStep5();
-                    else if (step === 6) processStep6();
-                    else if (step === 8) goToWizardStep(9);
+                    else if (step === '4a') processStep4a();
+                    else if (step === 5) goToWizardStep('5a');
+                    else if (step === '5a') goToWizardStep('5b');
+                    else if (step === '5b') goToWizardStep(6);
+                    else if (step === 6) goToWizardStep(7);
+                    else if (step === 7) processStep6();
+                    else if (step === 8) {
+                        if (window._isPartialAdd) {
+                            const addForm = document.getElementById('add-form');
+                            if (addForm) addForm.dispatchEvent(new Event('submit', { cancelable: true, bubbles: true }));
+                        } else {
+                            goToWizardStep(9);
+                        }
+                    }
                     else if (step === 9) processStep9();
                 };
             } else {
@@ -3819,7 +3939,8 @@
             // Map each step to a progress item number (1 to 4)
             const progressMap = {
                 0: 1,  // Name
-                4: 2,  // Your story
+                4: 2,  // Your story part 1
+                '4a': 2, // Your story part 2
                 5: 3,  // What you do
                 6: 3,  // What you do (optional sub-step)
                 8: 4,  // Connections
@@ -3907,14 +4028,56 @@
 
         function processStep4() {
             // Data collected later, just transition
-            goToWizardStep(5);
+            goToWizardStep('4a');
         }
+
+        function processStep4a() {
+            window._isPartialAdd = true;
+            const addForm = document.getElementById('add-form');
+            if (addForm) {
+                addForm.dispatchEvent(new Event('submit', { cancelable: true, bubbles: true }));
+            }
+        }
+
+        // Logic to resume the wizard for a partially added user
+        window.resumeFeedMore = function() {
+            const existingPopup = document.getElementById('feed-more-popup');
+            if (existingPopup) existingPopup.remove();
+            window._isPartialAdd = false;
+            
+            if (selectedNodeId === null || !people[selectedNodeId]) return;
+            const person = people[selectedNodeId];
+            
+            // Open modal in edit mode (this populates all tags and hidden fields)
+            openModal('edit', person);
+            
+            // Override the edit-mode flattening by re-enabling the wizard
+            const instr = document.getElementById('add-person-instructions');
+            if (instr) instr.style.display = 'block';
+            
+            const mTitle = document.getElementById('modal-title');
+            if (mTitle) mTitle.textContent = 'Add Person';
+            
+            // Determine next unfilled step
+            let nextStep = 5;
+            if (person.role || person.workplace) nextStep = '5a';
+            if ((person.role || person.workplace) && person.highschool) nextStep = '5b';
+            if ((person.role || person.workplace) && person.highschool && person.military) nextStep = 6;
+            if ((person.role || person.workplace) && person.highschool && person.military && person.education) nextStep = 7;
+            
+            goToWizardStep(nextStep);
+        }
+
+        window.saveAndFeed = function() {
+            window._isPartialAdd = true;
+            processStep6(true);
+        };
 
         function processStep5() {
-            goToWizardStep(6);
+            goToWizardStep('5a');
         }
 
-        function processStep6() {
+        function processStep6(isFeedAction = false) {
             // Serialize chapters into tags and description
             let generatedTags = [];
             let generatedDesc = [];
@@ -3928,6 +4091,8 @@
                 });
             };
             
+            // Add Role
+            addField(getFieldValues('tw-f-role', 'f-role'), 'role');
             addField(getFieldValues('tw-f-workplace', 'f-workplace'), 'workplace');
             addField(getFieldValues('tw-f-highschool', 'f-highschool'), 'highschool');
             addField(getFieldValues('tw-f-military', 'f-military'), 'military');
@@ -3941,7 +4106,14 @@
             if (hasRecs) {
                 goToWizardStep(8);
             } else {
-                goToWizardStep(9);
+                if (isFeedAction || window._isPartialAdd) {
+                    const addForm = document.getElementById('add-form');
+                    if (addForm) {
+                        addForm.dispatchEvent(new Event('submit', { cancelable: true, bubbles: true }));
+                    }
+                } else {
+                    goToWizardStep(9);
+                }
             }
         }
 
@@ -3979,11 +4151,24 @@
             
             tag.querySelector('.tag-remove').onclick = function() {
                 wrapper.removeChild(tag);
+                if (inputId === 'f-city') {
+                    const sameCityCheck = document.getElementById('f-same-city');
+                    if (sameCityCheck && sameCityCheck.checked) {
+                        if (window.toggleHometown) window.toggleHometown();
+                    }
+                }
             };
             
             wrapper.insertBefore(tag, input);
             input.value = '';
             if (dropdown) dropdown.style.display = 'none';
+            
+            if (inputId === 'f-city') {
+                const sameCityCheck = document.getElementById('f-same-city');
+                if (sameCityCheck && sameCityCheck.checked) {
+                    addTag('tw-f-origin-city', 'f-origin-city', value, null);
+                }
+            }
             
             // Focus input again
             input.focus();
@@ -4697,7 +4882,7 @@
                     el.style.display = 'none';
                 });
                 // We show all form sections at once for Edit mode
-                ['wizard-step-4', 'wizard-step-5', 'wizard-step-6', 'wizard-step-9'].forEach(id => {
+                ['wizard-step-4', 'wizard-step-4a', 'wizard-step-5', 'wizard-step-6', 'wizard-step-9'].forEach(id => {
                     const el = document.getElementById(id);
                     if (el) {
                         el.style.display = 'block';
@@ -5074,35 +5259,6 @@
                     
                     closeModal();
                     
-                    // --- Network Expansion Animation ---
-                    const N = numStrands;
-                    const oldR = 300 + N * 3.5;
-                    const newR = 300 + (N + 1) * 3.5;
-                    const percentIncrease = (((newR/oldR)**3) - 1) * 100;
-                    
-                    const notif = document.createElement('div');
-                    notif.style.cssText = 'position:fixed; top:50%; left:50%; transform:translate(-50%,-50%); background:rgba(0,0,0,0.85); color:#F5F5F5; padding:35px 50px; border-radius: 10px; font-size:28px; text-align:center; z-index:9999; backdrop-filter:blur(20px); opacity:0; transition:opacity 0.8s ease-in-out; font-weight: 300; pointer-events: none; border: 1px solid rgba(245,245,245,0.2); box-shadow: 0 20px 50px rgba(0,0,0,0.5); letter-spacing: 1px;';
-                    notif.innerHTML = `Welcome to the Network!<br><span style="font-size:15px; opacity:0.6; display:block; margin-top:12px; letter-spacing: 0.5px;">Network volume increased by ${percentIncrease.toFixed(1)}%</span>`;
-                    document.body.appendChild(notif);
-                    
-                    // Trigger fade in
-                    requestAnimationFrame(() => notif.style.opacity = '1');
-                    
-                    // Expand network visually
-                    const growthFactor = newR / oldR;
-                    for (let i = 0; i < numStrands; i++) {
-                        const p = pointData[i * pPerStrand];
-                        if(p) {
-                            p.targetCx *= growthFactor;
-                            p.targetCy *= growthFactor;
-                            p.targetCz *= growthFactor;
-                        }
-                    }
-                    
-                    await new Promise(r => setTimeout(r, 2500));
-                    notif.style.opacity = '0';
-                    setTimeout(() => notif.remove(), 800);
-                    
                 } else if (mode === 'edit') {
                     const personId = document.getElementById('form-person-id').value;
                     const res = await fetch(`/api/people/${personId}`, {
@@ -5113,9 +5269,44 @@
                     if (!res.ok) throw new Error('Failed to edit person');
                     closeModal();
                 }
+
+                // --- Network Expansion Animation ---
+                let oldCompleteness = 0;
+                people.forEach(p => oldCompleteness += getPersonCompleteness(p));
+                const oldR = 300 + oldCompleteness * 3.5;
                 
                 document.getElementById('loading').style.display = 'block';
                 await init();
+                
+                let newCompleteness = 0;
+                people.forEach(p => newCompleteness += getPersonCompleteness(p));
+                
+                if (newCompleteness > oldCompleteness) {
+                    const newR = 300 + newCompleteness * 3.5;
+                    const percentIncrease = (((newR/oldR)**3) - 1) * 100;
+                    
+                    const notif = document.createElement('div');
+                    notif.style.cssText = 'position:fixed; top:50%; left:50%; transform:translate(-50%,-50%); background:rgba(0,0,0,0.85); color:#F5F5F5; padding:35px 50px; border-radius: 10px; font-size:28px; text-align:center; z-index:9999; backdrop-filter:blur(20px); opacity:0; transition:opacity 0.8s ease-in-out; font-weight: 300; pointer-events: none; border: 1px solid rgba(245,245,245,0.2); box-shadow: 0 20px 50px rgba(0,0,0,0.5); letter-spacing: 1px;';
+                    notif.innerHTML = `Welcome to the Network!<br><span style="font-size:15px; opacity:0.6; display:block; margin-top:12px; letter-spacing: 0.5px;">Network volume increased by ${percentIncrease.toFixed(1)}%</span>`;
+                    if (mode === 'edit') {
+                        notif.innerHTML = `Feed Successful!<br><span style="font-size:15px; opacity:0.6; display:block; margin-top:12px; letter-spacing: 0.5px;">Network volume increased by ${percentIncrease.toFixed(1)}%</span>`;
+                    }
+                    document.body.appendChild(notif);
+                    
+                    // Trigger fade in
+                    requestAnimationFrame(() => notif.style.opacity = '1');
+                    
+                    // Expand network visually - update positionCache!
+                    const growthFactor = newR / oldR;
+                    for (let id in positionCache) {
+                        positionCache[id].r *= growthFactor;
+                    }
+                    
+                    setTimeout(() => {
+                        notif.style.opacity = '0';
+                        setTimeout(() => notif.remove(), 800);
+                    }, 2500);
+                }
                 
                 if ((mode === 'add' || mode === 'edit') && numStrands > 0) {
                     let targetIdx = numStrands - 1;
@@ -5207,6 +5398,12 @@
                                     curve.mesh.material.uniforms.uOpacity.value = 1.0;
                                 });
                             }
+                            
+                            // Follow the node back to its spot and open the info panel
+                            setTimeout(() => {
+                                selectNode(targetIdx, true);
+                            }, 100);
+                            
                         }, 3500);
                         
                     } else {
