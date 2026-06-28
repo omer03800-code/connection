@@ -59,9 +59,17 @@
             color: #000;
             border-color: rgba(0,0,0,0.4);
         }
-
-
-
+        body.light-mode .btn-feed-more {
+            color: #F5F5F5 !important;
+            border-color: rgba(255,255,255,0.5) !important;
+            background: rgba(255,255,255,0.1) !important;
+        }
+        body.light-mode .btn-feed-more:hover {
+            color: #fff !important;
+            border-color: rgba(255,255,255,0.8) !important;
+            background: rgba(255,255,255,0.2) !important;
+        }
+        
         #top-bar {
             position: absolute;
             top: 20px;
@@ -4705,7 +4713,31 @@
             if (shared.degree > 0 && shared.uni === 0) score += 15;
             
             if (p1CityLower && p2CityLower) {
-                if ((p2CityLower.includes(p1CityLower) || p1CityLower.includes(p2CityLower)) && !ignoreCities.includes(p1CityLower) && !ignoreCities.includes(p2CityLower)) {
+                const cityAliases = {
+                    'אילניה': ['ilaniya', 'ilania', 'אילניה'],
+                    'איניה': ['ilaniya', 'ilania', 'אילניה', 'איניה'],
+                    'moshav ilaniya': ['אילניה', 'ilania', 'ilaniya', 'moshav ilania', 'moshav ilaniya', 'מושב אילניה'],
+                    'מושב אילניה': ['ilaniya', 'ilania', 'moshav ilania', 'moshav ilaniya', 'אילניה'],
+                    'haifa': ['חיפה', 'haifa'],
+                    'חיפה': ['haifa', 'חיפה'],
+                    'tel aviv': ['תל אביב', 'tel aviv', 'tel-aviv'],
+                    'תל אביב': ['tel aviv', 'tel-aviv', 'תל אביב'],
+                    'ramat gan': ['רמת גן', 'ramat gan'],
+                    'רמת גן': ['ramat gan', 'רמת גן']
+                };
+
+                let p1Vals = [p1CityLower];
+                let p2Vals = [p2CityLower];
+                
+                Object.keys(cityAliases).forEach(k => {
+                    if (p1CityLower.includes(k)) p1Vals = p1Vals.concat(cityAliases[k]);
+                    if (p2CityLower.includes(k)) p2Vals = p2Vals.concat(cityAliases[k]);
+                });
+
+                const matchFound = p1Vals.some(v1 => p2Vals.some(v2 => v1.includes(v2) || v2.includes(v1)));
+                const shouldIgnore = ignoreCities.some(c => p1CityLower.includes(c)) || ignoreCities.some(c => p2CityLower.includes(c));
+                
+                if (matchFound && !shouldIgnore) {
                     score += 15; // Increased back to 15 to allow recommendations for kibbutz/moshav
                     sharedStrings.push(p1CityLower);
                 }
