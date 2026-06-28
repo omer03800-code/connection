@@ -684,6 +684,22 @@
             background: #F5F5F5;
             cursor: pointer;
         }
+    
+        #feed-more-popup-v2 {
+            position: absolute; left: 80px; top: -10px; width: max-content; 
+            padding: 20px 25px; 
+            background: rgba(255, 255, 255, 0.95) !important; 
+            backdrop-filter: blur(15px) !important; 
+            -webkit-backdrop-filter: blur(15px) !important; 
+            border-radius: 12px; pointer-events: auto; text-align: center; 
+            box-shadow: 0 10px 40px rgba(0,0,0,0.6); z-index: 100; 
+            color: #0a0a0a !important;
+        }
+        body.light-mode #feed-more-popup-v2 {
+            background: rgba(0, 0, 0, 0.95) !important; 
+            color: #f5f5f5 !important;
+        }
+
     </style>
 </head>
 
@@ -1233,7 +1249,23 @@
             color: #F5F5F5;
             font-weight: 400;
         }
-        </style>
+        
+        #feed-more-popup-v2 {
+            position: absolute; left: 80px; top: -10px; width: max-content; 
+            padding: 20px 25px; 
+            background: rgba(255, 255, 255, 0.95) !important; 
+            backdrop-filter: blur(15px) !important; 
+            -webkit-backdrop-filter: blur(15px) !important; 
+            border-radius: 12px; pointer-events: auto; text-align: center; 
+            box-shadow: 0 10px 40px rgba(0,0,0,0.6); z-index: 100; 
+            color: #0a0a0a !important;
+        }
+        body.light-mode #feed-more-popup-v2 {
+            background: rgba(0, 0, 0, 0.95) !important; 
+            color: #f5f5f5 !important;
+        }
+
+    </style>
 
         <div class="wizard-layout">
             <div class="wizard-form-area" id="wizard-form-area">
@@ -3204,7 +3236,7 @@
                 
                 const feedMorePopup = document.createElement('div');
                 feedMorePopup.id = 'feed-more-popup-v2';
-                feedMorePopup.style.cssText = "position: absolute; left: 80px; top: -10px; width: max-content; padding: 20px 25px; background: rgba(255, 255, 255, 0.95) !important; backdrop-filter: blur(15px) !important; -webkit-backdrop-filter: blur(15px) !important; border-radius: 12px; pointer-events: auto; text-align: center; box-shadow: 0 10px 40px rgba(0,0,0,0.6); z-index: 100; color: #0a0a0a !important;";
+                
                 feedMorePopup.innerHTML = `
                     <div style="font-size: 14px; font-weight: 300; margin-bottom: 15px; opacity: 0.9;">${popupCopy}</div>
                     <button class="btn-feed-more" onclick="window.resumeFeedMore()">[ FEED ME MORE ]</button>
