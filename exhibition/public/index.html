@@ -3959,12 +3959,7 @@
                     else if (step === 6) goToWizardStep(7);
                     else if (step === 7) processStep6();
                     else if (step === 8) {
-                        if (window._isPartialAdd) {
-                            const addForm = document.getElementById('add-form');
-                            if (addForm) addForm.dispatchEvent(new Event('submit', { cancelable: true, bubbles: true }));
-                        } else {
-                            goToWizardStep(9);
-                        }
+                        goToWizardStep(9);
                     }
                     else if (step === 9) processStep9();
                 };
@@ -4823,12 +4818,23 @@
                 return false;
             }
             
-            const recsToRender = pendingRecs.slice(0, 5);
-            recsToRender.forEach(rec => {
+            let visibleCount = 0;
+            let currentRecIndex = 0;
+
+            const renderNextCard = () => {
+                if (currentRecIndex >= pendingRecs.length) return;
+                if (visibleCount >= 5) return;
+
+                const rec = pendingRecs[currentRecIndex];
+                currentRecIndex++;
+                visibleCount++;
+
                 const p = rec.person;
                 const sharedConcepts = rec.shared || [];
                 const div = document.createElement('div');
                 div.className = 'suggested-card';
+                // Add an entrance animation class if you like
+                div.style.animation = 'fadeInUp 0.3s ease-out';
                 
                 let sharedHTML = '';
                 if (sharedConcepts.length > 0) {
@@ -4846,7 +4852,6 @@
                 }
 
                 const metaStr = `${p.role || 'Unknown'} <span>•</span> ${p.city || 'Unknown'}`;
-                // Bulletproof anti-orphan: replace the last space with a non-breaking space
                 const metaNoOrphans = metaStr.replace(/ ([^ ]*)$/, '&nbsp;$1');
 
                 div.innerHTML = `
@@ -4864,11 +4869,23 @@
                 div.querySelector('.btn-connect-sleek').addEventListener('click', (e) => {
                     const id = parseInt(e.target.dataset.id);
                     addConnectionEntry(id, 'acquaintance', 3);
-                    e.target.textContent = '[ ADDED ]';
-                    e.target.classList.add('added');
-                    e.target.disabled = true;
+                    
+                    // Remove this card with a fade out
+                    div.style.transition = 'all 0.3s ease';
+                    div.style.opacity = '0';
+                    div.style.transform = 'scale(0.95)';
+                    setTimeout(() => {
+                        div.remove();
+                        visibleCount--;
+                        renderNextCard(); // Pop up the next one!
+                    }, 300);
                 });
-            });
+            };
+
+            // Initially render up to 5 cards
+            for (let i = 0; i < 5; i++) {
+                renderNextCard();
+            }
             return true;
         }
 
