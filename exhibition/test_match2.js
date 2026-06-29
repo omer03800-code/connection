@@ -1,43 +1,49 @@
-const dbData = [
-  { name: 'Maayan Hershler', city: 'Moshav Ilania', role: 'Accountant', tags: '#Ilania', description: 'Work at Raffael', age: '30' }
-];
+const ignoreCities = ['tel aviv', 'jerusalem', 'haifa', 'תל אביב', 'ירושלים', 'חיפה'];
 
-const synonymGroups = [
-  { type: 'small_town', words: ['ilaniya', 'ilania', 'ilanya', 'illania', 'אילניה', 'מושב אילניה', 'אילנייה'] }
-];
+function calculateMatchScore(p1, p2) {
+    let score = 0;
+    let sharedStrings = [];
+    const p1CityLower = p1.city ? p1.city.toLowerCase() : '';
+    const p2CityLower = p2.city ? p2.city.toLowerCase() : '';
+    const p1Age = p1.age ? parseInt(p1.age) : null;
+    const p2Age = p2.age ? parseInt(p2.age) : null;
+    
+    const ageDiff = (p1Age !== null && p2Age !== null && !isNaN(p1Age) && !isNaN(p2Age)) ? Math.abs(p1Age - p2Age) : null;
+    const isSimilarAge = (ageDiff !== null && ageDiff <= 3);
+    
+    if (p1CityLower && p2CityLower) {
+        const cityAliases = {
+            'אילניה': ['ilaniya', 'ilania', 'אילניה'],
+            'moshav ilaniya': ['אילניה', 'ilania', 'ilaniya', 'moshav ilania', 'moshav ilaniya', 'מושב אילניה'],
+            'מושב אילניה': ['ilaniya', 'ilania', 'moshav ilania', 'moshav ilaniya', 'אילניה'],
+            'tel aviv': ['תל אביב', 'tel aviv', 'tel-aviv'],
+            'תל אביב': ['tel aviv', 'tel-aviv', 'תל אביב']
+        };
 
-const p1 = {
-  city: 'Ilania',
-  originCity: '',
-  role: '',
-  description: '',
-  tags: '',
-  age: ''
-};
+        let p1Vals = [p1CityLower];
+        let p2Vals = [p2CityLower];
+        
+        Object.keys(cityAliases).forEach(k => {
+            if (p1CityLower.includes(k)) p1Vals = p1Vals.concat(cityAliases[k]);
+            if (p2CityLower.includes(k)) p2Vals = p2Vals.concat(cityAliases[k]);
+        });
 
-const p1Text = ' ' + [(p1.city||'').toLowerCase(), (p1.originCity||'').toLowerCase(), (p1.role||'').toLowerCase(), (p1.description||'').toLowerCase()].join(' ').replace(/[,.!]/g, ' ') + ' ';
-
-let activeGroups = [];
-synonymGroups.forEach((group, idx) => {
-    if (group.words.some(word => p1Text.includes(' ' + word + ' '))) {
-        activeGroups.push({ idx: idx, type: group.type });
+        const matchFound = p1Vals.some(v1 => p2Vals.some(v2 => v1.includes(v2) || v2.includes(v1)));
+        const shouldIgnore = ignoreCities.some(c => p1CityLower.includes(c)) || ignoreCities.some(c => p2CityLower.includes(c));
+        
+        if (matchFound) {
+            if (!shouldIgnore) {
+                score += 15;
+                sharedStrings.push(p1CityLower);
+            } else if (isSimilarAge) {
+                score += 15;
+                sharedStrings.push(p1CityLower);
+            }
+        }
     }
-});
+    const finalShared = [...new Set(sharedStrings)];
+    return { score, sharedConcepts: finalShared };
+}
 
-let score = 0;
-const p2 = dbData[0];
-const p2TagsCleaned = (p2.tags || '').replace(/#/, '').split(',');
-const p2Text = ' ' + [(p2.city||'').toLowerCase(), (p2.originCity||'').toLowerCase(), (p2.role||'').toLowerCase(), (p2.description||'').toLowerCase(), ...p2TagsCleaned].join(' ').replace(/[,.!]/g, ' ') + ' ';
+console.log("Ilaniya test:", calculateMatchScore({city: 'אילניה', age: '56'}, {city: 'Moshav Ilaniya', age: '57'}));
 
-let shared = { uni: 0, degree: 0, company: 0, big_city: 0, small_town: 0, army_unit: 0, army_base: 0, high_school: 0, mechina: 0 };
-
-activeGroups.forEach(ag => {
-    if (synonymGroups[ag.idx].words.some(word => p2Text.includes(' ' + word + ' '))) {
-        shared[ag.type]++;
-    }
-});
-
-console.log("p1Text:", p1Text);
-console.log("p2Text:", p2Text);
-console.log("activeGroups:", activeGroups);
-console.log("shared:", shared);

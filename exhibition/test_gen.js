@@ -5,17 +5,12 @@ function calculateMatchScore(p1, p2) {
     let sharedStrings = [];
     const p1CityLower = p1.city ? p1.city.toLowerCase() : '';
     const p2CityLower = p2.city ? p2.city.toLowerCase() : '';
-    const p1Age = p1.age ? parseInt(p1.age) : null;
-    const p2Age = p2.age ? parseInt(p2.age) : null;
-    
-    const ageDiff = (p1Age !== null && p2Age !== null && !isNaN(p1Age) && !isNaN(p2Age)) ? Math.abs(p1Age - p2Age) : null;
-    const isSimilarAge = (ageDiff !== null && ageDiff <= 3);
     
     if (p1CityLower && p2CityLower) {
         const cityAliases = {
             'אילניה': ['ilaniya', 'ilania', 'אילניה'],
-            'tel aviv': ['תל אביב', 'tel aviv', 'tel-aviv'],
-            'תל אביב': ['tel aviv', 'tel-aviv', 'תל אביב']
+            'moshav ilaniya': ['אילניה', 'ilania', 'ilaniya', 'moshav ilania', 'moshav ilaniya', 'מושב אילניה'],
+            'מושב אילניה': ['ilaniya', 'ilania', 'moshav ilania', 'moshav ilaniya', 'אילניה']
         };
 
         let p1Vals = [p1CityLower];
@@ -33,9 +28,6 @@ function calculateMatchScore(p1, p2) {
             if (!shouldIgnore) {
                 score += 15;
                 sharedStrings.push(p1CityLower);
-            } else if (isSimilarAge) {
-                score += 15;
-                sharedStrings.push(p1CityLower);
             }
         }
     }
@@ -43,7 +35,20 @@ function calculateMatchScore(p1, p2) {
     return { score, sharedConcepts: finalShared };
 }
 
-console.log("Moshav test:", calculateMatchScore({city: 'אילניה', age: '25'}, {city: 'אילניה', age: '30'}));
-console.log("Big city test (diff age):", calculateMatchScore({city: 'תל אביב', age: '25'}, {city: 'תל אביב', age: '30'}));
-console.log("Big city test (same age):", calculateMatchScore({city: 'תל אביב', age: '25'}, {city: 'תל אביב', age: '26'}));
+const people = [
+    { id: 57, city: 'Moshav Ilaniya', age: '57' },
+    { id: 25, city: 'Tel Aviv', age: '30' }
+];
 
+function generateRecommendations(p1) {
+    let scores = [];
+    people.forEach(p => {
+        const result = calculateMatchScore(p1, p);
+        if (result.score >= 15 && result.sharedConcepts.length > 0) {
+            scores.push({ person: p, score: result.score, shared: result.sharedConcepts });
+        }
+    });
+    return scores.length > 0;
+}
+
+console.log("Has Recs?", generateRecommendations({ city: 'אילניה', age: '25' }));

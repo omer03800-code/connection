@@ -18,7 +18,15 @@ router.get('/search/query', (req, res) => {
         'אילניה': ['ilaniya', 'ilania', 'אילניה'],
         'איניה': ['ilaniya', 'ilania', 'אילניה', 'איניה'],
         'ilaniya': ['ilaniya', 'ilania', 'אילניה'],
-        'ilania': ['ilaniya', 'ilania', 'אילניה']
+        'ilania': ['ilaniya', 'ilania', 'אילניה'],
+        'זכרון יעקב': ['zikhron yaakov', 'זכרון יעקב', 'zikhron ya\'akov'],
+        'זכרון יעקוב': ['zikhron yaakov', 'זכרון יעקב', 'zikhron ya\'akov', 'זכרון יעקוב'],
+        'קרית ים': ['kiryat yam', 'קרית ים', 'קריית ים'],
+        'קריית ים': ['kiryat yam', 'קרית ים', 'קריית ים'],
+        'קרית חיים': ['kiryat haim', 'קרית חיים', 'קריית חיים'],
+        'קריית חיים': ['kiryat haim', 'קרית חיים', 'קריית חיים'],
+        'איילת השחר': ['ayelet hashahar', 'איילת השחר', 'ayelet ha-shahar', 'ayelet hashachar'],
+        'גבעת אלה': ['givat ella', 'givat ela', 'גבעת אלה']
     };
     
     if (aliases[term]) {

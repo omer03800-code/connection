@@ -1,1599 +1,4 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Feed the Beast</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 
-    <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        h1, h2, h3, p, span, div { text-wrap: pretty; }
-        body { width: 100vw; height: 100vh; overflow: hidden; background: #0a0a0a; font-family: 'Helvetica', Arial, sans-serif; transition: filter 0.5s; }
-        body.light-mode { filter: invert(1) hue-rotate(180deg); }
-        canvas { display: block; }
-
-        .node-label {
-            color: rgba(245, 245, 245, 0.95);
-            font-size: 9.5px;
-            pointer-events: none; /* Revert to none so hover only triggers on the circle */
-            cursor: pointer;
-            text-align: center;
-            width: 120px;
-            height: 60px;
-            display: flex;
-            flex-direction: column;
-            justify-content: flex-end;
-            padding-bottom: 5px;
-            text-shadow: 0 0 4px rgba(0,0,0,1);
-            letter-spacing: 0.5px;
-            font-weight: 300;
-            transition: color 0.3s, transform 0.2s, font-weight 0.3s;
-            user-select: none;
-            transform: translateY(60px); /* Position label strictly underneath node */
-            position: relative;
-        }
-
-        .node-label:hover {
-            color: rgba(245, 245, 245, 1);
-            text-shadow: 0 0 8px rgba(245,245,245,0.4);
-        }
-        
-        .btn-feed-more {
-            background: transparent;
-            border: 1px solid transparent;
-            border-radius: 10px;
-            color: #000;
-            opacity: 0.8;
-            cursor: pointer;
-            font-size: 12px;
-            font-family: inherit;
-            letter-spacing: 1.5px;
-            text-transform: uppercase;
-            text-align: center;
-            padding: 0 15px;
-            height: 32px;
-            line-height: 30px;
-            transition: all 0.2s ease;
-            outline: none;
-            font-weight: 300;
-            text-decoration: none;
-            box-sizing: border-box;
-        }
-        .btn-feed-more:hover {
-            opacity: 1;
-            background: #000;
-            color: #fff !important;
-            border-color: #000;
-        }
-        body.light-mode .btn-feed-more {
-            color: #F5F5F5 !important;
-            background: transparent !important;
-            border-color: transparent !important;
-        }
-        body.light-mode .btn-feed-more:hover {
-            color: #000 !important;
-            background: #fff !important;
-            border-color: #fff !important;
-        }
-        
-        #top-bar {
-            position: absolute;
-            top: 20px;
-            left: 20px;
-            z-index: 100;
-            display: flex;
-            gap: 12px;
-            align-items: flex-start;
-        }
-
-        .panel {
-            background: transparent;
-            border: none;
-            color: #F5F5F5;
-            width: max-content;
-            overflow: hidden;
-            flex-shrink: 0;
-            border-radius: 10px;
-            transition: background 0.3s, backdrop-filter 0.3s, width 0.3s, border 0.3s;
-        }
-        .panel:not(.collapsed) {
-            width: 260px;
-            background: rgba(0, 0, 0, 0.25);
-            backdrop-filter: blur(25px);
-            -webkit-backdrop-filter: blur(25px);
-            border: 1px solid rgba(245,245,245,0.2);
-            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
-        }
-
-        .panel-header {
-            padding: 0;
-            font-size: 10px;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            color: rgba(245,245,245,0.8);
-            cursor: pointer;
-            display: flex;
-            justify-content: flex-start;
-            align-items: center;
-            background: transparent;
-            white-space: nowrap;
-        }
-
-        .panel-body { padding: 15px; border-top: 1px solid rgba(245,245,245,0.2); margin-top: 5px; }
-        .panel.collapsed .panel-body { display: none; }
-        .panel.collapsed .panel-header { border-bottom: none; }
-        .panel-icon { font-size: 12px; transition: transform 0.3s; }
-        .panel:not(.collapsed) { }
-        .panel:not(.collapsed) .panel-icon { transform: rotate(45deg); }
-
-        #search-input:focus { 
-            opacity: 1; 
-            background: white;
-            color: black !important;
-            border-color: #F5F5F5;
-        }
-        #search-input::placeholder {
-            color: inherit;
-            opacity: 1;
-        }
-        .search-dropdown-item {
-            padding: 10px 16px;
-            cursor: pointer;
-            border-bottom: 1px solid rgba(245,245,245,0.05);
-            transition: background 0.2s;
-        }
-        .search-dropdown-item:last-child {
-            border-bottom: none;
-        }
-        .search-dropdown-item:hover, .search-dropdown-item.search-item-active {
-            background: rgba(245,245,245,0.1);
-        }
-        .search-item-name {
-            font-size: 13px;
-            font-weight: 500;
-            color: #F5F5F5;
-            margin-bottom: 4px;
-        }
-        .search-item-context {
-            font-size: 10px;
-            color: rgba(245,245,245,0.6);
-            line-height: 1.3;
-        }
-
-        .controls-list {
-            font-size: 10px;
-            line-height: 1.6;
-            color: rgba(245,245,245,0.8);
-            font-family: monospace;
-        }
-        .controls-list div {
-            margin-bottom: 8px;
-            padding-bottom: 6px;
-            border-bottom: 1px solid rgba(245,245,245,0.2);
-        }
-        .controls-list .label {
-            color: rgba(245,245,245,0.6);
-            font-size: 9px;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            margin-bottom: 4px;
-        }
-        .controls-list .key {
-            color: rgba(100,200,255,1);
-            font-weight: bold;
-        }
-
-        input[type="text"].conn-target, select, button {
-            box-sizing: border-box;
-            width: 100%;
-            padding: 8px;
-            margin-bottom: 8px;
-            background: rgba(245,245,245,0.05);
-            border: 1px solid rgba(245,245,245,0.2);
-            color: #F5F5F5;
-            border-radius: 10px;
-            outline: none;
-            font-size: 11px;
-            font-family: inherit;
-        }
-        select option { background: #000; color: #F5F5F5; }
-        button {
-            background: transparent;
-            cursor: pointer;
-            font-weight: 500;
-            transition: 0.2s;
-            box-shadow: none;
-            text-transform: uppercase;
-            font-size: 10px;
-            letter-spacing: 0.5px;
-        }
-        button:hover { background: white; color: black; }
-        #btn-reset { margin-bottom: 0; }
-
-        #info-panel-container {
-            position: absolute;
-            top: 20px;
-            right: 20px;
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-            pointer-events: none;
-            z-index: 100;
-            width: 450px;
-            opacity: 0;
-            transform: translateX(10px);
-            transition: all 0.3s ease;
-        }
-        #info-panel-container.visible {
-            opacity: 1;
-            transform: translateX(0);
-        }
-
-        #info-card {
-            background: rgba(0, 0, 0, 0.25);
-            backdrop-filter: blur(25px);
-            -webkit-backdrop-filter: blur(25px);
-            border: 1px solid rgba(245,245,245,0.2);
-            padding: 25px;
-            border-radius: 10px;
-            color: #F5F5F5;
-            width: 100%;
-            pointer-events: auto;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
-        }
-        #info-name { font-size: 28px; margin-bottom: 4px; font-weight: 400; letter-spacing: 1px; }
-        .info-action-btn {
-            background: transparent;
-            border: 1px solid transparent;
-            border-radius: 10px;
-            color: #E6E6E6;
-            opacity: 1;
-            cursor: pointer;
-            font-size: 12px;
-            letter-spacing: 1.5px;
-            text-transform: uppercase;
-            text-align: center;
-            padding: 0 10px;
-            margin-bottom: 8px;
-            width: auto;
-            transition: all 0.2s ease;
-            outline: none;
-            font-weight: 300;
-            box-sizing: border-box;
-            height: 32px;
-            line-height: 30px;
-        }
-        .info-action-btn:hover { 
-            opacity: 1;
-            background: white;
-            color: black !important;
-            border: 1px solid #F5F5F5;
-        }
-        .tag-pill {
-            display: inline-block;
-            padding: 4px 10px;
-            background: rgba(245,245,245,0.05);
-            border: 1px solid rgba(245,245,245,0.2);
-            border-radius: 10px;
-            font-size: 9px;
-            letter-spacing: 0.5px;
-            color: rgba(245,245,245,0.7);
-        }
-        #info-badge {
-            display: inline-block;
-            padding: 3px 8px;
-            background: rgba(245,245,245,0.1);
-            border: 1px solid rgba(245,245,245,0.2);
-            border-radius: 10px;
-            font-size: 10px;
-            font-weight: 500;
-            margin-bottom: 15px;
-            color: rgba(245,245,245,0.8);
-            letter-spacing: 0.5px;
-            text-transform: uppercase;
-        }
-
-        #btn-path-dest.active {
-            color: #F5F5F5;
-            animation: pulse-bw 1.5s infinite;
-        }
-
-        .path-chain {
-            margin-top: 15px;
-            font-size: 11px;
-            color: rgba(245,245,245,0.6);
-            display: flex;
-            flex-wrap: wrap;
-            gap: 4px;
-            align-items: center;
-            line-height: 1.4;
-        }
-        .path-node {
-            cursor: pointer;
-            color: #F5F5F5;
-            padding: 2px 4px;
-            border-radius: 3px;
-            background: rgba(245,245,245,0.15);
-            transition: 0.2s;
-        }
-        .path-node:hover { background: white; color: black; }
-        .path-arrow { color: rgba(245,245,245,0.4); font-size: 9px; }
-
-        #loading {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            color: rgba(245,245,245,0.5);
-            font-size: 12px;
-            letter-spacing: 2px;
-            text-transform: uppercase;
-        }
-
-        @keyframes pulse-bw {
-            0% { box-shadow: 0 0 0 0 rgba(245,245,245,0.3); }
-            70% { box-shadow: 0 0 0 6px rgba(245,245,245,0); }
-            100% { box-shadow: 0 0 0 0 rgba(245,245,245,0); }
-        }
-
-
-        
-        /* Discover Connections Button */
-        #btn-discover-connections {
-            position: absolute;
-            bottom: 80px;
-            left: 30px;
-            background: rgba(0, 0, 0, 0.85);
-            backdrop-filter: blur(8px);
-            border: 1px solid rgba(245,245,245,0.2);
-            color: #F5F5F5;
-            padding: 12px 24px;
-            border-radius: 10px;
-            font-size: 11px;
-            letter-spacing: 1px;
-            cursor: pointer;
-            z-index: 100;
-            display: flex;
-            align-items: center;
-            justify-content: flex-start;
-            gap: 12px;
-            transition: all 0.3s;
-            width: 250px;
-        }
-        #btn-discover-connections:hover { background: white; color: black; }
-
-
-        /* Modal Styles */
-        .modal {
-            position: fixed;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            background: rgba(0, 0, 0, 0.25);
-            backdrop-filter: blur(25px);
-            -webkit-backdrop-filter: blur(25px);
-            border: 1px solid rgba(245,245,245,0.2);
-            border-radius: 10px;
-            box-shadow: 0 10px 40px rgba(0,0,0,0.5);
-            padding: 0;
-            width: 550px;
-            max-width: 90%;
-            max-height: 85vh;
-            color: #F5F5F5;
-            z-index: 1000;
-        }
-
-        #add-modal {
-            width: 900px;
-            max-width: 95vw;
-            height: 650px;
-        }
-
-        #add-modal, #about-modal {
-            display: flex;
-            flex-direction: column;
-            overflow: hidden;
-            opacity: 0;
-            pointer-events: none;
-            transform: translate(-50%, -50%) scale(0.95);
-            transition: all 0.3s ease;
-        }
-        
-        #about-modal {
-            width: 100vw;
-            height: 100vh;
-            max-width: 100vw;
-            max-height: 100vh;
-            padding: 0;
-            border-radius: 0;
-            display: flex;
-            align-items: flex-start;
-            justify-content: center;
-            border: none;
-        }
-
-        #add-modal.visible, #about-modal.visible {
-            opacity: 1;
-            pointer-events: auto;
-            transform: translate(-50%, -50%) scale(1);
-        }
-        .modal-header { font-size: 18px; padding: 20px; font-weight: 300; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(245,245,245,0.2); }
-        .modal-close { cursor: pointer; opacity: 0.6; transition: 0.2s; font-size: 20px; }
-        .modal-close:hover { opacity: 1; }
-        .form-group { margin-bottom: 15px; }
-        .form-group label { display: block; font-size: 10px; color: rgba(245,245,245,0.6); margin-bottom: 5px; text-transform: uppercase; letter-spacing: 0.5px; }
-        .form-group input, .form-group textarea, .form-group select {
-            width: 100%;
-            background: rgba(245,245,245,0.05);
-            border: 1px solid rgba(245,245,245,0.2);
-            padding: 10px;
-            color: #F5F5F5;
-            border-radius: 10px;
-            font-family: inherit;
-            font-size: 12px;
-            outline: none;
-            box-sizing: border-box;
-        }
-        .form-group input, .form-group select {
-            height: 38px;
-        }
-        .form-group input:focus, .form-group textarea:focus, .form-group select:focus { border-color: rgba(245,245,245,0.5); }
-
-        select {
-            appearance: none;
-            -webkit-appearance: none;
-            background-image: url('data:image/svg+xml;utf8,<svg fill="%23F5F5F5" height="24" viewBox="0 0 24 24" width="24" xmlns="http://www.w3.org/2000/svg"><path d="M7 10l5 5 5-5z"/></svg>');
-            background-repeat: no-repeat;
-            background-position: right 8px center;
-            background-size: 16px;
-            padding-right: 30px !important;
-        }
-        
-        .connection-entry {
-            background: rgba(245,245,245,0.03);
-            border: 1px solid rgba(245,245,245,0.2);
-            padding: 6px;
-            border-radius: 10px;
-            margin-bottom: 6px;
-            display: flex;
-            align-items: center;
-            gap: 6px;
-        }
-        .btn-remove-conn {
-            background: transparent; border: none; color: #ff5555; cursor: pointer; padding: 2px 5px; width: auto; font-size: 14px; margin-left: auto; box-shadow: none;
-        }
-        .btn-remove-conn:hover { background: rgba(255,50,50,0.1); color: #ff5555; }
-        .btn-add-more-conn {
-            background: rgba(245,245,245,0.1); border: 1px dashed rgba(245,245,245,0.3); padding: 8px; font-size: 10px; margin-bottom: 10px; color: #F5F5F5; width: 100%;
-        }
-        .btn-add-more-conn:hover { background: rgba(245,245,245,0.2); color: #F5F5F5; }
-        .btn-submit { background: white; color: black; border: none; font-weight: bold; font-size: 12px; padding: 12px; width: 100%; border-radius: 10px;}
-        .btn-submit:hover { background: #ddd; }
-        #modal-overlay {
-            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.4);
-            z-index: 999; opacity: 0; pointer-events: none; transition: 0.3s;
-        }
-        #modal-overlay.visible { opacity: 1; pointer-events: auto; }
-
-        .wizard-step {
-            display: none;
-            opacity: 0;
-            transition: opacity 0.3s ease;
-        }
-        .wizard-step.active {
-            display: block;
-            opacity: 1;
-        }
-        .scan-spinner {
-            width: 40px;
-            height: 40px;
-            border: 2px solid rgba(245,245,245,0.1);
-            border-top-color: #F5F5F5;
-            border-radius: 50%;
-            animation: spin 1s linear infinite;
-            margin: 0 auto;
-        }
-        @keyframes spin {
-            to { transform: rotate(360deg); }
-        }
-
-        .progress-step {
-            width: 28px; height: 28px; border-radius: 50%;
-            border: 2px solid rgba(245,245,245,0.2);
-            display: flex; justify-content: center; align-items: center;
-            font-size: 12px; color: rgba(245,245,245,0.4);
-            transition: 0.3s;
-            background: transparent;
-        }
-        .progress-step.active {
-            border-color: #F5F5F5; color: black; background: white;
-            font-weight: bold;
-        }
-        .progress-step.completed {
-            border-color: #F5F5F5; color: black; background: white;
-            font-weight: bold;
-        }
-        .progress-line {
-            width: 40px; height: 2px; background: rgba(245,245,245,0.2);
-            transition: 0.3s;
-        }
-        .progress-line.active { background: white; }
-
-        .footer-buttons {
-            display: flex; gap: 15px; margin-top: auto; padding-top: 30px;
-        }
-        .btn-apple-primary {
-            flex: 1; height: 48px; border-radius: 12px; font-size: 14px; font-weight: 600;
-            background: #F5F5F5; color: #111; border: none; cursor: pointer; transition: 0.2s;
-            text-transform: none;
-        }
-        .btn-apple-primary:hover { opacity: 0.8; }
-        .btn-apple-secondary {
-            flex: 1; height: 48px; border-radius: 12px; font-size: 14px; font-weight: 600;
-            background: rgba(245,245,245,0.1); color: #F5F5F5; border: none; cursor: pointer; transition: 0.2s;
-            text-transform: none;
-        }
-        .btn-apple-secondary:hover { background: rgba(245,245,245,0.2); }
-        
-        /* Typography Hierarchy */
-        .wizard-step h2 {
-            font-weight: 300; margin-bottom: 30px; font-size: 28px; line-height: 1.2;
-        }
-        .step-explanation {
-            font-size: 14px; color: rgba(245,245,245,0.6); margin-bottom: 30px; line-height: 1.4; font-weight: 300;
-        }
-
-        /* Toggle Switch */
-        .type-toggle {
-            display: inline-flex;
-            background: #111;
-            border: 1px solid rgba(0,0,0,0.1);
-            border-radius: 30px;
-            padding: 4px;
-            position: relative;
-            margin-bottom: 40px;
-        }
-        .type-toggle-btn {
-            padding: 0 16px;
-            height: 32px;
-            line-height: normal;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            padding-top: 5px;
-            border-radius: 26px;
-            border: none;
-            background: transparent;
-            color: rgba(245,245,245,0.6);
-            font-size: 13px;
-            font-weight: 300;
-            cursor: pointer;
-            transition: 0.3s;
-            position: relative;
-            z-index: 2;
-            white-space: nowrap;
-            letter-spacing: 0.5px;
-            text-transform: none;
-        }
-        .type-toggle-btn:hover {
-            background: transparent !important;
-            color: rgba(245,245,245,0.6) !important;
-        }
-        .type-toggle-btn.active:hover {
-            color: #111 !important;
-        }
-        .type-toggle-btn.active {
-            color: #111 !important;
-        }
-        .type-toggle-slider {
-            position: absolute;
-            top: 4px;
-            left: 4px;
-            height: calc(100% - 8px);
-            background: #f5f5f5;
-            border-radius: 26px;
-            transition: 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
-            z-index: 1;
-        }
-
-        /* Custom Checkbox */
-        .white-checkbox {
-            appearance: none;
-            -webkit-appearance: none;
-            background-color: transparent;
-            border: 1px solid rgba(255, 255, 255, 0.5);
-            border-radius: 3px;
-            width: 16px;
-            height: 16px;
-            display: inline-block;
-            position: relative;
-            cursor: pointer;
-            flex-shrink: 0;
-            margin: 0;
-        }
-        .white-checkbox:checked {
-            background-color: #fff;
-            border-color: #fff;
-        }
-        .white-checkbox:checked::after {
-            content: '';
-            position: absolute;
-            top: 2px;
-            left: 5px;
-            width: 4px;
-            height: 8px;
-            border: solid #111;
-            border-width: 0 2px 2px 0;
-            transform: rotate(45deg);
-        }
-
-        /* Custom Radio Button */
-        .custom-radio {
-            appearance: none;
-            -webkit-appearance: none;
-            background-color: transparent;
-            border: 1px solid rgba(255, 255, 255, 0.5);
-            border-radius: 50%;
-            width: 16px;
-            height: 16px;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            position: relative;
-            cursor: pointer;
-            margin: 0;
-            transition: all 0.2s;
-        }
-        .custom-radio::after {
-            content: '';
-            width: 8px;
-            height: 8px;
-            border-radius: 50%;
-            background-color: transparent;
-            transition: background-color 0.2s;
-        }
-        .custom-radio.active {
-            border-color: #fff;
-        }
-        .custom-radio.active::after {
-            background-color: #fff;
-        }
-
-        .tooltip-icon {
-            display: inline-flex; justify-content: center; align-items: center;
-            width: 14px; height: 14px; border-radius: 50%; background: rgba(245,245,245,0.2);
-            font-size: 10px; color: #F5F5F5; cursor: help; position: relative;
-        }
-        .tooltip-text {
-            visibility: hidden; width: 220px; background: rgba(0,0,0,0.9);
-            color: #F5F5F5; text-align: center; border-radius: 10px; padding: 10px;
-            position: absolute; z-index: 10; bottom: 150%; left: 50%;
-            transform: translateX(-50%); opacity: 0; transition: opacity 0.3s;
-            font-size: 11px; font-weight: normal; border: 1px solid rgba(245,245,245,0.2);
-            pointer-events: none; box-shadow: 0 4px 15px rgba(0,0,0,0.5);
-        }
-        .tooltip-icon:hover .tooltip-text {
-            visibility: visible; opacity: 1;
-        }
-
-        /* Action buttons in info card */
-        .info-actions { display: flex; gap: 8px; margin-top: 15px; }
-        .info-actions button { flex: 1; padding: 8px 0; margin-bottom: 0; }
-
-        .strength-slider {
-            -webkit-appearance: none;
-            width: 100%;
-            height: 1px;
-            background: rgba(255,255,255,0.2);
-            outline: none;
-            border-radius: 1px;
-        }
-        .strength-slider::-webkit-slider-thumb {
-            -webkit-appearance: none;
-            appearance: none;
-            width: 12px;
-            height: 12px;
-            border-radius: 50%;
-            background: #F5F5F5;
-            cursor: pointer;
-        }
-    
-        #feed-more-popup-v2 {
-            position: absolute; left: 80px; top: -10px; width: max-content; 
-            padding: 20px 25px; 
-            background: rgba(255, 255, 255, 0.95) !important; 
-            backdrop-filter: blur(15px) !important; 
-            -webkit-backdrop-filter: blur(15px) !important; 
-            border-radius: 12px; pointer-events: auto; text-align: center; 
-            box-shadow: 0 10px 40px rgba(0,0,0,0.6); z-index: 100; 
-            color: #0a0a0a !important;
-        }
-        body.light-mode #feed-more-popup-v2 {
-            background: rgba(0, 0, 0, 0.95) !important; 
-            color: #f5f5f5 !important;
-        }
-
-    </style>
-</head>
-
-<body class="light-mode">
-    <div id="loading">טוען...</div>
-
-    <div id="top-bar" style="flex-direction: column; gap: 16px;">
-        <div style="display: flex; gap: 10px; align-items: flex-start;">
-            <div id="path-panel" class="panel collapsed">
-                <div class="panel-header" id="path-header">
-                    <button class="info-action-btn" style="margin: 0;">[ TRACE VEIN ]</button>
-                </div>
-                <div class="panel-body">
-                    <div style="display: flex; align-items: center; margin-bottom: 8px; color: rgba(245,245,245,0.7); font-size: 12px; letter-spacing: 1px;">
-                        [<input type="text" id="start-node" list="people-list" placeholder="ORIGIN NODE" autocomplete="off" style="background: transparent; border: none; color: #F5F5F5; width: 100%; outline: none; font-size: 11px; font-family: inherit; text-align: center; text-transform: uppercase; letter-spacing: 1px; padding: 5px;">]
-                    </div>
-                    <div style="display: flex; align-items: center; margin-bottom: 15px; color: rgba(245,245,245,0.7); font-size: 12px; letter-spacing: 1px;">
-                        [<input type="text" id="end-node" list="people-list" placeholder="TARGET NODE" autocomplete="off" style="background: transparent; border: none; color: #F5F5F5; width: 100%; outline: none; font-size: 11px; font-family: inherit; text-align: center; text-transform: uppercase; letter-spacing: 1px; padding: 5px;">]
-                    </div>
-                    <button id="btn-find">Trace Path</button>
-                    <button id="btn-reset">Reset View</button>
-                </div>
-            </div>
-
-            <div id="search-wrapper" style="position: relative; display: flex; align-items: center; margin: 0; width: auto;">
-                <input type="text" id="search-input" class="info-action-btn" placeholder="[ FIND ANYTHING ]" autocomplete="off" style="margin: 0; width: 170px; cursor: text; border-radius: 10px;">
-                <div id="search-dropdown" style="display: none; position: absolute; top: 100%; left: 0; min-width: 280px; background: rgba(0,0,0,0.3); backdrop-filter: blur(25px); border: 1px solid rgba(245,245,245,0.2); border-radius: 10px; z-index: 1000; margin-top: 8px; max-height: 400px; overflow-y: auto; overflow-x: hidden; padding: 8px 0; box-shadow: 0 4px 20px rgba(0,0,0,0.5);">
-                </div>
-            </div>
-
-            <button id="btn-pause" class="info-action-btn" style="margin: 0;">[ FREEZE ]</button>
-        </div>
-    </div>
-    
-    <button id="btn-add-connection" class="info-action-btn" style="position: absolute; top: 20px; left: 50%; transform: translateX(-50%); margin: 0; z-index: 100;">[ FEED THE BEAST ]</button>
-
-    <div id="info-panel-container">
-        <div id="info-card">
-            <!-- Header: Name and Menu -->
-            <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px;">
-                <h2 id="info-name" style="margin: 0;">Name</h2>
-                <div style="display: flex; align-items: center; gap: 15px; margin-top: 6px;">
-                    <div id="info-menu-container" style="position: relative;">
-                        <button id="btn-info-menu" style="background:transparent; border:none; color:#F5F5F5; font-size:22px; cursor:pointer; padding:0; line-height:0.8; opacity:0.6; letter-spacing:2px; outline:none;">...</button>
-                        <div id="info-menu-dropdown" style="display: none; position: absolute; right: 0; top: 20px; background: rgba(0,0,0,0.3); backdrop-filter: blur(25px); border: 1px solid rgba(245,245,245,0.2); padding: 12px; border-radius: 10px; z-index: 100; min-width: 140px;">
-                            <button id="btn-edit-node" class="info-action-btn" style="display: block; width:100%; margin-bottom: 12px; text-align: left; white-space: nowrap;">[ EDIT ]</button>
-                            <button id="btn-delete-node" class="info-action-btn" style="display: block; width:100%; margin-bottom: 0; text-align: left; white-space: nowrap; color: #ff4444;">[ DELETE ]</button>
-                        </div>
-                    </div>
-                    <button id="btn-close-card" style="background:transparent; border:none; color:#F5F5F5; font-size:24px; cursor:pointer; padding:0; line-height:0.8; font-weight:100; opacity:0.6; outline:none;">&times;</button>
-                </div>
-            </div>
-            
-            <!-- Role -->
-            <div id="info-role" style="font-size: 13px; color: rgba(245,245,245,0.6); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 12px; font-weight: 200;"></div>
-
-            <!-- Meta Data -->
-            <div style="display: flex; gap: 15px; margin-bottom: 12px; font-size: 13px; color: rgba(245,245,245,0.7); letter-spacing: 0.5px; font-weight: 200;">
-                <span id="info-age"></span>
-                <span id="info-city"></span>
-            </div>
-
-            <!-- About -->
-            <div id="info-description" style="font-size: 13px; color: rgba(245,245,245,0.7); line-height: 1.5; margin-bottom: 25px; font-weight: 200;"></div>
-            
-            <!-- Chapters -->
-            <div id="info-chapters" style="margin-bottom: 25px;"></div>
-            
-            <!-- Primary Actions -->
-            <div style="display: flex; flex-direction: row; justify-content: center; gap: 15px; margin-bottom: 25px;">
-                <button id="btn-path-dest" class="info-action-btn" style="margin: 0;">[ LOCATE CONNECTION ]</button>
-                <button id="btn-add-from-here" class="info-action-btn" style="margin: 0;">[ ADD CONNECTION ]</button>
-            </div>
-            
-            <!-- Connections -->
-            <details id="info-connections-container" style="border-top: 1px solid rgba(245,245,245,0.2); padding-top: 15px;">
-                <summary style="font-size: 12px; font-weight: 200; margin-bottom: 12px; color: rgba(245,245,245,0.5); letter-spacing: 1.5px; text-transform: uppercase; cursor: pointer; outline: none; list-style: none;">
-                    Connected To <span style="font-size: 8px; margin-left: 5px;">▼</span>
-                </summary>
-                <div id="info-connections-list" style="max-height: 160px; overflow-y: auto;"></div>
-            </details>
-
-            <div id="info-path" style="margin-top: 15px; font-size: 13px; color: rgba(245,245,245,0.7); font-weight: 200;"></div>
-            
-            <div id="info-suggestions" style="margin-top: 20px; border-top: 1px solid rgba(245,245,245,0.2); padding-top: 15px; display: none;">
-                <div style="font-size: 12px; font-weight: 200; margin-bottom: 12px; color: rgba(245,245,245,0.5); letter-spacing: 1.5px; text-transform: uppercase;">Suggested</div>
-                <div id="info-suggestions-list"></div>
-            </div>
-        
-        <div id="info-secondary-card" style="position: relative; display: none; border-top: 1px dashed rgba(245,245,245,0.3); padding-top: 15px; margin-top: 15px;">
-            <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 5px;">
-                <div style="padding-right: 20px;">
-                    <h3 id="sec-info-name" style="margin: 0; font-size: 14px; font-weight: bold;"></h3>
-                    <div id="sec-info-role" style="font-size: 10px; color: #aaa;"></div>
-                </div>
-                <button id="btn-close-sec" style="position: absolute; top: 15px; right: 0px; background: transparent; color: #aaa; border: none; font-size: 16px; cursor: pointer; padding: 0; line-height: 1; min-width: auto; height: auto; width: auto;">&times;</button>
-            </div>
-            <div id="sec-info-details" style="font-size: 10px; color: rgba(245,245,245,0.6); margin-bottom: 10px;"></div>
-            <div style="display: flex; gap: 5px;">
-                <button id="btn-sec-ignore" style="flex: 1; background: transparent; color: #aaa; border: 1px solid rgba(245,245,245,0.2); border-radius: 10px; padding: 6px; font-size: 10px; cursor: pointer;">Not Related</button>
-                <button id="btn-sec-connect" style="flex: 1; background: white; color: black; border: none; border-radius: 10px; padding: 6px; font-weight: bold; font-size: 10px; cursor: pointer;">Connect</button>
-            </div>
-        </div>
-        </div>
-    </div>
-    
-    <div id="conn-secondary-card" style="position: relative; display: none; background: rgba(0, 0, 0, 0.25);
-            backdrop-filter: blur(25px);
-            -webkit-backdrop-filter: blur(25px); border: 1px solid rgba(245,245,245,0.2); padding: 20px; border-radius: 10px; pointer-events: auto; color: #F5F5F5; box-shadow: 0 10px 30px rgba(0,0,0,0.5);">
-        <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 5px;">
-            <div style="padding-right: 20px;">
-                <h3 id="conn-sec-name" style="margin: 0; font-size: 14px; font-weight: bold;"></h3>
-                <div id="conn-sec-role" style="font-size: 11px; color: #aaa;"></div>
-            </div>
-            <button id="btn-close-conn-sec" style="position: absolute; top: 10px; right: 10px; background: transparent; color: #aaa; border: none; font-size: 16px; cursor: pointer; padding: 0; line-height: 1; min-width: auto; height: auto; width: auto;">&times;</button>
-        </div>
-        <div id="conn-sec-details" style="font-size: 11px; color: rgba(245,245,245,0.6); margin-bottom: 10px;"></div>
-        <button id="btn-conn-sec-view" style="width: 100%; background: white; color: black; border: none; border-radius: 10px; padding: 8px; font-weight: bold; font-size: 11px; cursor: pointer;">View Profile</button>
-    </div>
-
-    <!-- New UI Elements -->
-    
-    <button id="btn-discover-connections" style="display: none;">
-        <span style="font-size: 14px; font-weight: lighter; width: 14px; display: inline-block;"></span> DISCOVER CONNECTIONS
-    </button>
-
-    <div style="position: absolute; bottom: 30px; right: 30px; display: flex; align-items: center; gap: 15px; z-index: 100;">
-        <button id="btn-info" class="info-action-btn" onclick="document.getElementById('about-modal').classList.add('visible'); document.getElementById('modal-overlay').classList.add('visible');" style="margin: 0;">[ ABOUT THE BEAST ]</button>
-        <button id="btn-theme" class="info-action-btn" style="margin: 0;" title="Toggle Day/Night Mode">[ night ]</button>
-    </div>
-
-    <div id="modal-overlay" class="modal-overlay"></div>
-
-    <!-- About Modal -->
-    <div id="about-modal" class="modal">
-        <span class="close-btn" id="btn-close-about" onclick="document.getElementById('about-modal').classList.remove('visible'); document.getElementById('modal-overlay').classList.remove('visible');" style="position: absolute; top: 40px; right: 40px; font-size: 32px; font-weight: 300; cursor: pointer; color: inherit; z-index: 10; line-height: 1;">&times;</span>
-        
-        <div style="position: relative; width: 100%; height: 100%; display: flex; flex-direction: column; padding: 12vh 10% 0; font-family: 'Helvetica', Arial, sans-serif;">
-            
-            <h1 style="font-weight: 800; font-size: 15vw; line-height: 0.85; margin-bottom: 6vh; text-transform: uppercase; letter-spacing: -0.02em; word-break: keep-all; color: inherit; z-index: 2; user-select: none;">
-                FEED THE<br>BEAST
-            </h1>
-            
-            <div style="position: relative; width: 100%; z-index: 2;">
-                <div style="max-width: 650px; font-weight: 300; font-size: 18px; line-height: 1.6; color: inherit; opacity: 0.85;">
-                    <p style="margin-bottom: 25px;">An interactive installation that reveals the hidden<br>network of human connections surrounding us.</p>
-                    
-                    <p style="margin-bottom: 25px;">Each node represents a real person.<br>Each line represents a real relationship.<br>Together, they form a living organism.</p>
-                    
-                    <p style="margin-bottom: 25px;">Explore the system, trace paths between individuals,<br>uncover hidden links, and discover how people are<br>connected in ways that often remain unseen.</p>
-                    
-                    <p style="margin-bottom: 25px;">The organism is never complete.<br>With every new participant and every<br>new connection,<br>it grows, adapts, and reorganizes itself.</p>
-                </div>
-                
-                <div style="position: absolute; right: 0; bottom: 140px; font-size: 12px; font-weight: 300; letter-spacing: 1.5px; text-transform: uppercase; color: inherit; opacity: 0.5; user-select: none;">
-                    [ SCROLL TO EXPLORE ]
-                </div>
-            </div>
-        </div>
-    </div>
-    
-    <div id="discover-modal" class="modal" style="display: none; padding-top: 40px; padding-bottom: 20px; max-width: 95vw; width: 95vw; height: 90vh; box-sizing: border-box; flex-direction: column;">
-        <span class="close-btn" id="btn-close-discover" style="position: absolute; font-size: 32px; right: 25px; top: 15px; cursor: pointer; color: #F5F5F5;">&times;</span>
-        <h2 style="margin-bottom: 5px; font-weight: 300; font-size: 28px; text-align: center;">Discover Connections</h2>
-        <p style="font-size: 14px; color: rgba(245,245,245,0.6); margin-bottom: 30px; text-align: center;">Help us map the network by approving suggested matches.</p>
-        <div id="discover-list" style="flex: 1; overflow-y: auto; padding-right: 15px; display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 25px; align-content: start;"></div>
-    </div>
-
-    <div id="add-modal" class="modal">
-        <span class="close-btn" id="btn-close-modal" style="position: absolute; top: 15px; right: 20px; font-size: 28px; cursor: pointer; color: #F5F5F5; opacity: 0.6; transition: 0.2s; z-index: 10;">&times;</span>
-        <h2 id="modal-title" style="display: none;">Add Person</h2>
-        
-        <!-- VERTICAL PROGRESS BAR (NEW DESIGN) -->
-        <div class="wizard-progress-container" id="wizard-progress-container">
-            <div class="wizard-progress-line"></div>
-            
-            <div class="wizard-progress-item" id="prog-item-1">
-                <div class="wizard-progress-circle"></div>
-                <div class="wizard-progress-text">1. Origin</div>
-            </div>
-            
-            <div class="wizard-progress-item" id="prog-item-2">
-                <div class="wizard-progress-circle"></div>
-                <div class="wizard-progress-text">2. Work</div>
-            </div>
-            
-            <div class="wizard-progress-item" id="prog-item-3">
-                <div class="wizard-progress-circle"></div>
-                <div class="wizard-progress-text">3. Education</div>
-            </div>
-            
-            <div class="wizard-progress-item" id="prog-item-4">
-                <div class="wizard-progress-circle"></div>
-                <div class="wizard-progress-text">4. Military</div>
-            </div>
-            
-            <div class="wizard-progress-item" id="prog-item-5">
-                <div class="wizard-progress-circle"></div>
-                <div class="wizard-progress-text">5. General</div>
-            </div>
-        </div>
-
-        <form id="add-form" style="display: flex; flex-direction: column; flex: 1; overflow: hidden; margin: 0;">
-        <!-- NEW UI WIZARD CONTAINER -->
-        <style>
-            .editorial-input {
-                background: transparent;
-                border: none;
-                border-bottom: 1px solid rgba(245,245,245,0.4);
-                color: #F5F5F5;
-                font-size: 16px;
-                padding: 10px 0;
-                width: 100%;
-                outline: none;
-                font-family: inherit;
-                transition: border-color 0.3s;
-                letter-spacing: 1px;
-            }
-            .editorial-input:focus {
-                border-bottom-color: #F5F5F5;
-            }
-            .editorial-input::placeholder {
-                color: rgba(245, 245, 245, 0.15);
-            }
-            .editorial-label {
-                font-size: 11px;
-                text-transform: uppercase;
-                letter-spacing: 1px;
-                color: rgba(245,245,245,0.6);
-                margin-bottom: 5px;
-                display: block;
-            }
-            .wizard-layout {
-                display: flex; 
-                flex-direction: row;
-                flex: 1;
-                overflow: hidden;
-            }
-            .wizard-form-area {
-                flex: 1.5; 
-                padding: 40px;
-                padding-left: 50px; 
-                overflow-y: auto; 
-                display: flex; 
-                flex-direction: column;
-                justify-content: flex-start;
-            }
-            #wizard-step-0, #wizard-step-1, #wizard-step-4, #wizard-step-4a, #wizard-step-5, #wizard-step-6, #wizard-step-8 {
-                padding-right: 280px; /* Shortened inputs further */
-            }
-            .wizard-preview-area {
-                flex: 1; 
-                background: rgba(0,0,0,0.2); 
-                border-left: 1px solid rgba(245,245,245,0.1); 
-                padding: 40px; 
-                display: flex; 
-                flex-direction: column; 
-                align-items: center; 
-                justify-content: flex-start;
-                overflow-y: auto;
-            }
-            #live-network-preview {
-                display: flex;
-                flex-direction: row;
-                flex-wrap: wrap;
-                align-items: center;
-                justify-content: center;
-                gap: 10px;
-                width: 100%;
-            }
-            .preview-node {
-                display: flex;
-                flex-direction: row;
-                align-items: center;
-                animation: fadeInNode 0.5s ease forwards;
-            }
-            .preview-dot {
-                width: 14px;
-                height: 14px;
-                border-radius: 50%;
-                background: rgba(245,245,245,0.9);
-                box-shadow: 0 0 15px rgba(245,245,245,0.5);
-                margin: 0 10px 8px 10px;
-            }
-            .preview-line {
-                width: 30px;
-                height: 1px;
-                background: rgba(245,245,245,0.3);
-                margin: 0;
-            }
-            .preview-text {
-                font-size: 11px;
-                color: rgba(245,245,245,0.8);
-                text-transform: uppercase;
-                letter-spacing: 1px;
-                text-align: center;
-                margin-bottom: 2px;
-            }
-            @keyframes fadeInNode {
-                from { opacity: 0; transform: translateY(10px); }
-                to { opacity: 1; transform: translateY(0); }
-            }
-            .footer-buttons {
-                margin-top: 40px;
-                display: flex;
-                gap: 15px;
-            }
-            .chapter-block {
-                margin-bottom: 30px;
-            }
-            .autocomplete-wrapper {
-                position: relative;
-            }
-            .autocomplete-dropdown {
-                position: absolute;
-                top: 100%;
-                left: 0;
-                width: 100%;
-                background: rgba(10,10,10,0.95);
-                border: 1px solid rgba(245,245,245,0.2);
-                border-radius: 8px;
-                margin-top: 5px;
-                box-shadow: 0 4px 15px rgba(0,0,0,0.5);
-                z-index: 50;
-                max-height: 200px;
-                overflow-y: auto;
-                display: none;
-            }
-            .autocomplete-item {
-                padding: 12px 15px;
-                font-size: 13px;
-                cursor: pointer;
-                border-bottom: 1px solid rgba(245,245,245,0.1);
-                color: #F5F5F5;
-                display: flex;
-                justify-content: space-between;
-                align-items: center;
-            }
-            .autocomplete-item:hover, .autocomplete-item.active {
-                background: rgba(245,245,245,0.1);
-            }
-            .autocomplete-count {
-                font-size: 11px;
-                color: rgba(245,245,245,0.5);
-            }
-            .dynamic-stats {
-                font-size: 12px;
-                color: rgba(245,245,245,0.5);
-                margin-top: 8px;
-                min-height: 18px;
-            }
-            
-            /* --- TAGS SYSTEM --- */
-            .tags-wrapper {
-                display: flex;
-                flex-wrap: wrap;
-                gap: 8px;
-                align-items: center;
-                border-bottom: 1px solid rgba(245,245,245,0.4);
-                padding-bottom: 4px;
-                min-height: 38px;
-                transition: border-bottom-color 0.3s ease;
-            }
-            .tags-wrapper:focus-within {
-                border-bottom-color: rgba(245,245,245,0.8);
-            }
-            .tags-wrapper .editorial-input {
-                border-bottom: none;
-                padding: 4px 0;
-                flex-grow: 1;
-                min-width: 120px;
-                width: auto;
-            }
-            .tags-wrapper .editorial-input:focus {
-                border-bottom-color: transparent;
-            }
-            .tag-item {
-                display: flex;
-                align-items: center;
-                background: #000;
-                border: 1px solid rgba(245,245,245,0.2);
-                border-radius: 12px;
-                padding: 4px 12px;
-                font-family: 'Helvetica', Arial, sans-serif;
-                font-weight: 300;
-                font-size: 14px;
-                color: #fff;
-                white-space: nowrap;
-            }
-            
-            /* --- SUGGESTED CONNECTIONS --- */
-            .suggested-card {
-                position: relative;
-                background: transparent;
-                border: 1px solid rgba(245, 245, 245, 0.15);
-                border-radius: 12px;
-                padding: 24px 30px;
-                margin-bottom: 16px;
-                display: flex;
-                flex-direction: row;
-                align-items: center;
-            }
-            .btn-dismiss-rec {
-                position: absolute;
-                top: 10px;
-                right: 10px;
-                left: auto;
-                background: transparent !important;
-                border: none !important;
-                color: #888 !important;
-                font-size: 16px;
-                cursor: pointer;
-                padding: 0;
-                margin: 0;
-                width: 24px;
-                height: 24px;
-                min-width: 0;
-            }
-            .btn-dismiss-rec:hover {
-                color: rgba(245, 245, 245, 1) !important;
-                background: transparent !important;
-            }
-            .suggested-card-content {
-                flex: 1;
-                display: flex;
-                flex-direction: column;
-            }
-            .suggested-card-action {
-                width: 180px;
-                display: flex;
-                justify-content: center;
-                align-items: center;
-                padding-left: 30px;
-            }
-            .suggested-name {
-                font-family: 'Helvetica', Arial, sans-serif;
-                font-size: 20px;
-                font-weight: 300;
-                color: #F5F5F5;
-                letter-spacing: -0.01em;
-                margin-bottom: 8px;
-                text-wrap: balance;
-            }
-            .suggested-meta {
-                font-family: 'Helvetica', Arial, sans-serif;
-                font-size: 14px;
-                color: rgba(245,245,245,0.6);
-                font-weight: 300;
-                letter-spacing: 0.2px;
-                text-wrap: balance;
-            }
-            .suggested-meta span {
-                margin: 0 8px;
-                opacity: 0.4;
-            }
-            .btn-connect-sleek {
-                font-family: 'Helvetica', Arial, sans-serif;
-                background: transparent;
-                color: #E6E6E6;
-                border: none;
-                padding: 10px;
-                font-weight: 300;
-                font-size: 11px;
-                cursor: pointer;
-                transition: 0.2s;
-                text-transform: uppercase;
-                letter-spacing: 2px;
-                outline: none;
-            }
-            .btn-connect-sleek:hover {
-                color: #FFF !important;
-                background: #000 !important;
-                transform: scale(1.02);
-            }
-            .btn-connect-sleek.added {
-                color: rgba(245,245,245,0.3);
-                cursor: default;
-                transform: none;
-            }
-            .suggested-shared-wrap {
-                display: flex;
-                flex-direction: column;
-                align-items: flex-start;
-                gap: 12px;
-                margin-top: 24px;
-            }
-            .suggested-shared-label {
-                font-family: 'Helvetica', Arial, sans-serif;
-                font-size: 11px;
-                color: rgba(245,245,245,0.4);
-                text-transform: uppercase;
-                letter-spacing: 1.5px;
-                font-weight: 500;
-            }
-            .suggested-shared-pill {
-                font-family: 'Helvetica', Arial, sans-serif;
-                display: flex;
-                align-items: center;
-                background: #000;
-                border: 1px solid rgba(245,245,245,0.2);
-                border-radius: 12px;
-                padding: 4px 12px;
-                font-weight: 300;
-                font-size: 14px;
-                color: #fff;
-                white-space: nowrap;
-            }
-
-            .tag-remove {
-                margin-left: 8px;
-                cursor: pointer;
-                font-size: 14px;
-                color: rgba(255,255,255,0.5);
-                transition: color 0.2s;
-                font-weight: 400;
-            }
-            .tag-remove:hover {
-                color: #fff;
-            }
-
-        /* --- VERTICAL PROGRESS BAR (NEW DESIGN) --- */
-        .wizard-progress-container {
-            position: absolute;
-            right: 40px;
-            top: 104px;
-            bottom: 120px;
-            transform: none;
-            display: none;
-            flex-direction: column;
-            justify-content: space-between;
-            z-index: 1000;
-            width: 140px; /* Fixed width to allow proper alignment with footer */
-        }
-        .wizard-progress-line {
-            position: absolute;
-            left: 5px; /* Center of the 10px circle */
-            top: 5px;
-            bottom: 5px;
-            width: 1px;
-            background: rgba(255, 255, 255, 0.3);
-            z-index: 1;
-        }
-        .wizard-progress-item {
-            display: flex;
-            align-items: center;
-            gap: 15px;
-            z-index: 2;
-        }
-        .wizard-progress-circle {
-            width: 11px;
-            height: 11px;
-            border-radius: 50%;
-            border: 1px solid rgba(255, 255, 255, 0.5);
-            background: rgba(255, 255, 255, 0); /* will invert to black background for modal */
-            box-sizing: border-box;
-            transition: all 0.3s ease;
-            position: relative;
-        }
-        .wizard-progress-item.completed .wizard-progress-circle,
-        .wizard-progress-item.active .wizard-progress-circle {
-            background: #fff;
-            border-color: #fff;
-        }
-        .wizard-progress-text {
-            font-size: 13px;
-            color: rgba(255, 255, 255, 0.5);
-            font-weight: 300;
-            transition: color 0.3s ease;
-            letter-spacing: 0.5px;
-        }
-        .wizard-progress-item.active .wizard-progress-text {
-            color: #F5F5F5;
-            font-weight: 400;
-        }
-        
-        #feed-more-popup-v2 {
-            position: absolute; left: 80px; top: -10px; width: max-content; 
-            padding: 20px 25px; 
-            background: rgba(255, 255, 255, 0.95) !important; 
-            backdrop-filter: blur(15px) !important; 
-            -webkit-backdrop-filter: blur(15px) !important; 
-            border-radius: 12px; pointer-events: auto; text-align: center; 
-            box-shadow: 0 10px 40px rgba(0,0,0,0.6); z-index: 100; 
-            color: #0a0a0a !important;
-        }
-        body.light-mode #feed-more-popup-v2 {
-            background: rgba(0, 0, 0, 0.95) !important; 
-            color: #f5f5f5 !important;
-        }
-
-    </style>
-
-        <div class="wizard-layout">
-            <div class="wizard-form-area" id="wizard-form-area">
-                <input type="hidden" id="form-mode" value="add">
-                <input type="hidden" id="form-person-id" value="">
-                <input type="hidden" id="form-is-myself" value="yes">
-                <input type="hidden" id="f-tags" value="">
-                <input type="hidden" id="f-desc" value="">
-                
-                <!-- STEP 0 -->
-                <div id="wizard-step-0" class="wizard-step active" style="height: 100%;">
-                    <!-- Normal flow title -->
-                    <h2 id="step-0-title">Who are we adding?</h2>
-                    
-                    <!-- Radio buttons aligned perfectly with "1. Name" (20%) -->
-                    <div style="position: absolute; top: 20%; left: 50px; transform: translateY(-50%); z-index: 30;">
-                        <div style="display: flex; align-items: center; gap: 20px;">
-                            <div style="display: flex; align-items: center; gap: 10px; cursor: pointer;" onclick="setPersonType('myself')">
-                                <div class="custom-radio active" id="radio-myself"></div>
-                                <span style="font-size: 15px; color: #F5F5F5; font-weight: 300; letter-spacing: 0.5px;">It's me</span>
-                            </div>
-                            <div style="width: 1px; height: 16px; background: rgba(255,255,255,0.2);"></div>
-                            <div style="display: flex; align-items: center; gap: 10px; cursor: pointer;" onclick="setPersonType('someone')">
-                                <div class="custom-radio" id="radio-someone"></div>
-                                <span style="font-size: 15px; color: #F5F5F5; font-weight: 300; letter-spacing: 0.5px;">Someone else</span>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <!-- Text input aligned perfectly with "2. Your story" (40%) -->
-                    <div class="chapter-block" style="position: absolute; top: 40%; left: 50px; transform: translateY(-50%); width: 360px; z-index: 20; margin-top: 0;">
-                        <label class="editorial-label" id="step-1-title">What's your name?</label>
-                        <input type="text" id="f-name-initial" class="editorial-input" placeholder="e.g. John Doe" autocomplete="off" style="width: 100%;">
-                    </div>
-                </div>
-
-                <!-- STEP 2 -->
-                <div id="wizard-step-2" class="wizard-step" style="text-align: center; height: 100%; min-height: 400px;">
-                    <div style="display: flex; flex-direction: column; justify-content: center; align-items: center; height: 100%; width: 100%;">
-                        <div class="scan-spinner"></div>
-                        <h3 style="font-weight: 300; margin-top: 30px; letter-spacing: 1px; font-size: 24px;">Looking for existing traces...</h3>
-                        <p id="step-2-explanation" style="color: rgba(245,245,245,0.5); font-size: 13px; margin-top: 10px;">Searching the network</p>
-                    </div>
-                </div>
-
-                <!-- STEP 3 MATCH FOUND -->
-                <div id="wizard-step-3" class="wizard-step" style="text-align: center; height: 100%; min-height: 400px;">
-                    <div style="display: flex; flex-direction: column; height: 100%; width: 100%;">
-                        <div style="flex: 1; display: flex; flex-direction: column; justify-content: center; align-items: center;">
-                            <h2 id="step-3-title">Have we met before?</h2>
-                            <p class="step-explanation" id="step-3-explanation" style="margin-bottom: 30px;">We found someone in the network who might be you.</p>
-                            
-                            <div id="match-profile-card" style="background: rgba(245,245,245,0.05); border: 1px solid rgba(245,245,245,0.2); border-radius: 10px; padding: 20px; margin: 0 auto; width: 100%; max-width: 320px;">
-                                <div id="match-name" style="font-size: 18px; font-weight: 600; margin-bottom: 8px;"></div>
-                                <div id="match-role" style="font-size: 14px; color: rgba(245,245,245,0.7); margin-bottom: 4px;"></div>
-                                <div id="match-city" style="font-size: 14px; color: rgba(245,245,245,0.7);"></div>
-                            </div>
-                        </div>
-                        <div class="footer-buttons" style="margin-top: auto; display: flex; justify-content: space-between; gap: 10px; padding-top: 20px;">
-                            <button type="button" id="btn-match-yes" class="info-action-btn" style="margin: 0; min-width: auto;">[ Yes, that's me ]</button>
-                            <button type="button" id="btn-match-no" class="info-action-btn" style="margin: 0; min-width: auto;">[ No, not me ]</button>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- STEP 4 BASICS -->
-                <div id="wizard-step-4" class="wizard-step" style="height: 100%;">
-                    <h2 id="step-4-title">Where does your story begin?</h2>
-                    
-                    <!-- Full Name Block (only visible when adding connections) -->
-                    <div class="chapter-block" id="edit-name-group" style="display: none; position: absolute; top: 5%; left: 50px; width: calc(100% - 330px); z-index: 40;">
-                        <label class="editorial-label">Full Name</label>
-                        <input type="text" id="f-name" class="editorial-input" required>
-                    </div>
-
-                    <!-- 20% Block: Birth Year & Country -->
-                    <div style="position: absolute; top: 20%; left: 50px; width: calc(100% - 330px); z-index: 30;">
-
-                        <div style="display:flex; flex-direction: column; gap:80px;">
-                            <div>
-                                <label class="editorial-label">Birth Year</label>
-                                <input type="number" id="f-birth-year" class="editorial-input" placeholder="YYYY" min="1900" max="2026">
-                            </div>
-                            <div>
-                                <label class="editorial-label">Country</label>
-                                <input type="text" id="f-country" class="editorial-input" placeholder="e.g. Israel" value="Israel">
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- STEP 4a LOCATIONS -->
-                <div id="wizard-step-4a" class="wizard-step" style="height: 100%;">
-                    <h2 id="step-4a-title">Where are you located?</h2>
-                    <!-- Current City & Checkbox and Originally From -->
-                    <div style="position: absolute; top: 20%; left: 50px; width: calc(100% - 330px); z-index: 20; display: flex; flex-direction: column; gap: 80px;">
-                        <div>
-                            <div class="chapter-block autocomplete-wrapper" style="margin-bottom: 0px;">
-                                <label class="editorial-label">Current City</label>
-                                <div class="tags-wrapper" id="tw-f-city" onclick="document.getElementById('f-city').focus()">
-                                    <input type="text" id="f-city" class="editorial-input auto-location" placeholder="Where do you live?">
-                                </div>
-                                <div class="autocomplete-dropdown" id="dropdown-f-city"></div>
-                                <div class="dynamic-stats" id="stats-f-city"></div>
-                            </div>
-
-                            <!-- Checkbox just below -->
-                            <div style="display: flex; align-items: center; gap: 8px; font-size: 11px; color: rgba(245,245,245,0.6); text-transform: uppercase; letter-spacing: 1px; margin-top: 5px;">
-                                <input type="checkbox" id="f-same-city" class="white-checkbox" onchange="toggleHometown()">
-                                <label for="f-same-city" style="cursor: pointer; margin-top: 1px;">I grew up there too.</label>
-                            </div>
-                        </div>
-
-                        <!-- Originally From -->
-                        <div class="chapter-block autocomplete-wrapper" id="origin-city-wrapper">
-                            <label class="editorial-label">Originally From</label>
-                            <div class="tags-wrapper" id="tw-f-origin-city" onclick="document.getElementById('f-origin-city').focus()">
-                                <input type="text" id="f-origin-city" class="editorial-input auto-location" placeholder="Hometown">
-                            </div>
-                            <div class="autocomplete-dropdown" id="dropdown-f-origin-city"></div>
-                            <div class="dynamic-stats" id="stats-f-origin-city"></div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- STEP 5 CURRENT POSITION -->
-                <div id="wizard-step-5" class="wizard-step" style="height: 100%;">
-                    <h2 id="step-5-title">What keeps you busy?</h2>
-                    
-                    <div class="chapter-block autocomplete-wrapper" style="position: absolute; top: 20%; left: 50px; width: calc(100% - 330px); z-index: 30;">
-                        <label class="editorial-label">Current Role</label>
-                        <div class="tags-wrapper" id="tw-f-role" onclick="document.getElementById('f-role').focus()">
-                            <input type="text" id="f-role" class="editorial-input auto-role" placeholder="e.g. Designer, Developer, Student">
-                        </div>
-                        <div class="autocomplete-dropdown" id="dropdown-f-role"></div>
-                        <div class="dynamic-stats" id="stats-f-role"></div>
-                    </div>
-
-                    <div class="chapter-block autocomplete-wrapper" style="position: absolute; top: 40%; left: 50px; width: calc(100% - 330px); z-index: 20;">
-                        <label class="editorial-label">Current Workplace</label>
-                        <div class="tags-wrapper" id="tw-f-workplace" onclick="document.getElementById('f-workplace').focus()">
-                            <input type="text" id="f-workplace" class="editorial-input auto-work" placeholder="Company or Institution">
-                        </div>
-                        <div class="autocomplete-dropdown" id="dropdown-f-workplace"></div>
-                        <div class="dynamic-stats" id="stats-f-workplace"></div>
-                    </div>
-                </div>
-
-                <!-- STEP 6 EDUCATION -->
-                <div id="wizard-step-6" class="wizard-step" style="height: 100%;">
-                    <h2 id="step-6-title">Where did you study?</h2>
-                    
-                    <div class="chapter-block autocomplete-wrapper" style="position: absolute; top: 15%; left: 50px; width: calc(100% - 330px); z-index: 50;">
-                        <label class="editorial-label">School / High School</label>
-                        <div class="tags-wrapper" id="tw-f-highschool" onclick="document.getElementById('f-highschool').focus()">
-                            <input type="text" id="f-highschool" class="editorial-input auto-highschool" placeholder="e.g. Kadoorie School">
-                        </div>
-                        <div class="autocomplete-dropdown" id="dropdown-f-highschool"></div>
-                        <div class="dynamic-stats" id="stats-f-highschool"></div>
-                    </div>
-
-                    <div class="chapter-block autocomplete-wrapper" style="position: absolute; top: 45%; left: 50px; width: calc(100% - 330px); z-index: 40;">
-                        <label class="editorial-label">University</label>
-                        <div class="tags-wrapper" id="tw-f-university" onclick="document.getElementById('f-university').focus()">
-                            <input type="text" id="f-university" class="editorial-input auto-university" placeholder="e.g. Hebrew University">
-                        </div>
-                        <div class="autocomplete-dropdown" id="dropdown-f-university"></div>
-                        <div class="dynamic-stats" id="stats-f-university"></div>
-                    </div>
-
-                    <div class="chapter-block autocomplete-wrapper" style="position: absolute; top: 75%; left: 50px; width: calc(100% - 330px); z-index: 30;">
-                        <label class="editorial-label">Degree / Major</label>
-                        <div class="tags-wrapper" id="tw-f-degree" onclick="document.getElementById('f-degree').focus()">
-                            <input type="text" id="f-degree" class="editorial-input auto-degree" placeholder="e.g. Computer Science">
-                        </div>
-                        <div class="autocomplete-dropdown" id="dropdown-f-degree"></div>
-                        <div class="dynamic-stats" id="stats-f-degree"></div>
-                    </div>
-                </div>
-
-                <!-- STEP 7 ARMY -->
-                <div id="wizard-step-7" class="wizard-step" style="height: 100%;">
-                    <h2 id="step-7-title">Military Service</h2>
-                    
-                    <div class="chapter-block autocomplete-wrapper" style="position: absolute; top: 25%; left: 50px; width: calc(100% - 330px); z-index: 40;">
-                        <label class="editorial-label">Military Role</label>
-                        <div class="tags-wrapper" id="tw-f-army-role" onclick="document.getElementById('f-army-role').focus()">
-                            <input type="text" id="f-army-role" class="editorial-input auto-army-role" placeholder="e.g. Combat Soldier, Commander">
-                        </div>
-                        <div class="autocomplete-dropdown" id="dropdown-f-army-role"></div>
-                        <div class="dynamic-stats" id="stats-f-army-role"></div>
-                    </div>
-
-                    <div class="chapter-block autocomplete-wrapper" style="position: absolute; top: 55%; left: 50px; width: calc(100% - 330px); z-index: 30;">
-                        <label class="editorial-label">Army Base</label>
-                        <div class="tags-wrapper" id="tw-f-army-base" onclick="document.getElementById('f-army-base').focus()">
-                            <input type="text" id="f-army-base" class="editorial-input auto-army-base" placeholder="e.g. Kirya, Tzeelim">
-                        </div>
-                        <div class="autocomplete-dropdown" id="dropdown-f-army-base"></div>
-                        <div class="dynamic-stats" id="stats-f-army-base"></div>
-                    </div>
-                </div>
-
-                <!-- STEP 8 GENERAL -->
-                <div id="wizard-step-8" class="wizard-step" style="height: 100%;">
-                    <h2 id="step-8-title">Other Chapters & Topics</h2>
-                    
-                    <div class="chapter-block autocomplete-wrapper" style="position: absolute; top: 25%; left: 50px; width: calc(100% - 330px); z-index: 40;">
-                        <label class="editorial-label">Other Chapters (Mechina, Shnat Sherut, etc.)</label>
-                        <div class="tags-wrapper" id="tw-f-other-value" onclick="document.getElementById('f-other-value').focus()">
-                            <input type="text" id="f-other-value" class="editorial-input auto-other" placeholder="Mechina, Shnat Sherut, Course...">
-                        </div>
-                        <div class="autocomplete-dropdown" id="dropdown-f-other-value"></div>
-                        <div class="dynamic-stats" id="stats-f-other-value"></div>
-                    </div>
-
-                    <div class="chapter-block" style="position: absolute; top: 55%; left: 50px; width: calc(100% - 330px); z-index: 30;">
-                        <label class="editorial-label">Which topics best describe you?</label>
-                        <div class="tags-input-wrapper" id="tw-f-tags">
-                            <input type="text" class="tag-input-field" placeholder="e.g. #marketing, #hiking">
-                            <div class="dropdown-list"></div>
-                        </div>
-                        <input type="hidden" id="f-tags" name="tags">
-                    </div>
-                </div>
-
-                <!-- STEP REC SHARED PATHS (Suggested Connections) -->
-                <div id="wizard-step-rec" class="wizard-step">
-                    <h2>Let's start building your network</h2>
-                    <p class="step-explanation">We found a few people who may already be part of it.</p>
-                    
-                    <div id="recommendation-list" style="padding-right: 180px;"></div>
-                </div>
-
-                <!-- STEP 9 ADD CONNECTIONS -->
-                <div id="wizard-step-9" class="wizard-step">
-                    <h2>Let's trace a few connections</h2>
-                    <p class="step-explanation">Add a few people already connected to their story.</p>
-                    
-                    <div id="wizard-step-9-original-parent">
-                        <div id="connections-section" style="padding-right: 180px;">
-                            <button type="button" class="btn-add-more-conn" id="btn-add-conn-entry" style="width:100%; border:1px dashed rgba(255,255,255,0.3); background:transparent; color:#F5F5F5; font-size: 11px; font-weight: 500; letter-spacing: 1px; padding:15px; border-radius:8px; cursor:pointer; text-transform: uppercase; transition: 0.2s; margin-bottom: 15px;">+ Add connection</button>
-                            <div id="connections-list"></div>
-                        </div>
-                    </div>
-
-                    <!-- Accordion for Edit Mode Connections -->
-                    <div id="edit-connections-accordion" style="display: none; margin-top: 30px; border-top: 1px solid rgba(245,245,245,0.2); padding-top: 20px;">
-                        <div id="btn-toggle-edit-conns" style="cursor: pointer; display: flex; justify-content: space-between; align-items: center; font-weight: 600; font-size: 16px; color: rgba(245,245,245,0.9);">
-                            <span>Edit Existing Connections</span>
-                            <span id="edit-conns-arrow" style="transition: transform 0.3s; font-size: 12px;">▼</span>
-                        </div>
-                        <div id="edit-connections-content" style="display: none; margin-top: 20px;">
-                        </div>
-                    </div>
-                </div>
-
-                <!-- STEP 10 JOINING ANIMATION -->
-                <div id="wizard-step-10" class="wizard-step" style="display: flex; flex-direction: column; justify-content: center; align-items: center; height: 100%; text-align: center; padding: 0;">
-                    <div class="scan-spinner"></div>
-                    <h3 style="font-weight: 300; margin-top: 30px; letter-spacing: 1px; font-size: 24px;" id="join-network-text">A new thread has entered the network.</h3>
-                    <p style="color: rgba(245,245,245,0.5); font-size: 13px; margin-top: 10px;">The Beast has grown.</p>
-                </div>
-
-                </div>
-            </div>
-
-
-        <div id="global-wizard-footer" style="display: none; padding: 20px 40px; justify-content: space-between; align-items: center; position: absolute; bottom: 0; left: 0; right: 0; z-index: 1000; background: transparent;">
-            <button type="button" id="btn-wizard-global-back" class="info-action-btn" style="margin: 0; visibility: hidden; color: #fff;">[ BACK ]</button>
-            <div style="display: flex; align-items: center; gap: 15px; white-space: nowrap;">
-                <button type="button" id="btn-wizard-global-next" class="info-action-btn" style="margin: 0;">[ CONTINUE ]</button>
-            </div>
-        </div>        
-        </form>
-    </div>
-
-    <script type="importmap">
-      {
-        "imports": {
-          "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
-          "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
-        }
-      }
-    </script>
-    <script type="module">
-        console.log('MODULE SCRIPT LOADED');
         import * as THREE from 'three';
         import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
         import { CSS2DRenderer, CSS2DObject } from 'three/addons/renderers/CSS2DRenderer.js';
@@ -2234,7 +639,6 @@
         // --- UI Setup (called after data loads) ---
         let isUISetup = false;
         function setupUI() {
-            console.log('SETUP UI START');
             let datalist = document.getElementById('people-list');
             if (!datalist) {
                 datalist = document.createElement('datalist');
@@ -3025,7 +1429,7 @@
                 // camera variables are already defined above (dir)
                 controls.autoRotate = false;
                 camTargetLookAt.copy(C);
-                camTargetPos.copy(C).add(dir.multiplyScalar(1200)); // View from outside looking in
+                camTargetPos.copy(C).add(dir.multiplyScalar(350)); // View from outside looking in
                 isCameraAnimating = true;
             }
 
@@ -3346,24 +1750,6 @@
             const existingPopup = document.getElementById('feed-more-popup-v2');
             if (existingPopup) existingPopup.remove();
             selectedNodeId = null;
-        };
-
-        window.resumeFeedMore = () => {
-            const popup = document.getElementById('feed-more-popup-v2');
-            if (popup) popup.remove();
-            document.getElementById('info-panel-container').classList.remove('visible');
-            
-            if (window._nextWizardStep && selectedNodeId !== null && people[selectedNodeId]) {
-                const nextStep = window._nextWizardStep;
-                window._nextWizardStep = null; // Clear it
-                openModal('edit', people[selectedNodeId], null, true);
-                // openModal('edit') does not set a wizard step, so we do it here
-                goToWizardStep(nextStep);
-            } else {
-                window._isPartialAdd = false;
-                selectedNodeId = null;
-                openModal('add');
-            }
         };
 
         const infoMenuDropdown = document.getElementById('info-menu-dropdown');
@@ -3811,16 +2197,7 @@
         });
 
         // --- Bootstrap: fetch data then build ---
-        function removeConnectionEntry(btn) {
-            const entry = btn.closest('.connection-entry');
-            if (entry) {
-                entry.remove();
-            }
-        }
-        window.removeConnectionEntry = removeConnectionEntry;
-
         async function init() {
-            console.log('INIT START');
             try {
                 const bySelect = document.getElementById('f-birth-year');
                 if (bySelect) {
@@ -3852,13 +2229,9 @@
                 dbIdToIdx = Object.fromEntries(people.map((p, i) => [p.id, i]));
                 numStrands = userNames.length;
 
-                console.log('INIT CALLING buildStructure');
                 buildStructure(apiConnections);
-                console.log('INIT CALLING setupUI');
                 setupUI();
-                console.log('INIT SUCCESS');
             } catch (err) {
-                console.log('INIT CATCH ERROR:', err);
                 document.getElementById('loading').textContent = 'שגיאה בטעינת הנתונים';
                 console.error(err);
             }
@@ -4009,7 +2382,7 @@
             const currentStr = String(step);
             
             let targetDomId = currentStr;
-            if (currentStr.startsWith('rec-')) targetDomId = 'rec';
+            if (currentStr.startsWith('rec-')) targetDomId = '8';
             if (currentStr.startsWith('conn-')) targetDomId = '9';
             
             document.querySelectorAll('.wizard-step').forEach(el => {
@@ -4028,24 +2401,28 @@
                 stepEl.classList.add('active');
             }
             
-            // Path preview is visible for all steps except 10
+            // Path preview is now hidden as requested
             const previewArea = document.getElementById('wizard-preview-area');
-            if (previewArea) previewArea.style.display = (targetDomId === '10' || targetDomId === 10) ? 'none' : 'flex';
+            if (previewArea) previewArea.style.display = 'none';
             
             // Handle Global Footer
             const globalFooter = document.getElementById('global-wizard-footer');
             if (!globalFooter) return;
 
-
-            
-            
-            // Re-bind continue/back buttons if footer
-            const stepsWithFooter = ['0', '4', '4a', 'rec-1', 'conn-1', '5', '6', '7', '8', 'rec-2', 'conn-2', 'rec-3', 'conn-3', 'rec-4', 'conn-4', 'rec-5', 'conn-5'];
+            // Steps that show the global footer: 0, 4, 4a, 5, 5a, 5b, 6, 7, 8, 9
+            const stepsWithFooter = [
+    '0', '4', '4a', 'rec-1', 'conn-1',
+    '5', '5a', '5b', '6a', '6b', '6c', 'rec-2', 'conn-2',
+    '7a', '7b', 'rec-3', 'conn-3',
+    '8a', '8b', 'rec-4', 'conn-4'
+];
+            const currentStr = String(step);
             if (stepsWithFooter.includes(currentStr)) {
                 globalFooter.style.display = 'flex';
                 
                 const btnBack = document.getElementById('btn-wizard-global-back');
                 const btnNext = document.getElementById('btn-wizard-global-next');
+                const btnFeed = document.getElementById('btn-wizard-global-feed');
                 
                 // Back button logic
                 btnBack.style.visibility = currentStr === '0' ? 'hidden' : 'visible';
@@ -4054,78 +2431,73 @@
                     if (currentIndex > 0) goToWizardStep(stepsWithFooter[currentIndex - 1]);
                 };
                 
+                // Feed button logic is now handled in btnNext block below
+
                 if (currentStr.startsWith('conn-')) {
-                    btnNext.textContent = '[ FEED IT ]';
+                    if (currentStr === 'conn-4') {
+                        btnNext.textContent = '[ FEED IT ]';
+                    } else {
+                        btnNext.textContent = '[ FEED MORE ]';
+                    }
+                    btnFeed.style.display = 'inline-block';
+                    btnFeed.onclick = () => window.saveAndFeed();
                 } else {
                     btnNext.textContent = '[ CONTINUE ]';
+                    btnFeed.style.display = 'none';
                 }
                 
                 btnNext.style.display = 'inline-block';
                 btnNext.onclick = () => {
                     if (currentStr === '0') processStep0();
-                    else if (currentStr === '4') processStep4(); // goToWizardStep('4a')
+                    else if (currentStr === '4') processStep4();
                     else if (currentStr === '4a') triggerRecommendations(1);
                     else if (currentStr === 'rec-1') goToWizardStep('conn-1');
-                    else if (currentStr === 'conn-1') {
-                        window._nextWizardStep = '5';
-                        window._isPartialAdd = true;
-                        processStep9();
-                    }
+                    else if (currentStr === 'conn-1') goToWizardStep('5');
                     
-                    else if (currentStr === '5') triggerRecommendations(2);
+                    else if (currentStr === '5') goToWizardStep('5a');
+                    else if (currentStr === '5a') goToWizardStep('5b');
+                    else if (currentStr === '5b') goToWizardStep('6a');
+                    else if (currentStr === '6a') goToWizardStep('6b');
+                    else if (currentStr === '6b') goToWizardStep('6c');
+                    else if (currentStr === '6c') triggerRecommendations(2);
                     else if (currentStr === 'rec-2') goToWizardStep('conn-2');
-                    else if (currentStr === 'conn-2') {
-                        window._nextWizardStep = '6';
-                        window._isPartialAdd = true;
-                        processStep9();
-                    }
+                    else if (currentStr === 'conn-2') goToWizardStep('7a');
                     
-                    else if (currentStr === '6') triggerRecommendations(3);
+                    else if (currentStr === '7a') goToWizardStep('7b');
+                    else if (currentStr === '7b') triggerRecommendations(3);
                     else if (currentStr === 'rec-3') goToWizardStep('conn-3');
-                    else if (currentStr === 'conn-3') {
-                        window._nextWizardStep = '7';
-                        window._isPartialAdd = true;
-                        processStep9();
-                    }
+                    else if (currentStr === 'conn-3') goToWizardStep('8a');
                     
-                    else if (currentStr === '7') triggerRecommendations(4);
+                    else if (currentStr === '8a') goToWizardStep('8b');
+                    else if (currentStr === '8b') triggerRecommendations(4);
                     else if (currentStr === 'rec-4') goToWizardStep('conn-4');
-                    else if (currentStr === 'conn-4') {
-                        window._nextWizardStep = '8';
-                        window._isPartialAdd = true;
-                        processStep9();
-                    }
-                    
-                    else if (currentStr === '8') triggerRecommendations(5);
-                    else if (currentStr === 'rec-5') goToWizardStep('conn-5');
-                    else if (currentStr === 'conn-5') {
-                        window._nextWizardStep = null;
-                        window._isPartialAdd = false;
-                        processStep9();
-                    }
+                    else if (currentStr === 'conn-4') processStep9();
                 };
             } else {
                 globalFooter.style.display = 'none';
             }
+
             // --- PROGRESS BAR (NEW DESIGN) ---
             const progressContainer = document.getElementById('wizard-progress-container');
             
-            // Map each step to a progress item number (1 to 5)
+            // Map each step to a progress item number (1 to 4)
             const progressMap = {
-                '0': 1, '4': 1, '4a': 1, 'rec-1': 1, 'conn-1': 1,
-                '5': 2, 'rec-2': 2, 'conn-2': 2,
-                '6': 3, 'rec-3': 3, 'conn-3': 3,
-                '7': 4, 'rec-4': 4, 'conn-4': 4,
-                '8': 5, 'rec-5': 5, 'conn-5': 5
+                0: 1,  // Name
+                4: 2,  // Your story part 1
+                '4a': 2, // Your story part 2
+                5: 3,  // What you do
+                6: 3,  // What you do (optional sub-step)
+                8: 4,  // Connections
+                9: 4   // Finish / Confirm
             };
             
             if (progressContainer) {
                 // Show progress bar only if we're not on step 10 (finished) and we have a mapped step
-                if (step !== 10 && step !== '10' && progressMap[step] !== undefined) {
+                if (step !== 10 && progressMap[step] !== undefined) {
                     progressContainer.style.display = 'flex';
                     const activeItemNum = progressMap[step];
                     
-                    for (let i = 1; i <= 5; i++) {
+                    for (let i = 1; i <= 4; i++) {
                         const progItem = document.getElementById('prog-item-' + i);
                         if (!progItem) continue;
                         
@@ -4213,24 +2585,11 @@
         };
 
         function triggerRecommendations(sessionNum) {
-            let nextSessionStep = null;
-            let recStep = '';
-            let connStep = '';
-            if (sessionNum === 1) { nextSessionStep = '5'; recStep = 'rec-1'; connStep = 'conn-1'; }
-            else if (sessionNum === 2) { nextSessionStep = '6'; recStep = 'rec-2'; connStep = 'conn-2'; }
-            else if (sessionNum === 3) { nextSessionStep = '7'; recStep = 'rec-3'; connStep = 'conn-3'; }
-            else if (sessionNum === 4) { nextSessionStep = '8'; recStep = 'rec-4'; connStep = 'conn-4'; }
-            else if (sessionNum === 5) { nextSessionStep = null; recStep = 'rec-5'; connStep = 'conn-5'; }
-            
-            window._currentConnStep = connStep;
-            
             const hasRecs = generateRecommendations();
             if (hasRecs) {
-                goToWizardStep(recStep);
+                goToWizardStep('rec-' + sessionNum);
             } else {
-                window._nextWizardStep = nextSessionStep;
-                window._isPartialAdd = (nextSessionStep !== null);
-                processStep9();
+                goToWizardStep('conn-' + sessionNum);
             }
         }
 
@@ -4393,33 +2752,16 @@
                 
                 const splitAndCount = (value, isCity = false, isSchool = false) => {
                     if (!value) return;
-                    
-                    // First extract anything in parentheses
-                    const parensMatch = value.match(/\((.*?)\)/);
-                    let parensText = '';
-                    if (parensMatch) {
-                        parensText = parensMatch[1];
-                        value = value.replace(/\(.*?\)/, ''); // Remove parens from main value
-                    }
-                    
-                    const processParts = (str) => {
-                        const parts = str.split(/\||\/|,|\s-\s|—|\n|\sand\s|\s&\s/i);
-                        parts.forEach(p => {
-                            let cleanVal = p.trim();
-                            // Remove generic prefixes
-                            cleanVal = cleanVal.replace(/^grew up in /i, '').trim();
-                            
-                            if (cleanVal) {
-                                if (isCity) cleanVal = normalizeCity(cleanVal);
-                                else if (isSchool) cleanVal = normalizeSchool(cleanVal);
-                                else cleanVal = toTitleCase(cleanVal);
-                                counts[cleanVal] = (counts[cleanVal] || 0) + 1;
-                            }
-                        });
-                    };
-                    
-                    processParts(value);
-                    if (parensText) processParts(parensText);
+                    const parts = value.split(/\||\/|,|\s-\s|—|\n/);
+                    parts.forEach(p => {
+                        let cleanVal = p.trim();
+                        if (cleanVal) {
+                            if (isCity) cleanVal = normalizeCity(cleanVal);
+                            else if (isSchool) cleanVal = normalizeSchool(cleanVal);
+                            else cleanVal = toTitleCase(cleanVal);
+                            counts[cleanVal] = (counts[cleanVal] || 0) + 1;
+                        }
+                    });
                 };
                 
                 people.forEach(p => {
@@ -4694,7 +3036,7 @@
 
 
         function calculateMatchScore(p1, p2) {
-            const ignoreCities = ['tel aviv', 'jerusalem', 'haifa', 'ramat gan', 'תל אביב', 'ירושלים', 'חיפה', 'רמת גן'];
+            const ignoreCities = ['tel aviv', 'jerusalem', 'haifa', 'תל אביב', 'ירושלים', 'חיפה'];
             const synonymGroups = [
                 { type: 'degree', words: ['design', 'visual communication', 'designer', 'ux', 'ui', 'עיצוב', 'תקשורת חזותית', 'מעצבת', 'מעצב'] },
                 { type: 'uni', words: ['haifa university', 'university of haifa', 'wizo', 'אוניברסיטת חיפה', 'ויצו חיפה'] },
@@ -4748,7 +3090,7 @@
             const p1Text = ' ' + [(p1.city||'').toLowerCase(), (p1.originCity||'').toLowerCase(), (p1.role||'').toLowerCase(), (p1.description||'').toLowerCase(), ...p1TagsCleaned].join(' ').replace(/[,.!]/g, ' ') + ' ';
             const p1Years = p1Tags.map(t => t.replace(/^#/, '')).filter(t => /^(19|20)\d{2}$/.test(t));
             const p1Age = p1.age ? parseInt(p1.age) : null;
-            let p1CityLower = p1.city ? p1.city.toLowerCase() : '';
+            const p1CityLower = p1.city ? p1.city.toLowerCase() : '';
             const p1RoleLower = p1.role ? p1.role.toLowerCase() : '';
             
             let activeGroups = [];
@@ -4765,9 +3107,7 @@
             const p2Text = ' ' + [(p2.city||'').toLowerCase(), (p2.role||'').toLowerCase(), ...p2TagsCleaned].join(' ').replace(/[,.!]/g, ' ') + ' ';
             const p2Years = p2Tags.map(t => t.replace(/^#/, '')).filter(t => /^(19|20)\d{2}$/.test(t));
             const p2Age = p2.age ? parseInt(p2.age) : null;
-            let p2CityLower = p2.city ? p2.city.toLowerCase() : '';
-            p1Tags.forEach(t => { if(t.startsWith('city:')) p1CityLower += " " + t.substring(5).toLowerCase(); });
-            p2Tags.forEach(t => { if(t.startsWith('city:')) p2CityLower += " " + t.substring(5).toLowerCase(); });
+            const p2CityLower = p2.city ? p2.city.toLowerCase() : '';
             const p2RoleLower = p2.role ? p2.role.toLowerCase() : '';
             
             let shared = { uni: 0, degree: 0, company: 0, city: 0, army_unit: 0, army_base: 0, high_school: 0, mechina: 0 };
@@ -4820,53 +3160,45 @@
                     'haifa': ['חיפה', 'haifa'],
                     'חיפה': ['haifa', 'חיפה'],
                     'tel aviv': ['תל אביב', 'tel aviv', 'tel-aviv'],
-                    'tel aviv': ['tel aviv', 'tel-aviv', 'tlv', 'tel aviv-yafo', 'תל אביב', 'תל-אביב', 'תל אביב-יפו'],
-                    'tel-aviv': ['tel aviv', 'tel-aviv', 'tlv', 'tel aviv-yafo', 'תל אביב', 'תל-אביב', 'תל אביב-יפו'],
-                    'תל אביב': ['tel aviv', 'tel-aviv', 'tlv', 'tel aviv-yafo', 'תל אביב', 'תל-אביב', 'תל אביב-יפו'],
-                    'rishon lezion': ['rishon', 'rishon lezion', 'ראשון לציון', 'ראשון'],
-                    'ראשון לציון': ['rishon', 'rishon lezion', 'ראשון לציון', 'ראשון'],
-                    'petah tikva': ['petah tikva', 'פתח תקווה', 'פ"ת', 'פתח-תקווה'],
-                    'פתח תקווה': ['petah tikva', 'פתח תקווה', 'פ"ת', 'פתח-תקווה'],
-                    'jerusalem': ['jerusalem', 'ירושלים'],
-                    'ירושלים': ['jerusalem', 'ירושלים'],
-                    'kfar saba': ['kfar saba', 'כפר סבא', 'כפ"ס'],
-                    'כפר סבא': ['kfar saba', 'כפר סבא', 'כפ"ס'],
+                    'תל אביב': ['tel aviv', 'tel-aviv', 'תל אביב'],
+                    'ramat gan': ['רמת גן', 'ramat gan'],
+                    'רמת גן': ['ramat gan', 'רמת גן'],
+                    'kiryat yam': ['kiryat yam', 'קרית ים', 'קריית ים'],
+                    'קרית ים': ['kiryat yam', 'קרית ים', 'קריית ים'],
+                    'קריית ים': ['kiryat yam', 'קרית ים', 'קריית ים'],
+                    'kiryat haim': ['kiryat haim', 'קרית חיים', 'קריית חיים'],
+                    'קרית חיים': ['kiryat haim', 'קרית חיים', 'קריית חיים'],
+                    'קריית חיים': ['kiryat haim', 'קרית חיים', 'קריית חיים'],
+                    'givat ella': ['givat ella', 'giva\'t ella', 'גבעת אלה'],
+                    'גבעת אלה': ['givat ella', 'giva\'t ella', 'גבעת אלה'],
+                    'zikhron yaakov': ['zikhron ya\'akov', 'zikhron yaakov', 'zichron yaakov', 'זכרון יעקב'],
+                    'זכרון יעקב': ['zikhron ya\'akov', 'zikhron yaakov', 'zichron yaakov', 'זכרון יעקב'],
+                    'ayelet hashahar': ['ayelet hashahar', 'איילת השחר'],
+                    'איילת השחר': ['ayelet hashahar', 'איילת השחר'],
                     'beit keshet': ['beit keshet', 'בית קשת'],
                     'בית קשת': ['beit keshet', 'בית קשת'],
                     'gan shmuel': ['gan shmuel', 'גן שמואל'],
                     'גן שמואל': ['gan shmuel', 'גן שמואל']
                 };
 
-                let p1Vals = p1CityLower.split(/\||\/|,|\s-\s|—|\n|\sand\s|\s&\s/i).map(s => s.trim()).filter(Boolean);
-                let p2Vals = p2CityLower.split(/\||\/|,|\s-\s|—|\n|\sand\s|\s&\s/i).map(s => s.trim()).filter(Boolean);
+                let p1Vals = [p1CityLower];
+                let p2Vals = [p2CityLower];
                 
-                let expandedP1Vals = [...p1Vals];
-                let expandedP2Vals = [...p2Vals];
-
                 Object.keys(cityAliases).forEach(k => {
-                    if (p1Vals.some(v => v.includes(k))) expandedP1Vals = expandedP1Vals.concat(cityAliases[k]);
-                    if (p2Vals.some(v => v.includes(k))) expandedP2Vals = expandedP2Vals.concat(cityAliases[k]);
+                    if (p1CityLower.includes(k)) p1Vals = p1Vals.concat(cityAliases[k]);
+                    if (p2CityLower.includes(k)) p2Vals = p2Vals.concat(cityAliases[k]);
                 });
 
-                let matchFound = false;
-                let matchedVal = '';
-                expandedP1Vals.forEach(v1 => {
-                    expandedP2Vals.forEach(v2 => {
-                        if (v1.includes(v2) || v2.includes(v1)) {
-                            matchFound = true;
-                            matchedVal = v1.length < v2.length ? v1 : v2; // take the shorter one as the match core
-                        }
-                    });
-                });
+                const matchFound = p1Vals.some(v1 => p2Vals.some(v2 => v1.includes(v2) || v2.includes(v1)));
+                const shouldIgnore = ignoreCities.some(c => p1CityLower.includes(c)) || ignoreCities.some(c => p2CityLower.includes(c));
                 
                 if (matchFound) {
-                    const shouldIgnore = ignoreCities.some(c => matchedVal.includes(c));
                     if (!shouldIgnore) {
                         score += 15;
-                        sharedStrings.push(matchedVal);
+                        sharedStrings.push(p1CityLower);
                     } else if (isSimilarAge) {
                         score += 15;
-                        sharedStrings.push(matchedVal);
+                        sharedStrings.push(p1CityLower);
                     }
                 }
             }
@@ -4894,10 +3226,7 @@
                 });
                 
                 if (match) {
-                    const isIgnored = ignoreCities.some(c => c.replace(/\s+/g, '') === normTag || (normTag.length > 3 && normTag.includes(c.replace(/\s+/g, ''))));
-                    if (isIgnored && !isSimilarAge) {
-                        // Skip this tag match because it is an ignored city without similar age
-                    } else if (genericRoles.includes(normTag) || genericRoles.includes(cleanTag.toLowerCase())) {
+                    if (genericRoles.includes(normTag) || genericRoles.includes(cleanTag.toLowerCase())) {
                         score += 5;
                     } else {
                         score += 15; // Reduced from 30 to prevent weak matches from generic tags
@@ -4912,11 +3241,8 @@
                 const normP1 = cleanP1.toLowerCase().replace(/\s+/g, '');
                 const normCity2 = p2CityLower.replace(/\s+/g, '');
                 if (normP1.length > 3 && (normCity2.includes(normP1) || normP1.includes(normCity2))) {
-                    const isIgnored = ignoreCities.some(c => c.replace(/\s+/g, '') === normP1 || normCity2.includes(c.replace(/\s+/g, '')));
-                    if (!isIgnored || isSimilarAge) {
-                        score += 15;
-                        sharedStrings.push(cleanP1);
-                    }
+                    score += 15;
+                    sharedStrings.push(cleanP1);
                 }
             });
             
@@ -5052,7 +3378,7 @@
                         div.remove();
                         visibleCount--;
                         if (currentRecIndex >= pendingRecs.length && visibleCount === 0) {
-                            goToWizardStep(window._currentConnStep || 'conn-1');
+                            goToWizardStep(9);
                         } else {
                             renderNextCard(); // Pop up the next one!
                         }
@@ -5074,10 +3400,10 @@
             for (let i = 0; i < 5; i++) {
                 renderNextCard();
             }
-            return visibleCount > 0;
+            return true;
         }
 
-        function openModal(mode, personData = null, defaultConnectionNodeId = null, isResumingWizard = false) {
+        function openModal(mode, personData = null, defaultConnectionNodeId = null) {
             modal.classList.add('visible');
             overlay.classList.add('visible');
             document.getElementById('form-mode').value = mode;
@@ -5140,16 +3466,11 @@
                     personData.connections.forEach(c => addConnectionEntry(c.id, c.type, c.strength));
                 }
                 
-                if (!isResumingWizard) {
-                    // Move connections section into the accordion for Edit mode
-                    document.getElementById('edit-connections-content').appendChild(document.getElementById('connections-section'));
-                    document.getElementById('edit-connections-accordion').style.display = 'block';
-                    document.getElementById('edit-connections-content').style.display = 'none';
-                    document.getElementById('edit-conns-arrow').style.transform = 'rotate(0deg)';
-                } else {
-                    document.getElementById('wizard-step-9-original-parent').appendChild(document.getElementById('connections-section'));
-                    document.getElementById('edit-connections-accordion').style.display = 'none';
-                }
+                // Move connections section into the accordion for Edit mode
+                document.getElementById('edit-connections-content').appendChild(document.getElementById('connections-section'));
+                document.getElementById('edit-connections-accordion').style.display = 'block';
+                document.getElementById('edit-connections-content').style.display = 'none';
+                document.getElementById('edit-conns-arrow').style.transform = 'rotate(0deg)';
                 
                 // Show Edit mode UI directly (bypass wizard steps)
                 document.querySelectorAll('.wizard-step').forEach(el => {
@@ -5719,7 +4040,7 @@
                     } else {
                         // For edit, just immediately re-select the node cleanly
                         setTimeout(() => {
-                            selectNode(targetIdx, true);
+                            selectNode(targetIdx, false);
                         }, 100);
                     }
                 }
@@ -5771,6 +4092,3 @@
         window.removeConnectionEntry = removeConnectionEntry;
         window.selectNode = selectNode;
 
-</script>
-</body>
-</html>

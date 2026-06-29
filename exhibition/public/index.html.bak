@@ -835,6 +835,7 @@
         <div id="conn-sec-details" style="font-size: 11px; color: rgba(245,245,245,0.6); margin-bottom: 10px;"></div>
         <button id="btn-conn-sec-view" style="width: 100%; background: white; color: black; border: none; border-radius: 10px; padding: 8px; font-weight: bold; font-size: 11px; cursor: pointer;">View Profile</button>
     </div>
+</div>
 
     <!-- New UI Elements -->
     
@@ -894,27 +895,22 @@
             
             <div class="wizard-progress-item" id="prog-item-1">
                 <div class="wizard-progress-circle"></div>
-                <div class="wizard-progress-text">1. Origin</div>
+                <div class="wizard-progress-text">1. Name</div>
             </div>
             
             <div class="wizard-progress-item" id="prog-item-2">
                 <div class="wizard-progress-circle"></div>
-                <div class="wizard-progress-text">2. Work</div>
+                <div class="wizard-progress-text">2. Your story</div>
             </div>
             
             <div class="wizard-progress-item" id="prog-item-3">
                 <div class="wizard-progress-circle"></div>
-                <div class="wizard-progress-text">3. Education</div>
+                <div class="wizard-progress-text">3. What you do</div>
             </div>
             
             <div class="wizard-progress-item" id="prog-item-4">
                 <div class="wizard-progress-circle"></div>
-                <div class="wizard-progress-text">4. Military</div>
-            </div>
-            
-            <div class="wizard-progress-item" id="prog-item-5">
-                <div class="wizard-progress-circle"></div>
-                <div class="wizard-progress-text">5. General</div>
+                <div class="wizard-progress-text">4. Connections</div>
             </div>
         </div>
 
@@ -1455,90 +1451,79 @@
                     </div>
                 </div>
 
-                <!-- STEP 6 EDUCATION -->
-                <div id="wizard-step-6" class="wizard-step" style="height: 100%;">
-                    <h2 id="step-6-title">Where did you study?</h2>
+                <!-- STEP 5a HIGH SCHOOL -->
+                <div id="wizard-step-5a" class="wizard-step" style="height: 100%;">
+                    <h2 style="display: flex; align-items: baseline; gap: 20px;">
+                        School
+                    </h2>
                     
-                    <div class="chapter-block autocomplete-wrapper" style="position: absolute; top: 15%; left: 50px; width: calc(100% - 330px); z-index: 50;">
-                        <label class="editorial-label">School / High School</label>
+                    <div class="chapter-block autocomplete-wrapper" style="position: absolute; top: 40%; left: 50px; width: calc(100% - 330px); z-index: 50;">
+                        <label class="editorial-label">School</label>
                         <div class="tags-wrapper" id="tw-f-highschool" onclick="document.getElementById('f-highschool').focus()">
-                            <input type="text" id="f-highschool" class="editorial-input auto-highschool" placeholder="e.g. Kadoorie School">
+                            <input type="text" id="f-highschool" class="editorial-input auto-highschool" placeholder="School Name">
                         </div>
                         <div class="autocomplete-dropdown" id="dropdown-f-highschool"></div>
                         <div class="dynamic-stats" id="stats-f-highschool"></div>
                     </div>
+                </div>
 
-                    <div class="chapter-block autocomplete-wrapper" style="position: absolute; top: 45%; left: 50px; width: calc(100% - 330px); z-index: 40;">
-                        <label class="editorial-label">University</label>
-                        <div class="tags-wrapper" id="tw-f-university" onclick="document.getElementById('f-university').focus()">
-                            <input type="text" id="f-university" class="editorial-input auto-university" placeholder="e.g. Hebrew University">
+                <!-- STEP 5b MILITARY -->
+                <div id="wizard-step-5b" class="wizard-step" style="height: 100%;">
+                    <h2 style="display: flex; align-items: baseline; gap: 20px;">
+                        Military Service
+                    </h2>
+                    
+                    <div class="chapter-block autocomplete-wrapper" style="position: absolute; top: 40%; left: 50px; width: calc(100% - 330px); z-index: 40;">
+                        <label class="editorial-label">Military Service</label>
+                        <div class="tags-wrapper" id="tw-f-military" onclick="document.getElementById('f-military').focus()">
+                            <input type="text" id="f-military" class="editorial-input auto-military" placeholder="Unit, Base, or Role">
                         </div>
-                        <div class="autocomplete-dropdown" id="dropdown-f-university"></div>
-                        <div class="dynamic-stats" id="stats-f-university"></div>
-                    </div>
-
-                    <div class="chapter-block autocomplete-wrapper" style="position: absolute; top: 75%; left: 50px; width: calc(100% - 330px); z-index: 30;">
-                        <label class="editorial-label">Degree / Major</label>
-                        <div class="tags-wrapper" id="tw-f-degree" onclick="document.getElementById('f-degree').focus()">
-                            <input type="text" id="f-degree" class="editorial-input auto-degree" placeholder="e.g. Computer Science">
-                        </div>
-                        <div class="autocomplete-dropdown" id="dropdown-f-degree"></div>
-                        <div class="dynamic-stats" id="stats-f-degree"></div>
+                        <div class="autocomplete-dropdown" id="dropdown-f-military"></div>
+                        <div class="dynamic-stats" id="stats-f-military"></div>
                     </div>
                 </div>
 
-                <!-- STEP 7 ARMY -->
+                <!-- STEP 6 UNIVERSITY -->
+                <div id="wizard-step-6" class="wizard-step" style="height: 100%;">
+                    <h2 style="display: flex; align-items: baseline; gap: 20px;">
+                        Higher Education
+                    </h2>
+
+                    <div class="chapter-block autocomplete-wrapper" style="position: absolute; top: 20%; left: 50px; width: calc(100% - 330px); z-index: 30;">
+                        <label class="editorial-label">Higher Education</label>
+                        <div class="tags-wrapper" id="tw-f-education" onclick="document.getElementById('f-education').focus()">
+                            <input type="text" id="f-education" class="editorial-input auto-education" placeholder="University, College, Degree">
+                        </div>
+                        <div class="autocomplete-dropdown" id="dropdown-f-education"></div>
+                        <div class="dynamic-stats" id="stats-f-education"></div>
+                    </div>
+                </div>
+
+                <!-- STEP 7 OTHER CHAPTERS -->
                 <div id="wizard-step-7" class="wizard-step" style="height: 100%;">
-                    <h2 id="step-7-title">Military Service</h2>
-                    
-                    <div class="chapter-block autocomplete-wrapper" style="position: absolute; top: 25%; left: 50px; width: calc(100% - 330px); z-index: 40;">
-                        <label class="editorial-label">Military Role</label>
-                        <div class="tags-wrapper" id="tw-f-army-role" onclick="document.getElementById('f-army-role').focus()">
-                            <input type="text" id="f-army-role" class="editorial-input auto-army-role" placeholder="e.g. Combat Soldier, Commander">
-                        </div>
-                        <div class="autocomplete-dropdown" id="dropdown-f-army-role"></div>
-                        <div class="dynamic-stats" id="stats-f-army-role"></div>
-                    </div>
+                    <h2 style="display: flex; align-items: baseline; gap: 20px;">
+                        Other Chapters
+                    </h2>
+                    <p class="step-explanation">Youth movement, Mechina, Shnat Sherut, volunteering, etc.</p>
 
-                    <div class="chapter-block autocomplete-wrapper" style="position: absolute; top: 55%; left: 50px; width: calc(100% - 330px); z-index: 30;">
-                        <label class="editorial-label">Army Base</label>
-                        <div class="tags-wrapper" id="tw-f-army-base" onclick="document.getElementById('f-army-base').focus()">
-                            <input type="text" id="f-army-base" class="editorial-input auto-army-base" placeholder="e.g. Kirya, Tzeelim">
-                        </div>
-                        <div class="autocomplete-dropdown" id="dropdown-f-army-base"></div>
-                        <div class="dynamic-stats" id="stats-f-army-base"></div>
-                    </div>
-                </div>
-
-                <!-- STEP 8 GENERAL -->
-                <div id="wizard-step-8" class="wizard-step" style="height: 100%;">
-                    <h2 id="step-8-title">Other Chapters & Topics</h2>
-                    
-                    <div class="chapter-block autocomplete-wrapper" style="position: absolute; top: 25%; left: 50px; width: calc(100% - 330px); z-index: 40;">
-                        <label class="editorial-label">Other Chapters (Mechina, Shnat Sherut, etc.)</label>
+                    <div class="chapter-block autocomplete-wrapper" style="position: absolute; top: 40%; left: 50px; width: calc(100% - 330px); z-index: 20;">
+                        <label class="editorial-label">Other Chapters</label>
                         <div class="tags-wrapper" id="tw-f-other-value" onclick="document.getElementById('f-other-value').focus()">
                             <input type="text" id="f-other-value" class="editorial-input auto-other" placeholder="Mechina, Shnat Sherut, Course...">
                         </div>
                         <div class="autocomplete-dropdown" id="dropdown-f-other-value"></div>
                         <div class="dynamic-stats" id="stats-f-other-value"></div>
                     </div>
-
-                    <div class="chapter-block" style="position: absolute; top: 55%; left: 50px; width: calc(100% - 330px); z-index: 30;">
-                        <label class="editorial-label">Which topics best describe you?</label>
-                        <div class="tags-input-wrapper" id="tw-f-tags">
-                            <input type="text" class="tag-input-field" placeholder="e.g. #marketing, #hiking">
-                            <div class="dropdown-list"></div>
-                        </div>
-                        <input type="hidden" id="f-tags" name="tags">
-                    </div>
                 </div>
 
-                <!-- STEP REC SHARED PATHS (Suggested Connections) -->
-                <div id="wizard-step-rec" class="wizard-step">
+                <!-- STEP 8 SHARED PATHS (Suggested Connections) -->
+                <div id="wizard-step-8" class="wizard-step">
                     <h2>Let's start building your network</h2>
                     <p class="step-explanation">We found a few people who may already be part of it.</p>
                     
-                    <div id="recommendation-list" style="padding-right: 180px;"></div>
+                    <div id="recommendation-list"></div>
+
+
                 </div>
 
                 <!-- STEP 9 ADD CONNECTIONS -->
@@ -1562,11 +1547,13 @@
                         <div id="edit-connections-content" style="display: none; margin-top: 20px;">
                         </div>
                     </div>
+
+
                 </div>
 
                 <!-- STEP 10 JOINING ANIMATION -->
                 <div id="wizard-step-10" class="wizard-step" style="display: flex; flex-direction: column; justify-content: center; align-items: center; height: 100%; text-align: center; padding: 0;">
-                    <div class="scan-spinner"></div>
+                    <div class="scan-spinner" style="border-top-color: #4CAF50;"></div>
                     <h3 style="font-weight: 300; margin-top: 30px; letter-spacing: 1px; font-size: 24px;" id="join-network-text">A new thread has entered the network.</h3>
                     <p style="color: rgba(245,245,245,0.5); font-size: 13px; margin-top: 10px;">The Beast has grown.</p>
                 </div>
@@ -1575,12 +1562,14 @@
             </div>
 
 
-        <div id="global-wizard-footer" style="display: none; padding: 20px 40px; justify-content: space-between; align-items: center; position: absolute; bottom: 0; left: 0; right: 0; z-index: 1000; background: transparent;">
-            <button type="button" id="btn-wizard-global-back" class="info-action-btn" style="margin: 0; visibility: hidden; color: #fff;">[ BACK ]</button>
+        <!-- GLOBAL FOOTER FOR WIZARD -->
+        <div id="global-wizard-footer" style="display: none; padding: 30px 40px; justify-content: space-between; align-items: center; position: absolute; bottom: 0; left: 0; right: 0; z-index: 1000; background: transparent;">
+            <button type="button" id="btn-wizard-global-back" class="info-action-btn" style="margin: 0; visibility: hidden;">[ BACK ]</button>
             <div style="display: flex; align-items: center; gap: 15px; white-space: nowrap;">
+                <button type="button" id="btn-wizard-global-feed" class="info-action-btn" style="margin: 0; display: none;">[ FEED IT ]</button>
                 <button type="button" id="btn-wizard-global-next" class="info-action-btn" style="margin: 0;">[ CONTINUE ]</button>
             </div>
-        </div>        
+        </div>
         </form>
     </div>
 
@@ -1593,7 +1582,6 @@
       }
     </script>
     <script type="module">
-        console.log('MODULE SCRIPT LOADED');
         import * as THREE from 'three';
         import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
         import { CSS2DRenderer, CSS2DObject } from 'three/addons/renderers/CSS2DRenderer.js';
@@ -2234,7 +2222,6 @@
         // --- UI Setup (called after data loads) ---
         let isUISetup = false;
         function setupUI() {
-            console.log('SETUP UI START');
             let datalist = document.getElementById('people-list');
             if (!datalist) {
                 datalist = document.createElement('datalist');
@@ -3025,7 +3012,7 @@
                 // camera variables are already defined above (dir)
                 controls.autoRotate = false;
                 camTargetLookAt.copy(C);
-                camTargetPos.copy(C).add(dir.multiplyScalar(1200)); // View from outside looking in
+                camTargetPos.copy(C).add(dir.multiplyScalar(350)); // View from outside looking in
                 isCameraAnimating = true;
             }
 
@@ -3346,24 +3333,6 @@
             const existingPopup = document.getElementById('feed-more-popup-v2');
             if (existingPopup) existingPopup.remove();
             selectedNodeId = null;
-        };
-
-        window.resumeFeedMore = () => {
-            const popup = document.getElementById('feed-more-popup-v2');
-            if (popup) popup.remove();
-            document.getElementById('info-panel-container').classList.remove('visible');
-            
-            if (window._nextWizardStep && selectedNodeId !== null && people[selectedNodeId]) {
-                const nextStep = window._nextWizardStep;
-                window._nextWizardStep = null; // Clear it
-                openModal('edit', people[selectedNodeId], null, true);
-                // openModal('edit') does not set a wizard step, so we do it here
-                goToWizardStep(nextStep);
-            } else {
-                window._isPartialAdd = false;
-                selectedNodeId = null;
-                openModal('add');
-            }
         };
 
         const infoMenuDropdown = document.getElementById('info-menu-dropdown');
@@ -3811,16 +3780,7 @@
         });
 
         // --- Bootstrap: fetch data then build ---
-        function removeConnectionEntry(btn) {
-            const entry = btn.closest('.connection-entry');
-            if (entry) {
-                entry.remove();
-            }
-        }
-        window.removeConnectionEntry = removeConnectionEntry;
-
         async function init() {
-            console.log('INIT START');
             try {
                 const bySelect = document.getElementById('f-birth-year');
                 if (bySelect) {
@@ -3852,13 +3812,9 @@
                 dbIdToIdx = Object.fromEntries(people.map((p, i) => [p.id, i]));
                 numStrands = userNames.length;
 
-                console.log('INIT CALLING buildStructure');
                 buildStructure(apiConnections);
-                console.log('INIT CALLING setupUI');
                 setupUI();
-                console.log('INIT SUCCESS');
             } catch (err) {
-                console.log('INIT CATCH ERROR:', err);
                 document.getElementById('loading').textContent = 'שגיאה בטעינת הנתונים';
                 console.error(err);
             }
@@ -4006,20 +3962,14 @@
 
         function goToWizardStep(step) {
             currentWizardStep = step;
-            const currentStr = String(step);
-            
-            let targetDomId = currentStr;
-            if (currentStr.startsWith('rec-')) targetDomId = 'rec';
-            if (currentStr.startsWith('conn-')) targetDomId = '9';
-            
             document.querySelectorAll('.wizard-step').forEach(el => {
                 el.classList.remove('active');
                 el.style.display = 'none';
             });
             
-            const stepEl = document.getElementById(`wizard-step-${targetDomId}`);
+            const stepEl = document.getElementById(`wizard-step-${step}`);
             if (stepEl) {
-                if (targetDomId === 10 || targetDomId === '10') {
+                if (step === 10 || step === '10') {
                     stepEl.style.display = 'flex';
                 } else {
                     stepEl.style.display = 'block';
@@ -4028,24 +3978,23 @@
                 stepEl.classList.add('active');
             }
             
-            // Path preview is visible for all steps except 10
+            // Path preview is now hidden as requested
             const previewArea = document.getElementById('wizard-preview-area');
-            if (previewArea) previewArea.style.display = (targetDomId === '10' || targetDomId === 10) ? 'none' : 'flex';
+            if (previewArea) previewArea.style.display = 'none';
             
             // Handle Global Footer
             const globalFooter = document.getElementById('global-wizard-footer');
             if (!globalFooter) return;
 
-
-            
-            
-            // Re-bind continue/back buttons if footer
-            const stepsWithFooter = ['0', '4', '4a', 'rec-1', 'conn-1', '5', '6', '7', '8', 'rec-2', 'conn-2', 'rec-3', 'conn-3', 'rec-4', 'conn-4', 'rec-5', 'conn-5'];
+            // Steps that show the global footer: 0, 4, 4a, 5, 5a, 5b, 6, 7, 8, 9
+            const stepsWithFooter = ['0', '4', '4a', '5', '5a', '5b', '6', '7', '8', '9'];
+            const currentStr = String(step);
             if (stepsWithFooter.includes(currentStr)) {
                 globalFooter.style.display = 'flex';
                 
                 const btnBack = document.getElementById('btn-wizard-global-back');
                 const btnNext = document.getElementById('btn-wizard-global-next');
+                const btnFeed = document.getElementById('btn-wizard-global-feed');
                 
                 // Back button logic
                 btnBack.style.visibility = currentStr === '0' ? 'hidden' : 'visible';
@@ -4054,78 +4003,58 @@
                     if (currentIndex > 0) goToWizardStep(stepsWithFooter[currentIndex - 1]);
                 };
                 
-                if (currentStr.startsWith('conn-')) {
-                    btnNext.textContent = '[ FEED IT ]';
+                // Feed button logic (only on phases 5, 5a, 5b, 6, 7)
+                if (['5', '5a', '5b', '6', '7'].includes(String(step))) {
+                    btnFeed.style.display = 'inline-block';
+                    btnFeed.onclick = () => window.saveAndFeed();
                 } else {
-                    btnNext.textContent = '[ CONTINUE ]';
+                    btnFeed.style.display = 'none';
                 }
+
+                // Next button logic
+                if (currentStr === '9') btnNext.textContent = '[ FEED IT ]';
+                else btnNext.textContent = '[ CONTINUE ]';
                 
                 btnNext.style.display = 'inline-block';
                 btnNext.onclick = () => {
                     if (currentStr === '0') processStep0();
-                    else if (currentStr === '4') processStep4(); // goToWizardStep('4a')
-                    else if (currentStr === '4a') triggerRecommendations(1);
-                    else if (currentStr === 'rec-1') goToWizardStep('conn-1');
-                    else if (currentStr === 'conn-1') {
-                        window._nextWizardStep = '5';
-                        window._isPartialAdd = true;
-                        processStep9();
-                    }
-                    
-                    else if (currentStr === '5') triggerRecommendations(2);
-                    else if (currentStr === 'rec-2') goToWizardStep('conn-2');
-                    else if (currentStr === 'conn-2') {
-                        window._nextWizardStep = '6';
-                        window._isPartialAdd = true;
-                        processStep9();
-                    }
-                    
-                    else if (currentStr === '6') triggerRecommendations(3);
-                    else if (currentStr === 'rec-3') goToWizardStep('conn-3');
-                    else if (currentStr === 'conn-3') {
-                        window._nextWizardStep = '7';
-                        window._isPartialAdd = true;
-                        processStep9();
-                    }
-                    
-                    else if (currentStr === '7') triggerRecommendations(4);
-                    else if (currentStr === 'rec-4') goToWizardStep('conn-4');
-                    else if (currentStr === 'conn-4') {
-                        window._nextWizardStep = '8';
-                        window._isPartialAdd = true;
-                        processStep9();
-                    }
-                    
-                    else if (currentStr === '8') triggerRecommendations(5);
-                    else if (currentStr === 'rec-5') goToWizardStep('conn-5');
-                    else if (currentStr === 'conn-5') {
-                        window._nextWizardStep = null;
-                        window._isPartialAdd = false;
-                        processStep9();
+                    else if (currentStr === '4') processStep4();
+                    else if (currentStr === '4a') processStep4a();
+                    else if (currentStr === '5') goToWizardStep('5a');
+                    else if (currentStr === '5a') goToWizardStep('5b');
+                    else if (currentStr === '5b') goToWizardStep(6);
+                    else if (currentStr === '6') goToWizardStep(7);
+                    else if (currentStr === '7') processStep6(false);
+                    else if (currentStr === '9') processStep9();
+                    else if (currentStr === '8') {
+                        goToWizardStep(9);
                     }
                 };
             } else {
                 globalFooter.style.display = 'none';
             }
+
             // --- PROGRESS BAR (NEW DESIGN) ---
             const progressContainer = document.getElementById('wizard-progress-container');
             
-            // Map each step to a progress item number (1 to 5)
+            // Map each step to a progress item number (1 to 4)
             const progressMap = {
-                '0': 1, '4': 1, '4a': 1, 'rec-1': 1, 'conn-1': 1,
-                '5': 2, 'rec-2': 2, 'conn-2': 2,
-                '6': 3, 'rec-3': 3, 'conn-3': 3,
-                '7': 4, 'rec-4': 4, 'conn-4': 4,
-                '8': 5, 'rec-5': 5, 'conn-5': 5
+                0: 1,  // Name
+                4: 2,  // Your story part 1
+                '4a': 2, // Your story part 2
+                5: 3,  // What you do
+                6: 3,  // What you do (optional sub-step)
+                8: 4,  // Connections
+                9: 4   // Finish / Confirm
             };
             
             if (progressContainer) {
                 // Show progress bar only if we're not on step 10 (finished) and we have a mapped step
-                if (step !== 10 && step !== '10' && progressMap[step] !== undefined) {
+                if (step !== 10 && progressMap[step] !== undefined) {
                     progressContainer.style.display = 'flex';
                     const activeItemNum = progressMap[step];
                     
-                    for (let i = 1; i <= 5; i++) {
+                    for (let i = 1; i <= 4; i++) {
                         const progItem = document.getElementById('prog-item-' + i);
                         if (!progItem) continue;
                         
@@ -4204,33 +4133,89 @@
         }
 
         function processStep4a() {
-            triggerRecommendations(1);
+            window._isPartialAdd = true;
+            processStep6(true);
+        }
+
+        // Logic to resume the wizard for a partially added user
+        window.resumeFeedMore = function() {
+            const existingPopup = document.getElementById('feed-more-popup-v2');
+            if (existingPopup) existingPopup.remove();
+            window._isPartialAdd = false;
+            
+            if (selectedNodeId === null || !people[selectedNodeId]) return;
+            const person = people[selectedNodeId];
+            
+            // Open modal in edit mode (this populates all tags and hidden fields)
+            openModal('edit', person);
+            
+            // Override the edit-mode flattening by re-enabling the wizard
+            const instr = document.getElementById('add-person-instructions');
+            if (instr) instr.style.display = 'block';
+            
+            const mTitle = document.getElementById('modal-title');
+            if (mTitle) mTitle.textContent = 'Add Person';
+            
+            // Determine next unfilled step
+            let nextStep = 5;
+            if (person.role || person.workplace) nextStep = '5a';
+            if ((person.role || person.workplace) && person.highschool) nextStep = '5b';
+            if ((person.role || person.workplace) && person.highschool && person.military) nextStep = 6;
+            if ((person.role || person.workplace) && person.highschool && person.military && person.education) nextStep = 7;
+            
+            goToWizardStep(nextStep);
         }
 
         window.saveAndFeed = function() {
             window._isPartialAdd = true;
-            processStep9(); // early finish
+            processStep6(true);
         };
 
-        function triggerRecommendations(sessionNum) {
-            let nextSessionStep = null;
-            let recStep = '';
-            let connStep = '';
-            if (sessionNum === 1) { nextSessionStep = '5'; recStep = 'rec-1'; connStep = 'conn-1'; }
-            else if (sessionNum === 2) { nextSessionStep = '6'; recStep = 'rec-2'; connStep = 'conn-2'; }
-            else if (sessionNum === 3) { nextSessionStep = '7'; recStep = 'rec-3'; connStep = 'conn-3'; }
-            else if (sessionNum === 4) { nextSessionStep = '8'; recStep = 'rec-4'; connStep = 'conn-4'; }
-            else if (sessionNum === 5) { nextSessionStep = null; recStep = 'rec-5'; connStep = 'conn-5'; }
+        function processStep5() {
+            goToWizardStep('5a');
+        }
+
+        function processStep6(isFeedAction = false) {
+            // Serialize chapters into tags and description
+            let generatedTags = [];
+            let generatedDesc = [];
             
-            window._currentConnStep = connStep;
+            const addField = (values, prefix, isTag=true) => {
+                values.forEach(val => {
+                    if (val) {
+                        if (isTag) generatedTags.push(`${prefix}:${val}`);
+                        generatedDesc.push(`${prefix}: ${val}`);
+                    }
+                });
+            };
+            
+            // Add Location (Important for first session feed)
+            addField(getFieldValues('tw-f-city', 'f-city'), 'city');
+            addField(getFieldValues('tw-f-origin-city', 'f-origin-city'), 'origin-city');
+            
+            // Add Role
+            addField(getFieldValues('tw-f-role', 'f-role'), 'role');
+            addField(getFieldValues('tw-f-workplace', 'f-workplace'), 'workplace');
+            addField(getFieldValues('tw-f-highschool', 'f-highschool'), 'highschool');
+            addField(getFieldValues('tw-f-military', 'f-military'), 'military');
+            addField(getFieldValues('tw-f-education', 'f-education'), 'education');
+            addField(getFieldValues('tw-f-other-value', 'f-other-value'), 'other');
+            
+            document.getElementById('f-tags').value = generatedTags.join(', ');
+            document.getElementById('f-desc').value = generatedDesc.join('\n');
             
             const hasRecs = generateRecommendations();
             if (hasRecs) {
-                goToWizardStep(recStep);
+                goToWizardStep(8);
             } else {
-                window._nextWizardStep = nextSessionStep;
-                window._isPartialAdd = (nextSessionStep !== null);
-                processStep9();
+                if (isFeedAction || window._isPartialAdd) {
+                    const addForm = document.getElementById('add-form');
+                    if (addForm) {
+                        addForm.dispatchEvent(new Event('submit', { cancelable: true, bubbles: true }));
+                    }
+                } else {
+                    goToWizardStep(9);
+                }
             }
         }
 
@@ -4393,33 +4378,16 @@
                 
                 const splitAndCount = (value, isCity = false, isSchool = false) => {
                     if (!value) return;
-                    
-                    // First extract anything in parentheses
-                    const parensMatch = value.match(/\((.*?)\)/);
-                    let parensText = '';
-                    if (parensMatch) {
-                        parensText = parensMatch[1];
-                        value = value.replace(/\(.*?\)/, ''); // Remove parens from main value
-                    }
-                    
-                    const processParts = (str) => {
-                        const parts = str.split(/\||\/|,|\s-\s|—|\n|\sand\s|\s&\s/i);
-                        parts.forEach(p => {
-                            let cleanVal = p.trim();
-                            // Remove generic prefixes
-                            cleanVal = cleanVal.replace(/^grew up in /i, '').trim();
-                            
-                            if (cleanVal) {
-                                if (isCity) cleanVal = normalizeCity(cleanVal);
-                                else if (isSchool) cleanVal = normalizeSchool(cleanVal);
-                                else cleanVal = toTitleCase(cleanVal);
-                                counts[cleanVal] = (counts[cleanVal] || 0) + 1;
-                            }
-                        });
-                    };
-                    
-                    processParts(value);
-                    if (parensText) processParts(parensText);
+                    const parts = value.split(/\||\/|,|\s-\s|—|\n/);
+                    parts.forEach(p => {
+                        let cleanVal = p.trim();
+                        if (cleanVal) {
+                            if (isCity) cleanVal = normalizeCity(cleanVal);
+                            else if (isSchool) cleanVal = normalizeSchool(cleanVal);
+                            else cleanVal = toTitleCase(cleanVal);
+                            counts[cleanVal] = (counts[cleanVal] || 0) + 1;
+                        }
+                    });
                 };
                 
                 people.forEach(p => {
@@ -4562,10 +4530,8 @@
         setupAutocomplete('f-role', 'role');
         setupAutocomplete('f-workplace', 'workplace');
         setupAutocomplete('f-highschool', 'highschool');
-        setupAutocomplete('f-university', 'university');
-        setupAutocomplete('f-degree', 'degree');
-        setupAutocomplete('f-army-role', 'armyrole');
-        setupAutocomplete('f-army-base', 'armybase');
+        setupAutocomplete('f-military', 'military');
+        setupAutocomplete('f-education', 'education');
         setupAutocomplete('f-prev-work', 'prevwork');
         setupAutocomplete('f-other-value', 'dynamic:other-category');
 
@@ -4694,7 +4660,7 @@
 
 
         function calculateMatchScore(p1, p2) {
-            const ignoreCities = ['tel aviv', 'jerusalem', 'haifa', 'ramat gan', 'תל אביב', 'ירושלים', 'חיפה', 'רמת גן'];
+            const ignoreCities = ['tel aviv', 'jerusalem', 'haifa', 'תל אביב', 'ירושלים', 'חיפה'];
             const synonymGroups = [
                 { type: 'degree', words: ['design', 'visual communication', 'designer', 'ux', 'ui', 'עיצוב', 'תקשורת חזותית', 'מעצבת', 'מעצב'] },
                 { type: 'uni', words: ['haifa university', 'university of haifa', 'wizo', 'אוניברסיטת חיפה', 'ויצו חיפה'] },
@@ -4748,7 +4714,7 @@
             const p1Text = ' ' + [(p1.city||'').toLowerCase(), (p1.originCity||'').toLowerCase(), (p1.role||'').toLowerCase(), (p1.description||'').toLowerCase(), ...p1TagsCleaned].join(' ').replace(/[,.!]/g, ' ') + ' ';
             const p1Years = p1Tags.map(t => t.replace(/^#/, '')).filter(t => /^(19|20)\d{2}$/.test(t));
             const p1Age = p1.age ? parseInt(p1.age) : null;
-            let p1CityLower = p1.city ? p1.city.toLowerCase() : '';
+            const p1CityLower = p1.city ? p1.city.toLowerCase() : '';
             const p1RoleLower = p1.role ? p1.role.toLowerCase() : '';
             
             let activeGroups = [];
@@ -4765,9 +4731,7 @@
             const p2Text = ' ' + [(p2.city||'').toLowerCase(), (p2.role||'').toLowerCase(), ...p2TagsCleaned].join(' ').replace(/[,.!]/g, ' ') + ' ';
             const p2Years = p2Tags.map(t => t.replace(/^#/, '')).filter(t => /^(19|20)\d{2}$/.test(t));
             const p2Age = p2.age ? parseInt(p2.age) : null;
-            let p2CityLower = p2.city ? p2.city.toLowerCase() : '';
-            p1Tags.forEach(t => { if(t.startsWith('city:')) p1CityLower += " " + t.substring(5).toLowerCase(); });
-            p2Tags.forEach(t => { if(t.startsWith('city:')) p2CityLower += " " + t.substring(5).toLowerCase(); });
+            const p2CityLower = p2.city ? p2.city.toLowerCase() : '';
             const p2RoleLower = p2.role ? p2.role.toLowerCase() : '';
             
             let shared = { uni: 0, degree: 0, company: 0, city: 0, army_unit: 0, army_base: 0, high_school: 0, mechina: 0 };
@@ -4820,53 +4784,45 @@
                     'haifa': ['חיפה', 'haifa'],
                     'חיפה': ['haifa', 'חיפה'],
                     'tel aviv': ['תל אביב', 'tel aviv', 'tel-aviv'],
-                    'tel aviv': ['tel aviv', 'tel-aviv', 'tlv', 'tel aviv-yafo', 'תל אביב', 'תל-אביב', 'תל אביב-יפו'],
-                    'tel-aviv': ['tel aviv', 'tel-aviv', 'tlv', 'tel aviv-yafo', 'תל אביב', 'תל-אביב', 'תל אביב-יפו'],
-                    'תל אביב': ['tel aviv', 'tel-aviv', 'tlv', 'tel aviv-yafo', 'תל אביב', 'תל-אביב', 'תל אביב-יפו'],
-                    'rishon lezion': ['rishon', 'rishon lezion', 'ראשון לציון', 'ראשון'],
-                    'ראשון לציון': ['rishon', 'rishon lezion', 'ראשון לציון', 'ראשון'],
-                    'petah tikva': ['petah tikva', 'פתח תקווה', 'פ"ת', 'פתח-תקווה'],
-                    'פתח תקווה': ['petah tikva', 'פתח תקווה', 'פ"ת', 'פתח-תקווה'],
-                    'jerusalem': ['jerusalem', 'ירושלים'],
-                    'ירושלים': ['jerusalem', 'ירושלים'],
-                    'kfar saba': ['kfar saba', 'כפר סבא', 'כפ"ס'],
-                    'כפר סבא': ['kfar saba', 'כפר סבא', 'כפ"ס'],
+                    'תל אביב': ['tel aviv', 'tel-aviv', 'תל אביב'],
+                    'ramat gan': ['רמת גן', 'ramat gan'],
+                    'רמת גן': ['ramat gan', 'רמת גן'],
+                    'kiryat yam': ['kiryat yam', 'קרית ים', 'קריית ים'],
+                    'קרית ים': ['kiryat yam', 'קרית ים', 'קריית ים'],
+                    'קריית ים': ['kiryat yam', 'קרית ים', 'קריית ים'],
+                    'kiryat haim': ['kiryat haim', 'קרית חיים', 'קריית חיים'],
+                    'קרית חיים': ['kiryat haim', 'קרית חיים', 'קריית חיים'],
+                    'קריית חיים': ['kiryat haim', 'קרית חיים', 'קריית חיים'],
+                    'givat ella': ['givat ella', 'giva\'t ella', 'גבעת אלה'],
+                    'גבעת אלה': ['givat ella', 'giva\'t ella', 'גבעת אלה'],
+                    'zikhron yaakov': ['zikhron ya\'akov', 'zikhron yaakov', 'zichron yaakov', 'זכרון יעקב'],
+                    'זכרון יעקב': ['zikhron ya\'akov', 'zikhron yaakov', 'zichron yaakov', 'זכרון יעקב'],
+                    'ayelet hashahar': ['ayelet hashahar', 'איילת השחר'],
+                    'איילת השחר': ['ayelet hashahar', 'איילת השחר'],
                     'beit keshet': ['beit keshet', 'בית קשת'],
                     'בית קשת': ['beit keshet', 'בית קשת'],
                     'gan shmuel': ['gan shmuel', 'גן שמואל'],
                     'גן שמואל': ['gan shmuel', 'גן שמואל']
                 };
 
-                let p1Vals = p1CityLower.split(/\||\/|,|\s-\s|—|\n|\sand\s|\s&\s/i).map(s => s.trim()).filter(Boolean);
-                let p2Vals = p2CityLower.split(/\||\/|,|\s-\s|—|\n|\sand\s|\s&\s/i).map(s => s.trim()).filter(Boolean);
+                let p1Vals = [p1CityLower];
+                let p2Vals = [p2CityLower];
                 
-                let expandedP1Vals = [...p1Vals];
-                let expandedP2Vals = [...p2Vals];
-
                 Object.keys(cityAliases).forEach(k => {
-                    if (p1Vals.some(v => v.includes(k))) expandedP1Vals = expandedP1Vals.concat(cityAliases[k]);
-                    if (p2Vals.some(v => v.includes(k))) expandedP2Vals = expandedP2Vals.concat(cityAliases[k]);
+                    if (p1CityLower.includes(k)) p1Vals = p1Vals.concat(cityAliases[k]);
+                    if (p2CityLower.includes(k)) p2Vals = p2Vals.concat(cityAliases[k]);
                 });
 
-                let matchFound = false;
-                let matchedVal = '';
-                expandedP1Vals.forEach(v1 => {
-                    expandedP2Vals.forEach(v2 => {
-                        if (v1.includes(v2) || v2.includes(v1)) {
-                            matchFound = true;
-                            matchedVal = v1.length < v2.length ? v1 : v2; // take the shorter one as the match core
-                        }
-                    });
-                });
+                const matchFound = p1Vals.some(v1 => p2Vals.some(v2 => v1.includes(v2) || v2.includes(v1)));
+                const shouldIgnore = ignoreCities.some(c => p1CityLower.includes(c)) || ignoreCities.some(c => p2CityLower.includes(c));
                 
                 if (matchFound) {
-                    const shouldIgnore = ignoreCities.some(c => matchedVal.includes(c));
                     if (!shouldIgnore) {
                         score += 15;
-                        sharedStrings.push(matchedVal);
+                        sharedStrings.push(p1CityLower);
                     } else if (isSimilarAge) {
                         score += 15;
-                        sharedStrings.push(matchedVal);
+                        sharedStrings.push(p1CityLower);
                     }
                 }
             }
@@ -4894,10 +4850,7 @@
                 });
                 
                 if (match) {
-                    const isIgnored = ignoreCities.some(c => c.replace(/\s+/g, '') === normTag || (normTag.length > 3 && normTag.includes(c.replace(/\s+/g, ''))));
-                    if (isIgnored && !isSimilarAge) {
-                        // Skip this tag match because it is an ignored city without similar age
-                    } else if (genericRoles.includes(normTag) || genericRoles.includes(cleanTag.toLowerCase())) {
+                    if (genericRoles.includes(normTag) || genericRoles.includes(cleanTag.toLowerCase())) {
                         score += 5;
                     } else {
                         score += 15; // Reduced from 30 to prevent weak matches from generic tags
@@ -4912,11 +4865,8 @@
                 const normP1 = cleanP1.toLowerCase().replace(/\s+/g, '');
                 const normCity2 = p2CityLower.replace(/\s+/g, '');
                 if (normP1.length > 3 && (normCity2.includes(normP1) || normP1.includes(normCity2))) {
-                    const isIgnored = ignoreCities.some(c => c.replace(/\s+/g, '') === normP1 || normCity2.includes(c.replace(/\s+/g, '')));
-                    if (!isIgnored || isSimilarAge) {
-                        score += 15;
-                        sharedStrings.push(cleanP1);
-                    }
+                    score += 15;
+                    sharedStrings.push(cleanP1);
                 }
             });
             
@@ -4930,8 +4880,8 @@
         }
 
         function generateRecommendations() {
-            let tags = (document.getElementById('f-tags') ? document.getElementById('f-tags').value : '').split(',').map(t => t.trim()).filter(Boolean);
-            const desc = (document.getElementById('f-chapters') ? document.getElementById('f-chapters').value : '').trim();
+            let tags = document.getElementById('f-tags').value.split(',').map(t => t.trim()).filter(Boolean);
+            const desc = document.getElementById('f-desc').value.trim();
             if (tags.length === 0 && desc) {
                 const words = desc.split(/[\s,.-]+/);
                 const ignoreWords = ['this','that','with','from','they','the','and','for','was','not','are','but','you','all','any','can','her','him','out'];
@@ -4944,27 +4894,11 @@
             if (byStr) {
                 const byInt = parseInt(byStr);
                 if (byInt < 150) {
-                    calculatedAge = byStr;
+                    calculatedAge = byStr; // User entered their age directly
                 } else {
                     calculatedAge = (new Date().getFullYear() - byInt).toString();
                 }
             }
-            
-            // Collect all tags dynamically
-            const addField = (values, prefix) => {
-                values.forEach(val => {
-                    if (val) tags.push(`${prefix}:${val}`);
-                });
-            };
-            
-            addField(getFieldValues('tw-f-city', 'f-city'), 'city');
-            addField(getFieldValues('tw-f-origin-city', 'f-origin-city'), 'origincity');
-            addField(getFieldValues('tw-f-role', 'f-role'), 'role');
-            if (document.getElementById('f-highschool')) addField([document.getElementById('f-highschool').value], 'highschool');
-            if (document.getElementById('f-university')) addField([document.getElementById('f-university').value], 'university');
-            if (document.getElementById('f-degree')) addField([document.getElementById('f-degree').value], 'degree');
-            if (document.getElementById('f-army-role')) addField([document.getElementById('f-army-role').value], 'armyrole');
-            if (document.getElementById('f-army-base')) addField([document.getElementById('f-army-base').value], 'armybase');
 
             const p1 = {
                 age: calculatedAge,
@@ -4974,13 +4908,12 @@
                 description: desc,
                 tags: tags
             };
+            
             let scores = [];
             people.forEach(p => {
                 const result = calculateMatchScore(p1, p);
                 // Only suggest if score is high enough AND there's an explicit shared concept
-                // AND they are not already in the connectedList!
-                const isAlreadyConnected = Array.from(document.querySelectorAll('.connection-entry .conn-target')).some(input => input.value.trim() === p.name);
-                if (!isAlreadyConnected && result.score >= 15 && result.sharedConcepts.length > 0) {
+                if (result.score >= 15 && result.sharedConcepts.length > 0) {
                     scores.push({ person: p, score: result.score, shared: result.sharedConcepts });
                 }
             });
@@ -5052,7 +4985,7 @@
                         div.remove();
                         visibleCount--;
                         if (currentRecIndex >= pendingRecs.length && visibleCount === 0) {
-                            goToWizardStep(window._currentConnStep || 'conn-1');
+                            goToWizardStep(9);
                         } else {
                             renderNextCard(); // Pop up the next one!
                         }
@@ -5074,10 +5007,10 @@
             for (let i = 0; i < 5; i++) {
                 renderNextCard();
             }
-            return visibleCount > 0;
+            return true;
         }
 
-        function openModal(mode, personData = null, defaultConnectionNodeId = null, isResumingWizard = false) {
+        function openModal(mode, personData = null, defaultConnectionNodeId = null) {
             modal.classList.add('visible');
             overlay.classList.add('visible');
             document.getElementById('form-mode').value = mode;
@@ -5140,16 +5073,11 @@
                     personData.connections.forEach(c => addConnectionEntry(c.id, c.type, c.strength));
                 }
                 
-                if (!isResumingWizard) {
-                    // Move connections section into the accordion for Edit mode
-                    document.getElementById('edit-connections-content').appendChild(document.getElementById('connections-section'));
-                    document.getElementById('edit-connections-accordion').style.display = 'block';
-                    document.getElementById('edit-connections-content').style.display = 'none';
-                    document.getElementById('edit-conns-arrow').style.transform = 'rotate(0deg)';
-                } else {
-                    document.getElementById('wizard-step-9-original-parent').appendChild(document.getElementById('connections-section'));
-                    document.getElementById('edit-connections-accordion').style.display = 'none';
-                }
+                // Move connections section into the accordion for Edit mode
+                document.getElementById('edit-connections-content').appendChild(document.getElementById('connections-section'));
+                document.getElementById('edit-connections-accordion').style.display = 'block';
+                document.getElementById('edit-connections-content').style.display = 'none';
+                document.getElementById('edit-conns-arrow').style.transform = 'rotate(0deg)';
                 
                 // Show Edit mode UI directly (bypass wizard steps)
                 document.querySelectorAll('.wizard-step').forEach(el => {
@@ -5476,42 +5404,14 @@
                 return ['ilaniya', 'moshav ilaniya', 'moshav ilania', 'אילניה', 'מושב אילניה'].includes(lowerCity) ? 'ilania' : c;
             }).join(', ');
 
-            
-            // Build description and tags from all the new fields
-            let generatedTags = [];
-            let generatedDesc = [];
-            
-            const addField = (values, prefix, isTag=true) => {
-                values.forEach(val => {
-                    if (val) {
-                        if (isTag) generatedTags.push(`${prefix}:${val}`);
-                        generatedDesc.push(`${prefix}: ${val}`);
-                    }
-                });
-            };
-            
-            addField(getFieldValues('tw-f-workplace', 'f-workplace'), 'workplace', true);
-            if (document.getElementById('f-highschool')) addField([document.getElementById('f-highschool').value], 'highschool', true);
-            if (document.getElementById('f-university')) addField([document.getElementById('f-university').value], 'university', true);
-            if (document.getElementById('f-degree')) addField([document.getElementById('f-degree').value], 'degree', true);
-            if (document.getElementById('f-army-role')) addField([document.getElementById('f-army-role').value], 'armyrole', true);
-            if (document.getElementById('f-army-base')) addField([document.getElementById('f-army-base').value], 'armybase', true);
-            addField(getFieldValues('tw-f-other-value', 'f-other-value'), 'other', true);
-
-            const userTags = document.getElementById('f-tags') ? document.getElementById('f-tags').value : '';
-            const allTags = [userTags, ...generatedTags].filter(Boolean).join(', ');
-            
-            const userDesc = document.getElementById('f-desc') ? document.getElementById('f-desc').value : '';
-            const allDesc = [userDesc, ...generatedDesc].filter(Boolean).join('\n');
-
             const data = {
                 name: document.getElementById('f-name').value,
                 age: calcAge,
                 role: getFieldValues('tw-f-role', 'f-role').join(', '),
                 city: cityVal,
                 country: document.getElementById('f-country').value || 'Israel',
-                description: allDesc,
-                tags: allTags,
+                description: document.getElementById('f-desc').value,
+                tags: document.getElementById('f-tags').value,
             };
 
             const originCity = getFieldValues('tw-f-origin-city', 'f-origin-city').join(', ');
@@ -5719,7 +5619,7 @@
                     } else {
                         // For edit, just immediately re-select the node cleanly
                         setTimeout(() => {
-                            selectNode(targetIdx, true);
+                            selectNode(targetIdx, false);
                         }, 100);
                     }
                 }
