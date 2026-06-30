@@ -2911,7 +2911,7 @@
             }
         }
 
-        function selectNode(id, triggerFocus = true, zoomToNetwork = false) {
+        function selectNode(id, triggerFocus = true) {
             if (pathTargetMode && selectedNodeId !== null && selectedNodeId !== id) {
                 const startId = selectedNodeId;
                 disablePathTargetMode();
@@ -3001,7 +3001,6 @@
                 const trueUp = new THREE.Vector3().crossVectors(camRight, viewDir).normalize();
                 
                 const repelRadius = 800; // Force background nodes outside the 2D planar network
-                let maxPersonalRadius = 150;
                 
                 for (let i = 0; i < numStrands; i++) {
                     const p = pointData[i * pPerStrand];
@@ -3017,8 +3016,6 @@
                         else if (connInfo.type === 'family_extended') r = 200 - ((connInfo.strength - 1) * 12.5);
                         else if (connInfo.type === 'friend') r = 350 - ((connInfo.strength - 1) * 25);
                         else r = 550 - ((connInfo.strength - 1) * 32.5);
-                        
-                        if (r > maxPersonalRadius) maxPersonalRadius = r;
                         
                         const c = Math.cos(angle) * r;
                         const s = Math.sin(angle) * r;
@@ -3090,15 +3087,9 @@
                 controls.autoRotate = false;
                 camTargetLookAt.copy(C);
                 
-                const optimalDist = Math.max(400, maxPersonalRadius * 2.2);
-                
-                if (zoomToNetwork) {
-                    camTargetPos.copy(C).add(dir.multiplyScalar(optimalDist));
-                } else {
-                    let currentDist = camera.position.distanceTo(C);
-                    if (currentDist < 100 || currentDist > 1500) currentDist = optimalDist;
-                    camTargetPos.copy(C).add(dir.multiplyScalar(currentDist));
-                }
+                let currentDist = camera.position.distanceTo(C);
+                if (currentDist < 100 || currentDist > 1500) currentDist = 400;
+                camTargetPos.copy(C).add(dir.multiplyScalar(currentDist));
                 
                 isCameraAnimating = true;
             }
