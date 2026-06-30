@@ -4237,6 +4237,12 @@
                     }
                     
                     else if (currentStr === '8') showSummaryScreen(5, '8');
+                    
+                    else if (currentStr === 'conn-1') showSummaryScreen(1, 'conn-1');
+                    else if (currentStr === 'conn-2') showSummaryScreen(1, 'conn-2');
+                    else if (currentStr === 'conn-3') showSummaryScreen(1, 'conn-3');
+                    else if (currentStr === 'conn-4') goToWizardStep('conn-5'); // Work directly to Studies
+                    else if (currentStr === 'conn-5') showSummaryScreen(2, 'conn-5'); // Studies to Summary 2
                 };
             } else {
                 globalFooter.style.display = 'none';
@@ -6001,83 +6007,10 @@
                     
                     const pIdx = targetIdx * pPerStrand;
                     
-                    if (mode === 'add') {
-                        // Trigger the new Intro Animation
-                        introAnimationNode = targetIdx;
-                        introAnimationPhase = 1;
-                        introAnimationStart = performance.now();
-                        
-                        // Force camera far away to start, looking at origin
-                        camera.position.set(0, 0, 1800);
-                        camera.lookAt(0, 0, 0);
-                        camTargetPos.set(0, 0, 800); // Sucks us inside
-                        camTargetLookAt.set(0, 0, 0);
-                        isCameraAnimating = true;
-                        
-                        // Teleport the new node exactly to camera initially so it flies in
-                        const pData = pointData[targetIdx * pPerStrand];
-                        if (pData) {
-                            const startWorld = camera.position.clone();
-                            // Push it a bit behind the camera
-                            const camDir = new THREE.Vector3();
-                            camera.getWorldDirection(camDir);
-                            startWorld.add(camDir.multiplyScalar(-500));
-                            masterGroup.worldToLocal(startWorld);
-                            pData.cx = startWorld.x;
-                            pData.cy = startWorld.y;
-                            pData.cz = startWorld.z;
-                            
-                            // Make the new person the permanent center of the network
-                            pData.baseCx = 0;
-                            pData.baseCy = 0;
-                            pData.baseCz = 0;
-                        }
-                        
-                        // Hide connections initially
-                        if (typeof connectionCurves !== 'undefined') {
-                            connectionCurves.forEach(curve => {
-                                curve.mesh.material.uniforms.uOpacity.value = 0.0;
-                            });
-                        }
-                        
-                        // Set timeouts for phases
-                        setTimeout(() => {
-                            introAnimationPhase = 2; // Show connections
-                            if (typeof connectionCurves !== 'undefined') {
-                                connectionCurves.forEach(curve => {
-                                    const aNode = curve.aIdx / pPerStrand;
-                                    const bNode = curve.bIdx / pPerStrand;
-                                    if (aNode === introAnimationNode || bNode === introAnimationNode) {
-                                        curve.mesh.material.uniforms.uOpacity.value = 1.0;
-                                    }
-                                });
-                            }
-                        }, 1500);
-                        
-                        setTimeout(() => {
-                            introAnimationPhase = 3; // Release network
-                            introAnimationNode = null;
-                            
-
-                            if (typeof connectionCurves !== 'undefined') {
-                                connectionCurves.forEach(curve => {
-                                    curve.mesh.material.uniforms.uOpacity.value = 1.0;
-                                });
-                            }
-                            
-                            // Follow the node back to its spot and open the info panel
-                            setTimeout(() => {
-                                selectNode(targetIdx, true, true);
-                            }, 100);
-                            
-                        }, 3500);
-                        
-                    } else {
-                        // For edit, just immediately re-select the node cleanly
-                        setTimeout(() => {
-                            selectNode(targetIdx, true, true);
-                        }, 100);
-                    }
+                    // Use standard selectNode behavior for both add and edit
+                    setTimeout(() => {
+                        selectNode(targetIdx, true, true);
+                    }, 100);
                 }
                 
             } catch (err) {
