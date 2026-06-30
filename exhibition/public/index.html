@@ -3083,10 +3083,11 @@
                 globalGeometry.attributes.color.needsUpdate = true;
                 
                 // Move camera to view the node in its natural environment
-                // camera variables are already defined above (dir)
                 controls.autoRotate = false;
                 camTargetLookAt.copy(C);
-                camTargetPos.copy(C).add(dir.multiplyScalar(400)); // View from outside looking in, closer to personal network
+                let currentDist = camera.position.distanceTo(C);
+                if (currentDist < 100 || currentDist > 1500) currentDist = 400;
+                camTargetPos.copy(C).add(dir.multiplyScalar(currentDist));
                 isCameraAnimating = true;
             }
 
@@ -4207,7 +4208,7 @@
                     else if (currentStr === '4') processStep4();
                     else if (currentStr === '4a') showSummaryScreen(1, '4a');
                     else if (currentStr === 'rec-1') {
-                        window._nextWizardStep = window._forceStopFeeding ? null : '5';
+                        window._nextWizardStep = '5';
                         window._isPartialAdd = true;
                         processStep9();
                     }
@@ -4220,14 +4221,14 @@
                         const cityCurrent = getFieldValues('tw-f-city', 'f-city').join(' ').toLowerCase();
                         const hebrewRegex = /[\u0590-\u05FF]/;
                         const isIsrael = cityOrigin.includes('israel') || cityOrigin.includes('ישראל') || cityCurrent.includes('israel') || cityCurrent.includes('ישראל') || hebrewRegex.test(cityOrigin) || hebrewRegex.test(cityCurrent) || ['tel aviv', 'jerusalem', 'haifa', 'rishon', 'petah', 'ashdod', 'netanya', 'beer sheva', 'holon', 'ramat gan', 'herzliya'].some(c => cityOrigin.includes(c) || cityCurrent.includes(c));
-                        window._nextWizardStep = window._forceStopFeeding ? null : (isIsrael ? '7' : '8');
+                        window._nextWizardStep = isIsrael ? '7' : '8';
                         window._isPartialAdd = true;
                         processStep9();
                     }
                     
                     else if (currentStr === '7') showSummaryScreen(4, '7');
                     else if (currentStr === 'rec-4') {
-                        window._nextWizardStep = window._forceStopFeeding ? null : '8';
+                        window._nextWizardStep = '8';
                         window._isPartialAdd = true;
                         processStep9();
                     }
