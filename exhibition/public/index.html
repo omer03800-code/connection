@@ -1347,7 +1347,7 @@
                 <div id="wizard-step-2" class="wizard-step" style="text-align: center; height: 100%; min-height: 400px;">
                     <div style="display: flex; flex-direction: column; justify-content: center; align-items: center; height: 100%; width: 100%;">
                         <div class="scan-spinner"></div>
-                        <h3 style="font-weight: 300; margin-top: 30px; letter-spacing: 1px; font-size: 24px;">Looking for existing traces...</h3>
+                        <h3 id="loading-playful-msg" style="font-weight: 300; margin-top: 30px; letter-spacing: 1px; font-size: 24px;">Looking for existing traces...</h3>
                         <p id="step-2-explanation" style="color: rgba(245,245,245,0.5); font-size: 13px; margin-top: 10px;">Searching the network</p>
                     </div>
                 </div>
@@ -1435,8 +1435,8 @@
                 <!-- STEP 5 CURRENT POSITION -->
                 <div id="wizard-step-5" class="wizard-step" style="height: 100%;">
                     <h2 id="step-5-title">What keeps you busy?</h2>
-                    
-                    <div class="chapter-block autocomplete-wrapper" style="position: absolute; top: 20%; left: 50px; width: calc(100% - 330px); z-index: 30;">
+                    <div style="position: absolute; top: 20%; left: 50px; width: calc(100% - 330px); z-index: 20; display: flex; flex-direction: column; gap: 80px;">
+                        <div class="chapter-block autocomplete-wrapper">
                         <label class="editorial-label">Current Role</label>
                         <div class="tags-wrapper" id="tw-f-role" onclick="document.getElementById('f-role').focus()">
                             <input type="text" id="f-role" class="editorial-input auto-role" placeholder="e.g. Designer, Developer, Student">
@@ -1445,7 +1445,7 @@
                         <div class="dynamic-stats" id="stats-f-role"></div>
                     </div>
 
-                    <div class="chapter-block autocomplete-wrapper" style="position: absolute; top: 40%; left: 50px; width: calc(100% - 330px); z-index: 20;">
+                        <div class="chapter-block autocomplete-wrapper">
                         <label class="editorial-label">Current Workplace</label>
                         <div class="tags-wrapper" id="tw-f-workplace" onclick="document.getElementById('f-workplace').focus()">
                             <input type="text" id="f-workplace" class="editorial-input auto-work" placeholder="Company or Institution">
@@ -1453,13 +1453,14 @@
                         <div class="autocomplete-dropdown" id="dropdown-f-workplace"></div>
                         <div class="dynamic-stats" id="stats-f-workplace"></div>
                     </div>
+                    </div>
                 </div>
 
                 <!-- STEP 6 EDUCATION -->
                 <div id="wizard-step-6" class="wizard-step" style="height: 100%;">
                     <h2 id="step-6-title">Where did you study?</h2>
-                    
-                    <div class="chapter-block autocomplete-wrapper" style="position: absolute; top: 15%; left: 50px; width: calc(100% - 330px); z-index: 50;">
+                    <div style="position: absolute; top: 20%; left: 50px; width: calc(100% - 330px); z-index: 20; display: flex; flex-direction: column; gap: 80px;">
+                        <div class="chapter-block autocomplete-wrapper">
                         <label class="editorial-label">School / High School</label>
                         <div class="tags-wrapper" id="tw-f-highschool" onclick="document.getElementById('f-highschool').focus()">
                             <input type="text" id="f-highschool" class="editorial-input auto-highschool" placeholder="e.g. Kadoorie School">
@@ -1468,7 +1469,7 @@
                         <div class="dynamic-stats" id="stats-f-highschool"></div>
                     </div>
 
-                    <div class="chapter-block autocomplete-wrapper" style="position: absolute; top: 45%; left: 50px; width: calc(100% - 330px); z-index: 40;">
+                        <div class="chapter-block autocomplete-wrapper">
                         <label class="editorial-label">University</label>
                         <div class="tags-wrapper" id="tw-f-university" onclick="document.getElementById('f-university').focus()">
                             <input type="text" id="f-university" class="editorial-input auto-university" placeholder="e.g. Hebrew University">
@@ -1477,7 +1478,7 @@
                         <div class="dynamic-stats" id="stats-f-university"></div>
                     </div>
 
-                    <div class="chapter-block autocomplete-wrapper" style="position: absolute; top: 75%; left: 50px; width: calc(100% - 330px); z-index: 30;">
+                        <div class="chapter-block autocomplete-wrapper">
                         <label class="editorial-label">Degree / Major</label>
                         <div class="tags-wrapper" id="tw-f-degree" onclick="document.getElementById('f-degree').focus()">
                             <input type="text" id="f-degree" class="editorial-input auto-degree" placeholder="e.g. Computer Science">
@@ -1485,13 +1486,14 @@
                         <div class="autocomplete-dropdown" id="dropdown-f-degree"></div>
                         <div class="dynamic-stats" id="stats-f-degree"></div>
                     </div>
+                    </div>
                 </div>
 
                 <!-- STEP 7 ARMY -->
                 <div id="wizard-step-7" class="wizard-step" style="height: 100%;">
                     <h2 id="step-7-title">Military Service</h2>
-                    
-                    <div class="chapter-block autocomplete-wrapper" style="position: absolute; top: 25%; left: 50px; width: calc(100% - 330px); z-index: 40;">
+                    <div style="position: absolute; top: 20%; left: 50px; width: calc(100% - 330px); z-index: 20; display: flex; flex-direction: column; gap: 80px;">
+                        <div class="chapter-block autocomplete-wrapper">
                         <label class="editorial-label">Military Role</label>
                         <div class="tags-wrapper" id="tw-f-army-role" onclick="document.getElementById('f-army-role').focus()">
                             <input type="text" id="f-army-role" class="editorial-input auto-army-role" placeholder="e.g. Combat Soldier, Commander">
@@ -1500,7 +1502,7 @@
                         <div class="dynamic-stats" id="stats-f-army-role"></div>
                     </div>
 
-                    <div class="chapter-block autocomplete-wrapper" style="position: absolute; top: 55%; left: 50px; width: calc(100% - 330px); z-index: 30;">
+                        <div class="chapter-block autocomplete-wrapper">
                         <label class="editorial-label">Army Base</label>
                         <div class="tags-wrapper" id="tw-f-army-base" onclick="document.getElementById('f-army-base').focus()">
                             <input type="text" id="f-army-base" class="editorial-input auto-army-base" placeholder="e.g. Kirya, Tzeelim">
@@ -1508,13 +1510,14 @@
                         <div class="autocomplete-dropdown" id="dropdown-f-army-base"></div>
                         <div class="dynamic-stats" id="stats-f-army-base"></div>
                     </div>
+                    </div>
                 </div>
 
                 <!-- STEP 8 GENERAL -->
                 <div id="wizard-step-8" class="wizard-step" style="height: 100%;">
                     <h2 id="step-8-title">Other Chapters & Topics</h2>
-                    
-                    <div class="chapter-block autocomplete-wrapper" style="position: absolute; top: 25%; left: 50px; width: calc(100% - 330px); z-index: 40;">
+                    <div style="position: absolute; top: 20%; left: 50px; width: calc(100% - 330px); z-index: 20; display: flex; flex-direction: column; gap: 80px;">
+                        <div class="chapter-block autocomplete-wrapper">
                         <label class="editorial-label">Other Chapters (Mechina, Shnat Sherut, etc.)</label>
                         <div class="tags-wrapper" id="tw-f-other-value" onclick="document.getElementById('f-other-value').focus()">
                             <input type="text" id="f-other-value" class="editorial-input auto-other" placeholder="Mechina, Shnat Sherut, Course...">
@@ -1523,13 +1526,14 @@
                         <div class="dynamic-stats" id="stats-f-other-value"></div>
                     </div>
 
-                    <div class="chapter-block" style="position: absolute; top: 55%; left: 50px; width: calc(100% - 330px); z-index: 30;">
+                        <div class="chapter-block">
                         <label class="editorial-label">Which topics best describe you?</label>
                         <div class="tags-input-wrapper" id="tw-f-tags">
                             <input type="text" class="tag-input-field" placeholder="e.g. #marketing, #hiking">
                             <div class="dropdown-list"></div>
                         </div>
                         <input type="hidden" id="f-tags" name="tags">
+                    </div>
                     </div>
                 </div>
 
@@ -4050,8 +4054,25 @@
                 // Back button logic
                 btnBack.style.visibility = currentStr === '0' ? 'hidden' : 'visible';
                 btnBack.onclick = () => {
-                    const currentIndex = stepsWithFooter.indexOf(currentStr);
-                    if (currentIndex > 0) goToWizardStep(stepsWithFooter[currentIndex - 1]);
+                    let backTo = null;
+                    if (currentStr === '4') backTo = '0';
+                    else if (currentStr === '4a') backTo = '4';
+                    else if (currentStr.startsWith('rec-1') || currentStr.startsWith('conn-1')) backTo = '4a';
+                    else if (currentStr === '5') backTo = '4a';
+                    else if (currentStr.startsWith('rec-2') || currentStr.startsWith('conn-2')) backTo = '5';
+                    else if (currentStr === '6') backTo = '5';
+                    else if (currentStr.startsWith('rec-3') || currentStr.startsWith('conn-3')) backTo = '6';
+                    else if (currentStr === '7') backTo = '6';
+                    else if (currentStr.startsWith('rec-4') || currentStr.startsWith('conn-4')) backTo = '7';
+                    else if (currentStr === '8') {
+                        const cityOrigin = document.getElementById('f-origin-city') ? document.getElementById('f-origin-city').value.toLowerCase() : '';
+                        const cityCurrent = document.getElementById('f-city') ? document.getElementById('f-city').value.toLowerCase() : '';
+                        const isIsrael = cityOrigin.includes('israel') || cityOrigin.includes('ישראל') || cityCurrent.includes('israel') || cityCurrent.includes('ישראל');
+                        backTo = isIsrael ? '7' : '6';
+                    }
+                    else if (currentStr.startsWith('rec-5') || currentStr.startsWith('conn-5')) backTo = '8';
+                    
+                    if (backTo) goToWizardStep(backTo);
                 };
                 
                 if (currentStr.startsWith('conn-')) {
@@ -4061,6 +4082,58 @@
                 }
                 
                 btnNext.style.display = 'inline-block';
+                
+                // Disable logic
+                const inputFieldsMap = {
+                    '4a': ['f-origin-city'],
+                    '5': ['f-role', 'f-city'],
+                    '6': ['f-highschool', 'f-university', 'f-degree'],
+                    '7': ['f-army-role', 'f-army-base'],
+                    '8': ['f-chapters']
+                };
+                
+                const checkInputs = () => {
+                    const fields = inputFieldsMap[currentStr];
+                    if (!fields) {
+                        btnNext.style.opacity = '1';
+                        btnNext.style.pointerEvents = 'auto';
+                        return;
+                    }
+                    
+                    let hasValue = false;
+                    fields.forEach(fid => {
+                        const el = document.getElementById(fid);
+                        if (el && el.value.trim().length > 0) hasValue = true;
+                        
+                        const tw = document.getElementById('tw-' + fid);
+                        if (tw && tw.querySelectorAll('.tag-item').length > 0) hasValue = true;
+                    });
+                    
+                    if (hasValue) {
+                        btnNext.style.opacity = '1';
+                        btnNext.style.pointerEvents = 'auto';
+                    } else {
+                        btnNext.style.opacity = '0.4';
+                        btnNext.style.pointerEvents = 'none';
+                    }
+                };
+                
+                checkInputs();
+                
+                // Attach listeners
+                const fields = inputFieldsMap[currentStr] || [];
+                fields.forEach(fid => {
+                    const el = document.getElementById(fid);
+                    if (el) {
+                        el.addEventListener('input', checkInputs);
+                    }
+                    const tw = document.getElementById('tw-' + fid);
+                    if (tw) {
+                        // MutationObserver for tags
+                        const observer = new MutationObserver(checkInputs);
+                        observer.observe(tw, { childList: true, subtree: true });
+                    }
+                });
                 btnNext.onclick = () => {
                     if (currentStr === '0') processStep0();
                     else if (currentStr === '4') processStep4(); // goToWizardStep('4a')
@@ -4083,7 +4156,10 @@
                     else if (currentStr === '6') triggerRecommendations(3);
                     else if (currentStr === 'rec-3') goToWizardStep('conn-3');
                     else if (currentStr === 'conn-3') {
-                        window._nextWizardStep = '7';
+                        const cityOrigin = document.getElementById('f-origin-city') ? document.getElementById('f-origin-city').value.toLowerCase() : '';
+                        const cityCurrent = document.getElementById('f-city') ? document.getElementById('f-city').value.toLowerCase() : '';
+                        const isIsrael = cityOrigin.includes('israel') || cityOrigin.includes('ישראל') || cityCurrent.includes('israel') || cityCurrent.includes('ישראל');
+                        window._nextWizardStep = isIsrael ? '7' : '8';
                         window._isPartialAdd = true;
                         processStep9();
                     }
@@ -4182,7 +4258,7 @@
         document.getElementById('btn-match-no').addEventListener('click', () => {
             document.getElementById('form-mode').value = 'add';
             document.getElementById('form-person-id').value = '';
-            goToWizardStep(4);
+            goToWizardStep('4a');
         });
 
         function getFieldValues(wrapperId, inputId) {
@@ -4228,14 +4304,24 @@
             if (hasRecs) {
                 goToWizardStep(recStep);
             } else {
-                window._nextWizardStep = nextSessionStep;
-                window._isPartialAdd = (nextSessionStep !== null);
-                processStep9();
+                goToWizardStep(connStep);
             }
         }
 
         function processStep9() {
             goToWizardStep(10);
+            const playfulMsgs = [
+                "Looking for existing traces...",
+                "The beast needs more data...",
+                "Looks like a ghost... feed me more!",
+                "Not enough digital footprint... keep typing!",
+                "Searching the matrix...",
+                "Connecting the dots... but we need more dots!"
+            ];
+            const msgEl = document.getElementById('loading-playful-msg');
+            if (msgEl) {
+                msgEl.textContent = playfulMsgs[Math.floor(Math.random() * playfulMsgs.length)];
+            }
             setTimeout(() => {
                 const addForm = document.getElementById('add-form');
                 if (addForm) {
@@ -4883,24 +4969,37 @@
             }
             p2Tags.forEach(t => {
                 const cleanTag = t.replace(/^#/, '');
-                const normTag = cleanTag.toLowerCase().replace(/\s+/g, '');
+                const normTagFull = cleanTag.toLowerCase();
+                const valTag = normTagFull.includes(':') ? normTagFull.split(':')[1].trim() : normTagFull.trim();
+                const normTagStripped = valTag.replace(/\s+/g, '');
                 
                 const match = p1Tags.find(p1t => {
                     const cleanP1 = p1t.replace(/^#/, '');
-                    const normP1 = cleanP1.toLowerCase().replace(/\s+/g, '');
-                    return normTag === normP1 || 
-                           (normTag.length > 3 && normP1.includes(normTag)) || 
-                           (normP1.length > 3 && normTag.includes(normP1));
+                    const normP1Full = cleanP1.toLowerCase();
+                    const valP1 = normP1Full.includes(':') ? normP1Full.split(':')[1].trim() : normP1Full.trim();
+                    const normP1Stripped = valP1.replace(/\s+/g, '');
+                    
+                    if (!valTag || !valP1) return false;
+                    
+                    if (normTagStripped === normP1Stripped) return true;
+                    
+                    const tagWords = valTag.split(/\s+/);
+                    const p1Words = valP1.split(/\s+/);
+                    
+                    if (valTag.length >= 3 && p1Words.includes(valTag)) return true;
+                    if (valP1.length >= 3 && tagWords.includes(valP1)) return true;
+                    
+                    return false;
                 });
                 
                 if (match) {
-                    const isIgnored = ignoreCities.some(c => c.replace(/\s+/g, '') === normTag || (normTag.length > 3 && normTag.includes(c.replace(/\s+/g, ''))));
+                    const isIgnored = ignoreCities.some(c => c.replace(/\s+/g, '') === normTagStripped || (normTagStripped.length > 3 && normTagStripped.includes(c.replace(/\s+/g, ''))));
                     if (isIgnored && !isSimilarAge) {
                         // Skip this tag match because it is an ignored city without similar age
-                    } else if (genericRoles.includes(normTag) || genericRoles.includes(cleanTag.toLowerCase())) {
+                    } else if (genericRoles.includes(normTagStripped) || genericRoles.includes(cleanTag.toLowerCase())) {
                         score += 5;
                     } else {
-                        score += 15; // Reduced from 30 to prevent weak matches from generic tags
+                        score += 15;
                         sharedStrings.push(cleanTag);
                     }
                 }
@@ -4909,10 +5008,21 @@
             // Cross-match: if p1 has a tag that matches p2's city
             p1Tags.forEach(t => {
                 const cleanP1 = t.replace(/^#/, '');
-                const normP1 = cleanP1.toLowerCase().replace(/\s+/g, '');
+                const normP1Full = cleanP1.toLowerCase();
+                const valP1 = normP1Full.includes(':') ? normP1Full.split(':')[1].trim() : normP1Full.trim();
+                const normP1Stripped = valP1.replace(/\s+/g, '');
                 const normCity2 = p2CityLower.replace(/\s+/g, '');
-                if (normP1.length > 3 && (normCity2.includes(normP1) || normP1.includes(normCity2))) {
-                    const isIgnored = ignoreCities.some(c => c.replace(/\s+/g, '') === normP1 || normCity2.includes(c.replace(/\s+/g, '')));
+                
+                // Only match if exact or full word
+                let crossMatch = false;
+                if (normP1Stripped.length > 3 && normCity2 === normP1Stripped) crossMatch = true;
+                else {
+                    const cityWords = p2CityLower.split(/\||\/|,|\s-\s|—|\n|\sand\s|\s&\s|\s+/i).map(s => s.trim()).filter(Boolean);
+                    if (valP1.length > 3 && cityWords.includes(valP1)) crossMatch = true;
+                }
+                
+                if (crossMatch) {
+                    const isIgnored = ignoreCities.some(c => c.replace(/\s+/g, '') === normP1Stripped || normCity2.includes(c.replace(/\s+/g, '')));
                     if (!isIgnored || isSimilarAge) {
                         score += 15;
                         sharedStrings.push(cleanP1);
@@ -4975,7 +5085,9 @@
                 tags: tags
             };
             let scores = [];
+            const currentName = (document.getElementById('f-name-initial') ? document.getElementById('f-name-initial').value : '').trim().toLowerCase();
             people.forEach(p => {
+                if (currentName && p.name.toLowerCase() === currentName) return;
                 const result = calculateMatchScore(p1, p);
                 // Only suggest if score is high enough AND there's an explicit shared concept
                 // AND they are not already in the connectedList!
