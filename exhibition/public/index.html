@@ -4258,7 +4258,7 @@
             };
             
             if (progressContainer) {
-                if (currentStr === '9' || currentStr === '10') {
+                if (currentStr === '9' || currentStr === '10' || currentStr === 'summary') {
                     progressContainer.style.display = 'none';
                 } else {
                     progressContainer.style.display = 'flex';
@@ -5173,7 +5173,8 @@
                 let matchedVal = '';
                 expandedP1Vals.forEach(v1 => {
                     expandedP2Vals.forEach(v2 => {
-                        if (v1.includes(v2) || v2.includes(v1)) {
+                        if (v1 === v2 || v1.includes(' ' + v2 + ' ') || v1.startsWith(v2 + ' ') || v1.endsWith(' ' + v2) || 
+                            v2.includes(' ' + v1 + ' ') || v2.startsWith(v1 + ' ') || v2.endsWith(' ' + v1)) {
                             matchFound = true;
                             matchedVal = v1.length < v2.length ? v1 : v2; // take the shorter one as the match core
                         }
