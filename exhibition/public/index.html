@@ -1439,7 +1439,7 @@
                         <div class="chapter-block autocomplete-wrapper">
                         <label class="editorial-label">Current Role</label>
                         <div class="tags-wrapper" id="tw-f-role" onclick="document.getElementById('f-role').focus()">
-                            <input type="text" id="f-role" class="editorial-input auto-role" placeholder="e.g. Designer, Developer, Student">
+                            <input type="text" id="f-role" class="editorial-input auto-role" placeholder="e.g. Graphic Designer, Software Engineer (or Student)">
                         </div>
                         <div class="autocomplete-dropdown" id="dropdown-f-role"></div>
                         <div class="dynamic-stats" id="stats-f-role"></div>
@@ -1527,7 +1527,7 @@
                     </div>
 
                         <div class="chapter-block">
-                        <label class="editorial-label">Which topics best describe you?</label>
+                        <!-- Removed label as per item 8 -->
                         <div class="tags-input-wrapper" id="tw-f-tags">
                             <input type="text" class="tag-input-field" placeholder="e.g. #marketing, #hiking">
                             <div class="dropdown-list"></div>
@@ -4085,11 +4085,11 @@
                 
                 // Disable logic
                 const inputFieldsMap = {
-                    '4a': ['f-origin-city'],
-                    '5': ['f-role', 'f-city'],
+                    '4a': ['f-origin-city', 'f-city'],
+                    '5': ['f-role', 'f-workplace'],
                     '6': ['f-highschool', 'f-university', 'f-degree'],
                     '7': ['f-army-role', 'f-army-base'],
-                    '8': ['f-chapters']
+                    '8': ['f-tags', 'f-other-value']
                 };
                 
                 const checkInputs = () => {
@@ -4304,7 +4304,7 @@
             if (hasRecs) {
                 goToWizardStep(recStep);
             } else {
-                goToWizardStep(connStep);
+                processStep9();
             }
         }
 
@@ -4316,11 +4316,16 @@
                 "Looks like a ghost... feed me more!",
                 "Not enough digital footprint... keep typing!",
                 "Searching the matrix...",
-                "Connecting the dots... but we need more dots!"
+                "Connecting the dots... but we need more dots!",
+                "Summoning the algorithms...",
+                "Decoding your connections...",
+                "Mapping the unknown...",
+                "Unveiling hidden paths..."
             ];
+            
             const msgEl = document.getElementById('loading-playful-msg');
             if (msgEl) {
-                msgEl.textContent = playfulMsgs[Math.floor(Math.random() * playfulMsgs.length)];
+                msgEl.innerText = playfulMsgs[Math.floor(Math.random() * playfulMsgs.length)];
             }
             setTimeout(() => {
                 const addForm = document.getElementById('add-form');
@@ -4531,8 +4536,11 @@
                 });
                 
                 // Add predefined options
-                if (PREDEFINED[prefix]) {
-                    PREDEFINED[prefix].forEach(val => {
+                let predefinedKey = prefix;
+                if (['university', 'degree'].includes(prefix)) predefinedKey = 'education';
+                if (['armyrole', 'armybase'].includes(prefix)) predefinedKey = 'military';
+                if (PREDEFINED[predefinedKey]) {
+                    PREDEFINED[predefinedKey].forEach(val => {
                         counts[val] = (counts[val] || 0) + 1;
                     });
                 }
@@ -5036,10 +5044,14 @@
                 score = 10;
             }
             
-            return { score, sharedConcepts: finalShared };
+            return { 
+                score, 
+                sharedConcepts: finalShared.filter(s => !/[\u0590-\u05FF]/.test(s))
+            };
         }
 
         function generateRecommendations() {
+            window._addedSomeoneInRecs = false; // reset for this session
             let tags = (document.getElementById('f-tags') ? document.getElementById('f-tags').value : '').split(',').map(t => t.trim()).filter(Boolean);
             const desc = (document.getElementById('f-chapters') ? document.getElementById('f-chapters').value : '').trim();
             if (tags.length === 0 && desc) {
@@ -5164,7 +5176,16 @@
                         div.remove();
                         visibleCount--;
                         if (currentRecIndex >= pendingRecs.length && visibleCount === 0) {
-                            goToWizardStep(window._currentConnStep || 'conn-1');
+                            if (window._addedSomeoneInRecs) {
+                                goToWizardStep(window._currentConnStep || 'conn-1');
+                            } else {
+                                // Simulate 'Continue' click from the conn-X step to skip it and go to next question/network
+                                const currentConn = window._currentConnStep || 'conn-1';
+                                document.querySelectorAll('.wizard-step.active').forEach(el => el.classList.remove('active'));
+                                const nextStepEl = document.getElementById('wizard-step-' + currentConn);
+                                if (nextStepEl) nextStepEl.classList.add('active');
+                                document.getElementById('btn-next').click();
+                            }
                         } else {
                             renderNextCard(); // Pop up the next one!
                         }
@@ -5178,6 +5199,7 @@
                 div.querySelector('.btn-connect-sleek').addEventListener('click', (e) => {
                     const id = parseInt(e.target.dataset.id);
                     addConnectionEntry(id, 'acquaintance', 3);
+                    window._addedSomeoneInRecs = true;
                     removeCard();
                 });
             };
