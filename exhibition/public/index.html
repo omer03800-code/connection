@@ -4499,28 +4499,23 @@
             window._forceStopFeeding = isFeedNow;
             
             const hasRecs = generateRecommendations();
+            
+            // Calculate next session step ALWAYS, so if they return later, they start at the right place
+            if (sessionNum === 1) window._nextWizardStep = '5';
+            else if (sessionNum === 2) window._nextWizardStep = '6';
+            else if (sessionNum === 3) {
+                const cityOrigin = getFieldValues('tw-f-origin-city', 'f-origin-city').join(' ').toLowerCase();
+                const cityCurrent = getFieldValues('tw-f-city', 'f-city').join(' ').toLowerCase();
+                const hebrewRegex = /[\u0590-\u05FF]/;
+                const isIsrael = cityOrigin.includes('israel') || cityOrigin.includes('ישראל') || cityCurrent.includes('israel') || cityCurrent.includes('ישראל') || hebrewRegex.test(cityOrigin) || hebrewRegex.test(cityCurrent) || ['tel aviv', 'jerusalem', 'haifa', 'rishon', 'petah', 'ashdod', 'netanya', 'beer sheva', 'holon', 'ramat gan', 'herzliya'].some(c => cityOrigin.includes(c) || cityCurrent.includes(c));
+                window._nextWizardStep = isIsrael ? '7' : '8';
+            }
+            else if (sessionNum === 4) window._nextWizardStep = '8';
+            else window._nextWizardStep = null;
+            
             if (hasRecs) {
                 goToWizardStep(recStep);
             } else {
-                if (isFeedNow) {
-                    window._nextWizardStep = null;
-                    window._isPartialAdd = true;
-                    processStep9();
-                    return;
-                }
-                
-                if (sessionNum === 1) window._nextWizardStep = '5';
-                else if (sessionNum === 2) window._nextWizardStep = '6';
-                else if (sessionNum === 3) {
-                    const cityOrigin = getFieldValues('tw-f-origin-city', 'f-origin-city').join(' ').toLowerCase();
-                    const cityCurrent = getFieldValues('tw-f-city', 'f-city').join(' ').toLowerCase();
-                    const hebrewRegex = /[\u0590-\u05FF]/;
-                    const isIsrael = cityOrigin.includes('israel') || cityOrigin.includes('ישראל') || cityCurrent.includes('israel') || cityCurrent.includes('ישראל') || hebrewRegex.test(cityOrigin) || hebrewRegex.test(cityCurrent) || ['tel aviv', 'jerusalem', 'haifa', 'rishon', 'petah', 'ashdod', 'netanya', 'beer sheva', 'holon', 'ramat gan', 'herzliya'].some(c => cityOrigin.includes(c) || cityCurrent.includes(c));
-                    window._nextWizardStep = isIsrael ? '7' : '8';
-                }
-                else if (sessionNum === 4) window._nextWizardStep = '8';
-                else window._nextWizardStep = null;
-
                 window._isPartialAdd = true;
                 processStep9();
             }
