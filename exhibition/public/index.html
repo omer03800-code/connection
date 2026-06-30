@@ -1920,6 +1920,7 @@
             people.forEach(p => totalCompleteness += getPersonCompleteness(p));
             
             const maxSpread = 300.0 + (totalCompleteness * 3.5); // Grows dynamically based on how much data is provided
+            window._networkRadius = maxSpread;
             masterGroup.scale.set(1, 1, 1);
 
             particleCount = numStrands * pPerStrand;
@@ -2910,7 +2911,7 @@
             }
         }
 
-        function selectNode(id, triggerFocus = true) {
+        function selectNode(id, triggerFocus = true, zoomToNetwork = false) {
             if (pathTargetMode && selectedNodeId !== null && selectedNodeId !== id) {
                 const startId = selectedNodeId;
                 disablePathTargetMode();
@@ -3085,9 +3086,16 @@
                 // Move camera to view the node in its natural environment
                 controls.autoRotate = false;
                 camTargetLookAt.copy(C);
-                let currentDist = camera.position.distanceTo(C);
-                if (currentDist < 100 || currentDist > 1500) currentDist = 400;
-                camTargetPos.copy(C).add(dir.multiplyScalar(currentDist));
+                
+                if (zoomToNetwork) {
+                    const dist = Math.max(800, (window._networkRadius || 600) * 2.5);
+                    camTargetPos.copy(C).add(dir.multiplyScalar(dist));
+                } else {
+                    let currentDist = camera.position.distanceTo(C);
+                    if (currentDist < 100 || currentDist > 1500) currentDist = 400;
+                    camTargetPos.copy(C).add(dir.multiplyScalar(currentDist));
+                }
+                
                 isCameraAnimating = true;
             }
 
@@ -4250,11 +4258,12 @@
             };
             
             if (progressContainer) {
-                if (currentStr === '9' || currentStr === '10' || currentStr === 'summary' || currentStr.startsWith('conn-')) {
+                if (currentStr === '9' || currentStr === '10') {
                     progressContainer.style.display = 'none';
                 } else {
                     progressContainer.style.display = 'flex';
-                    const activeStep = progressMap[currentStr] || 1;
+                    const activeStep = progressMap[currentStr] || window._lastActiveStep || 1;
+                    window._lastActiveStep = activeStep;
                     const items = progressContainer.querySelectorAll('.wizard-progress-item');
                     items.forEach((item, index) => {
                         item.classList.remove('active', 'completed');
@@ -6062,7 +6071,7 @@
                             
                             // Follow the node back to its spot and open the info panel
                             setTimeout(() => {
-                                selectNode(targetIdx, true);
+                                selectNode(targetIdx, true, true);
                             }, 100);
                             
                         }, 3500);
@@ -6070,7 +6079,7 @@
                     } else {
                         // For edit, just immediately re-select the node cleanly
                         setTimeout(() => {
-                            selectNode(targetIdx, true);
+                            selectNode(targetIdx, true, true);
                         }, 100);
                     }
                 }
