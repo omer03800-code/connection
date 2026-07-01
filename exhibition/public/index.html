@@ -2911,7 +2911,7 @@
             }
         }
 
-        function selectNode(id, triggerFocus = true) {
+        function selectNode(id, triggerFocus = true, forceZoomDist = null) {
             if (pathTargetMode && selectedNodeId !== null && selectedNodeId !== id) {
                 const startId = selectedNodeId;
                 disablePathTargetMode();
@@ -3087,7 +3087,7 @@
                 controls.autoRotate = false;
                 camTargetLookAt.copy(C);
                 
-                let currentDist = camera.position.distanceTo(C);
+                let currentDist = forceZoomDist !== null ? forceZoomDist : camera.position.distanceTo(C);
                 if (currentDist < 100 || currentDist > 1500) currentDist = 400;
                 camTargetPos.copy(C).add(dir.multiplyScalar(currentDist));
                 
@@ -4216,7 +4216,7 @@
                         processStep9();
                     }
                     
-                    else if (currentStr === '5') showSummaryScreen(2, '5');
+                    else if (currentStr === '5') goToWizardStep('6');
                     
                     else if (currentStr === '6') showSummaryScreen(3, '6');
                     else if (currentStr === 'rec-3') {
@@ -4237,12 +4237,6 @@
                     }
                     
                     else if (currentStr === '8') showSummaryScreen(5, '8');
-                    
-                    else if (currentStr === 'conn-1') showSummaryScreen(1, 'conn-1');
-                    else if (currentStr === 'conn-2') showSummaryScreen(1, 'conn-2');
-                    else if (currentStr === 'conn-3') showSummaryScreen(1, 'conn-3');
-                    else if (currentStr === 'conn-4') goToWizardStep('conn-5'); // Work directly to Studies
-                    else if (currentStr === 'conn-5') showSummaryScreen(2, 'conn-5'); // Studies to Summary 2
                 };
             } else {
                 globalFooter.style.display = 'none';
@@ -6007,9 +6001,31 @@
                     
                     const pIdx = targetIdx * pPerStrand;
                     
+                    if (mode === 'add') {
+                        // Place new user exactly in front of camera to avoid wild swing
+                        const pData = pointData[targetIdx * pPerStrand];
+                        if (pData && typeof currentRadius !== 'undefined') {
+                            // Find position on the sphere closest to the camera
+                            const spawnPos = camera.position.clone().normalize().multiplyScalar(currentRadius);
+                            
+                            pData.baseCx = spawnPos.x;
+                            pData.baseCy = spawnPos.y;
+                            pData.baseCz = spawnPos.z;
+                            pData.cx = spawnPos.x;
+                            pData.cy = spawnPos.y;
+                            pData.cz = spawnPos.z;
+                            
+                            if (positionCache[people[targetIdx].id]) {
+                                positionCache[people[targetIdx].id].x = spawnPos.x;
+                                positionCache[people[targetIdx].id].y = spawnPos.y;
+                                positionCache[people[targetIdx].id].z = spawnPos.z;
+                            }
+                        }
+                    }
+                    
                     // Use standard selectNode behavior for both add and edit
                     setTimeout(() => {
-                        selectNode(targetIdx, true, true);
+                        selectNode(targetIdx, true, 400);
                     }, 100);
                 }
                 
