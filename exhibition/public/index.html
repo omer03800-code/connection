@@ -3000,7 +3000,7 @@
                 }
                 const trueUp = new THREE.Vector3().crossVectors(camRight, viewDir).normalize();
                 
-                const repelRadius = 800; // Force background nodes outside the 2D planar network
+                const repelRadius = 3000; // Force background nodes outside the 2D planar network
                 
                 for (let i = 0; i < numStrands; i++) {
                     const p = pointData[i * pPerStrand];
@@ -6025,7 +6025,7 @@
                     
                     // Use standard selectNode behavior for both add and edit
                     setTimeout(() => {
-                        selectNode(targetIdx, true, 1000); // 1000 gives a wide enough FOV to see all connections
+                        selectNode(targetIdx, true, 1400); // 1400 ensures FOV covers 550 radius perfectly
                     }, 100);
                 }
                 
