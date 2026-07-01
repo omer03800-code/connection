@@ -232,18 +232,49 @@
         }
 
         #info-card {
-            background: rgba(0, 0, 0, 0.25);
-            backdrop-filter: blur(25px);
-            -webkit-backdrop-filter: blur(25px);
-            border: 1px solid rgba(245,245,245,0.2);
+            background: #ffffff;
+            border: 1px solid rgba(0,0,0,0.05);
             padding: 25px;
-            border-radius: 10px;
-            color: #F5F5F5;
+            border-radius: 16px;
+            color: #000000;
             width: 100%;
             pointer-events: auto;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
         }
-        #info-name { font-size: 28px; margin-bottom: 4px; font-weight: 400; letter-spacing: 1px; }
+        
+        body.light-mode #info-card,
+        body.light-mode #conn-secondary-card,
+        body.light-mode #edit-person-modal {
+            filter: invert(1) hue-rotate(180deg);
+        }
+        #info-name { font-size: 28px; margin-bottom: 4px; font-weight: 500; letter-spacing: 0px; }
+        .info-row-v2 {
+            display: flex;
+            flex-direction: row;
+            padding: 14px 20px;
+            border-radius: 12px;
+            align-items: center;
+            justify-content: space-between;
+            box-sizing: border-box;
+            background: #fafafa;
+            border: 1px solid rgba(0,0,0,0.06);
+            margin-bottom: 8px;
+            color: #000;
+        }
+        .info-row-label {
+            font-size: 10px;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            color: #666;
+            font-weight: 500;
+        }
+        .info-row-value {
+            font-size: 13px;
+            font-weight: 400;
+            text-align: right;
+            max-width: 65%;
+            color: #111;
+        }
         .info-action-btn {
             background: transparent;
             border: 1px solid transparent;
@@ -477,12 +508,12 @@
         .btn-add-more-conn:hover { background: rgba(245,245,245,0.2); color: #F5F5F5; }
         .btn-submit { background: white; color: black; border: none; font-weight: bold; font-size: 12px; padding: 12px; width: 100%; border-radius: 10px;}
         .btn-submit:hover { background: #ddd; }
-        #modal-overlay {
+        .modal-overlay {
             position: absolute; top: 0; left: 0; width: 100%; height: 100%;
             background: rgba(0,0,0,0.4);
             z-index: 999; opacity: 0; pointer-events: none; transition: 0.3s;
         }
-        #modal-overlay.visible { opacity: 1; pointer-events: auto; }
+        .modal-overlay.visible { opacity: 1; pointer-events: auto; }
 
         .wizard-step {
             display: none;
@@ -811,72 +842,71 @@
                 <h2 id="info-name" style="margin: 0;">Name</h2>
                 <div style="display: flex; align-items: center; gap: 15px; margin-top: 6px;">
                     <div id="info-menu-container" style="position: relative;">
-                        <button id="btn-info-menu" style="background:transparent; border:none; color:#F5F5F5; font-size:22px; cursor:pointer; padding:0; line-height:0.8; opacity:0.6; letter-spacing:2px; outline:none;">...</button>
-                        <div id="info-menu-dropdown" style="display: none; position: absolute; right: 0; top: 20px; background: rgba(0,0,0,0.3); backdrop-filter: blur(25px); border: 1px solid rgba(245,245,245,0.2); padding: 12px; border-radius: 10px; z-index: 100; min-width: 140px;">
-                            <button id="btn-edit-node" class="info-action-btn" style="display: block; width:100%; margin-bottom: 12px; text-align: left; white-space: nowrap;">[ EDIT ]</button>
-                            <button id="btn-delete-node" class="info-action-btn" style="display: block; width:100%; margin-bottom: 0; text-align: left; white-space: nowrap; color: #ff4444;">[ DELETE ]</button>
+                        <button id="btn-info-menu" style="background:transparent; border:none; color:#000; font-size:22px; cursor:pointer; padding:0; line-height:0.8; opacity:0.6; letter-spacing:2px; outline:none;">...</button>
+                        <div id="info-menu-dropdown" style="display: none; position: absolute; right: 0; top: 20px; background: #fff; border: 1px solid rgba(0,0,0,0.1); padding: 12px; border-radius: 10px; z-index: 100; min-width: 140px; box-shadow: 0 4px 15px rgba(0,0,0,0.1);">
+                            <button id="btn-edit-node" class="info-action-btn" style="display: block; width:100%; margin-bottom: 12px; text-align: left; white-space: nowrap; color: #000; border: 1px solid rgba(0,0,0,0.1);">[ EDIT ]</button>
+                            <button id="btn-delete-node" class="info-action-btn" style="display: block; width:100%; margin-bottom: 0; text-align: left; white-space: nowrap; color: #ff4444; border: 1px solid rgba(0,0,0,0.1);">[ DELETE ]</button>
                         </div>
                     </div>
-                    <button id="btn-close-card" style="background:transparent; border:none; color:#F5F5F5; font-size:24px; cursor:pointer; padding:0; line-height:0.8; font-weight:100; opacity:0.6; outline:none;">&times;</button>
+                    <button id="btn-close-card" style="background:transparent; border:none; color:#000; font-size:24px; cursor:pointer; padding:0; line-height:0.8; font-weight:100; opacity:0.6; outline:none;">&times;</button>
                 </div>
             </div>
             
             <!-- Role -->
-            <div id="info-role" style="font-size: 13px; color: rgba(245,245,245,0.6); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 12px; font-weight: 200;"></div>
+            <div id="info-role" style="font-size: 13px; color: #666; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 12px; font-weight: 500;"></div>
 
             <!-- Meta Data -->
-            <div style="display: flex; gap: 15px; margin-bottom: 12px; font-size: 13px; color: rgba(245,245,245,0.7); letter-spacing: 0.5px; font-weight: 200;">
+            <div style="display: flex; gap: 15px; margin-bottom: 12px; font-size: 13px; color: #444; letter-spacing: 0.5px; font-weight: 400;">
                 <span id="info-age"></span>
                 <span id="info-city"></span>
             </div>
 
             <!-- About -->
-            <div id="info-description" style="font-size: 13px; color: rgba(245,245,245,0.7); line-height: 1.5; margin-bottom: 25px; font-weight: 200;"></div>
+            <div id="info-description" style="font-size: 13px; color: #333; line-height: 1.5; margin-bottom: 25px; font-weight: 400;"></div>
             
             <!-- Chapters -->
             <div id="info-chapters" style="margin-bottom: 25px;"></div>
             
             <!-- Primary Actions -->
             <div style="display: flex; flex-direction: row; justify-content: center; gap: 15px; margin-bottom: 25px;">
-                <button id="btn-path-dest" class="info-action-btn" style="margin: 0;">[ LOCATE CONNECTION ]</button>
-                <button id="btn-add-from-here" class="info-action-btn" style="margin: 0;">[ ADD CONNECTION ]</button>
+                <button id="btn-path-dest" class="info-action-btn" style="margin: 0; color: #000; border: 1px solid rgba(0,0,0,0.1);">[ LOCATE CONNECTION ]</button>
+                <button id="btn-add-from-here" class="info-action-btn" style="margin: 0; color: #000; border: 1px solid rgba(0,0,0,0.1);">[ ADD CONNECTION ]</button>
             </div>
             
             <!-- Connections -->
-            <details id="info-connections-container" style="border-top: 1px solid rgba(245,245,245,0.2); padding-top: 15px;">
-                <summary style="font-size: 12px; font-weight: 200; margin-bottom: 12px; color: rgba(245,245,245,0.5); letter-spacing: 1.5px; text-transform: uppercase; cursor: pointer; outline: none; list-style: none;">
+            <details id="info-connections-container" style="border-top: 1px solid rgba(0,0,0,0.06); padding-top: 15px;">
+                <summary style="font-size: 12px; font-weight: 500; margin-bottom: 12px; color: #666; letter-spacing: 1.5px; text-transform: uppercase; cursor: pointer; outline: none; list-style: none;">
                     Connected To <span style="font-size: 8px; margin-left: 5px;">▼</span>
                 </summary>
                 <div id="info-connections-list" style="max-height: 160px; overflow-y: auto;"></div>
             </details>
 
-            <div id="info-path" style="margin-top: 15px; font-size: 13px; color: rgba(245,245,245,0.7); font-weight: 200;"></div>
+            <div id="info-path" style="margin-top: 15px; font-size: 13px; color: #666; font-weight: 400;"></div>
             
-            <div id="info-suggestions" style="margin-top: 20px; border-top: 1px solid rgba(245,245,245,0.2); padding-top: 15px; display: none;">
-                <div style="font-size: 12px; font-weight: 200; margin-bottom: 12px; color: rgba(245,245,245,0.5); letter-spacing: 1.5px; text-transform: uppercase;">Suggested</div>
+            <div id="info-suggestions" style="margin-top: 20px; border-top: 1px solid rgba(0,0,0,0.06); padding-top: 15px; display: none;">
+                <div style="font-size: 12px; font-weight: 500; margin-bottom: 12px; color: #666; letter-spacing: 1.5px; text-transform: uppercase;">Suggested</div>
                 <div id="info-suggestions-list"></div>
             </div>
         
-        <div id="info-secondary-card" style="position: relative; display: none; border-top: 1px dashed rgba(245,245,245,0.3); padding-top: 15px; margin-top: 15px;">
+        <div id="info-secondary-card" style="position: relative; display: none; border-top: 1px dashed rgba(0,0,0,0.1); padding-top: 15px; margin-top: 15px;">
             <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 5px;">
                 <div style="padding-right: 20px;">
-                    <h3 id="sec-info-name" style="margin: 0; font-size: 14px; font-weight: bold;"></h3>
-                    <div id="sec-info-role" style="font-size: 10px; color: #aaa;"></div>
+                    <h3 id="sec-info-name" style="margin: 0; font-size: 14px; font-weight: bold; color: #000;"></h3>
+                    <div id="sec-info-role" style="font-size: 10px; color: #666;"></div>
                 </div>
                 <button id="btn-close-sec" style="position: absolute; top: 15px; right: 0px; background: transparent; color: #aaa; border: none; font-size: 16px; cursor: pointer; padding: 0; line-height: 1; min-width: auto; height: auto; width: auto;">&times;</button>
             </div>
-            <div id="sec-info-details" style="font-size: 10px; color: rgba(245,245,245,0.6); margin-bottom: 10px;"></div>
+            <div id="sec-info-details" style="font-size: 10px; color: #666; margin-bottom: 10px;"></div>
             <div style="display: flex; gap: 5px;">
-                <button id="btn-sec-ignore" style="flex: 1; background: transparent; color: #aaa; border: 1px solid rgba(245,245,245,0.2); border-radius: 10px; padding: 6px; font-size: 10px; cursor: pointer;">Not Related</button>
-                <button id="btn-sec-connect" style="flex: 1; background: white; color: black; border: none; border-radius: 10px; padding: 6px; font-weight: bold; font-size: 10px; cursor: pointer;">Connect</button>
+                <button id="btn-sec-ignore" style="flex: 1; background: transparent; color: #666; border: 1px solid rgba(0,0,0,0.1); border-radius: 10px; padding: 6px; font-size: 10px; cursor: pointer;">Not Related</button>
+                <button id="btn-sec-connect" style="flex: 1; background: #000; color: #fff; border: none; border-radius: 10px; padding: 6px; font-weight: bold; font-size: 10px; cursor: pointer;">Connect</button>
             </div>
         </div>
         </div>
     </div>
     
-    <div id="conn-secondary-card" style="position: relative; display: none; background: rgba(0, 0, 0, 0.25);
-            backdrop-filter: blur(25px);
-            -webkit-backdrop-filter: blur(25px); border: 1px solid rgba(245,245,245,0.2); padding: 20px; border-radius: 10px; pointer-events: auto; color: #F5F5F5; box-shadow: 0 10px 30px rgba(0,0,0,0.5);">
+    <div id="conn-secondary-card" style="position: relative; display: none; background: #ffffff;
+            border: 1px solid rgba(0,0,0,0.05); padding: 20px; border-radius: 16px; pointer-events: auto; color: #000; box-shadow: 0 4px 20px rgba(0,0,0,0.1);">
         <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 5px;">
             <div style="padding-right: 20px;">
                 <h3 id="conn-sec-name" style="margin: 0; font-size: 14px; font-weight: bold;"></h3>
@@ -884,8 +914,8 @@
             </div>
             <button id="btn-close-conn-sec" style="position: absolute; top: 10px; right: 10px; background: transparent; color: #aaa; border: none; font-size: 16px; cursor: pointer; padding: 0; line-height: 1; min-width: auto; height: auto; width: auto;">&times;</button>
         </div>
-        <div id="conn-sec-details" style="font-size: 11px; color: rgba(245,245,245,0.6); margin-bottom: 10px;"></div>
-        <button id="btn-conn-sec-view" style="width: 100%; background: white; color: black; border: none; border-radius: 10px; padding: 8px; font-weight: bold; font-size: 11px; cursor: pointer;">View Profile</button>
+        <div id="conn-sec-details" style="font-size: 11px; color: #666; margin-bottom: 10px;"></div>
+        <button id="btn-conn-sec-view" style="width: 100%; background: #000; color: #fff; border: none; border-radius: 10px; padding: 8px; font-weight: bold; font-size: 11px; cursor: pointer;">View Profile</button>
     </div>
 
     <!-- New UI Elements -->
@@ -894,12 +924,273 @@
         <span style="font-size: 14px; font-weight: lighter; width: 14px; display: inline-block;"></span> DISCOVER CONNECTIONS
     </button>
 
+    <div style="position: absolute; bottom: 30px; left: 30px; display: flex; align-items: center; z-index: 100;">
+        <button id="btn-sound" class="info-action-btn" style="margin: 0;" title="Toggle Sound">[ listen ]</button>
+    </div>
+
     <div style="position: absolute; bottom: 30px; right: 30px; display: flex; align-items: center; gap: 15px; z-index: 100;">
         <button id="btn-info" class="info-action-btn" onclick="document.getElementById('about-modal').classList.add('visible'); document.getElementById('modal-overlay').classList.add('visible');" style="margin: 0;">[ ABOUT THE BEAST ]</button>
         <button id="btn-theme" class="info-action-btn" style="margin: 0;" title="Toggle Day/Night Mode">[ night ]</button>
     </div>
 
+    <audio id="bg-audio" loop autoplay>
+        <source src="background.mp3" type="audio/mpeg">
+    </audio>
+
     <div id="modal-overlay" class="modal-overlay"></div>
+
+    <!-- Dedicated Edit Person Modal -->
+    <div id="edit-person-overlay" class="modal-overlay" style="z-index: 2000;">
+        <div id="edit-person-modal" style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 500px; height: 85vh; max-height: 800px; background: #ffffff; color: #000000; border: 1px solid rgba(0,0,0,0.05); border-radius: 16px; padding: 25px 35px; display: flex; flex-direction: column; box-shadow: 0 4px 30px rgba(0,0,0,0.15); overflow: hidden;">
+            <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 25px;">
+                <input type="text" id="edit-f-name" style="font-size: 32px; font-weight: 500; letter-spacing: -0.5px; background: transparent; border: none; border-bottom: 1px solid rgba(0,0,0,0.1); outline: none; width: 85%; color: #000; font-family: inherit; padding-bottom: 4px;" placeholder="Full Name">
+                <span class="close-btn" onclick="document.getElementById('edit-person-overlay').classList.remove('visible');" style="font-size: 28px; cursor: pointer; opacity: 0.4; line-height: 1; transition: 0.2s;">&times;</span>
+            </div>
+            
+            <!-- Tabs -->
+            <div style="display: flex; border-bottom: 1px solid rgba(0,0,0,0.08); margin-bottom: 15px;">
+                <div id="tab-edit-details" onclick="switchEditTab('details')" style="flex: 1; text-align: center; padding-bottom: 12px; cursor: pointer; font-size: 13px; font-weight: 600; text-transform: uppercase; letter-spacing: 1.5px; border-bottom: 2px solid #000; color: #000; transition: 0.2s;">Edit Details</div>
+                <div id="tab-edit-connections" onclick="switchEditTab('connections')" style="flex: 1; text-align: center; padding-bottom: 12px; cursor: pointer; font-size: 13px; font-weight: 600; text-transform: uppercase; letter-spacing: 1.5px; border-bottom: 2px solid transparent; color: #999; transition: 0.2s;">Connections</div>
+            </div>
+            
+            <!-- Details Tab -->
+            <div id="edit-person-form" style="flex: 1; overflow-y: auto; overflow-x: hidden; padding-right: 5px; display: flex; flex-direction: column; gap: 8px;">
+                
+                <style>
+                    .edit-row-v2 {
+                        display: flex;
+                        flex-direction: column;
+                        padding: 8px 12px;
+                        border-radius: 8px;
+                        background: #fdfdfd;
+                        border: 1px solid rgba(0,0,0,0.06);
+                        margin-bottom: 4px;
+                        transition: background 0.2s;
+                    }
+                    .edit-row-v2:focus-within {
+                        background: #f5f5f5;
+                    }
+                    .edit-row-label {
+                        font-size: 10px;
+                        color: #888;
+                        text-transform: uppercase;
+                        letter-spacing: 1.5px;
+                        margin-bottom: 4px;
+                    }
+                    .edit-row-input {
+                        font-size: 15px;
+                        color: #111;
+                        font-weight: 400;
+                        background: transparent;
+                        border: none;
+                        border-bottom: 1px solid rgba(0,0,0,0.05);
+                        outline: none;
+                        width: 100%;
+                        font-family: inherit;
+                        padding-bottom: 4px;
+                        transition: border-color 0.2s;
+                    }
+                    .edit-row-input:focus { border-bottom-color: #000; }
+                    
+                    /* Make tags look white and sleek in the edit modal */
+                    #edit-person-form .tag-item {
+                        background: #ffffff !important;
+                        color: #000000 !important;
+                        border: 1px solid rgba(0,0,0,0.15) !important;
+                        font-weight: 400 !important;
+                        box-shadow: 0 1px 3px rgba(0,0,0,0.02);
+                    }
+                    #edit-person-form .tag-item span:last-child {
+                        color: rgba(0,0,0,0.4) !important;
+                    }
+                    #edit-person-form .tag-item span:last-child:hover {
+                        color: rgba(0,0,0,0.8) !important;
+                    }
+                    
+                    /* Hide input placeholder when tags are present */
+                    .tags-wrapper:has(.tag-item) .edit-row-input::placeholder {
+                        color: transparent;
+                    }
+                </style>
+
+                <!-- Birth Year & Country -->
+                <div style="display: flex; gap: 12px; margin-bottom: 0px;">
+                    <div class="edit-row-v2" style="flex: 1;">
+                        <label class="edit-row-label">BIRTH YEAR</label>
+                        <input type="number" id="edit-f-birth-year" class="edit-row-input" placeholder="YYYY">
+                    </div>
+                    <div class="edit-row-v2" style="flex: 1;">
+                        <label class="edit-row-label">COUNTRY</label>
+                        <input type="text" id="edit-f-country" class="edit-row-input" placeholder="Israel">
+                    </div>
+                </div>
+
+                <!-- Current City -->
+                <div class="edit-row-v2 autocomplete-wrapper">
+                    <label class="edit-row-label">CITY</label>
+                    <div class="tags-wrapper" id="tw-edit-f-city" onclick="document.getElementById('edit-f-city').focus()">
+                        <input type="text" id="edit-f-city" class="edit-row-input" style="border:none;" placeholder="Current City">
+                    </div>
+                    <div class="autocomplete-dropdown" id="dropdown-edit-f-city"></div>
+                    <div class="dynamic-stats" id="stats-edit-f-city"></div>
+                </div>
+
+                <!-- Originally From -->
+                <div class="edit-row-v2 autocomplete-wrapper">
+                    <label class="edit-row-label">HOMETOWN</label>
+                    <div class="tags-wrapper" id="tw-edit-f-origin-city" onclick="document.getElementById('edit-f-origin-city').focus()">
+                        <input type="text" id="edit-f-origin-city" class="edit-row-input" style="border:none;" placeholder="Originally From">
+                    </div>
+                    <div class="autocomplete-dropdown" id="dropdown-edit-f-origin-city"></div>
+                    <div class="dynamic-stats" id="stats-edit-f-origin-city"></div>
+                </div>
+
+                <!-- Current Role -->
+                <div class="edit-row-v2 autocomplete-wrapper">
+                    <label class="edit-row-label">ROLE</label>
+                    <div class="tags-wrapper" id="tw-edit-f-role" onclick="document.getElementById('edit-f-role').focus()">
+                        <input type="text" id="edit-f-role" class="edit-row-input" style="border:none;" placeholder="Role / Job">
+                    </div>
+                    <div class="autocomplete-dropdown" id="dropdown-edit-f-role"></div>
+                    <div class="dynamic-stats" id="stats-edit-f-role"></div>
+                </div>
+
+                <!-- Current Workplace -->
+                <div class="edit-row-v2 autocomplete-wrapper">
+                    <label class="edit-row-label">WORKPLACE</label>
+                    <div class="tags-wrapper" id="tw-edit-f-workplace" onclick="document.getElementById('edit-f-workplace').focus()">
+                        <input type="text" id="edit-f-workplace" class="edit-row-input" style="border:none;" placeholder="Workplace">
+                    </div>
+                    <div class="autocomplete-dropdown" id="dropdown-edit-f-workplace"></div>
+                    <div class="dynamic-stats" id="stats-edit-f-workplace"></div>
+                </div>
+
+                <!-- High School -->
+                <div class="edit-row-v2 autocomplete-wrapper">
+                    <label class="edit-row-label">HIGH SCHOOL</label>
+                    <div class="tags-wrapper" id="tw-edit-f-highschool" onclick="document.getElementById('edit-f-highschool').focus()">
+                        <input type="text" id="edit-f-highschool" class="edit-row-input" style="border:none;" placeholder="School">
+                    </div>
+                    <div class="autocomplete-dropdown" id="dropdown-edit-f-highschool"></div>
+                    <div class="dynamic-stats" id="stats-edit-f-highschool"></div>
+                </div>
+
+                <!-- University -->
+                <div class="edit-row-v2 autocomplete-wrapper">
+                    <label class="edit-row-label">UNIVERSITY</label>
+                    <div class="tags-wrapper" id="tw-edit-f-university" onclick="document.getElementById('edit-f-university').focus()">
+                        <input type="text" id="edit-f-university" class="edit-row-input" style="border:none;" placeholder="University">
+                    </div>
+                    <div class="autocomplete-dropdown" id="dropdown-edit-f-university"></div>
+                    <div class="dynamic-stats" id="stats-edit-f-university"></div>
+                </div>
+
+                <!-- Degree -->
+                <div class="edit-row-v2 autocomplete-wrapper">
+                    <label class="edit-row-label">DEGREE</label>
+                    <div class="tags-wrapper" id="tw-edit-f-degree" onclick="document.getElementById('edit-f-degree').focus()">
+                        <input type="text" id="edit-f-degree" class="edit-row-input" style="border:none;" placeholder="Major">
+                    </div>
+                    <div class="autocomplete-dropdown" id="dropdown-edit-f-degree"></div>
+                    <div class="dynamic-stats" id="stats-edit-f-degree"></div>
+                </div>
+
+                <!-- Army Role -->
+                <div class="edit-row-v2 autocomplete-wrapper">
+                    <label class="edit-row-label">ARMY ROLE</label>
+                    <div class="tags-wrapper" id="tw-edit-f-army-role" onclick="document.getElementById('edit-f-army-role').focus()">
+                        <input type="text" id="edit-f-army-role" class="edit-row-input" style="border:none;" placeholder="Role">
+                    </div>
+                    <div class="autocomplete-dropdown" id="dropdown-edit-f-army-role"></div>
+                    <div class="dynamic-stats" id="stats-edit-f-army-role"></div>
+                </div>
+
+                <!-- Army Base -->
+                <div class="edit-row-v2 autocomplete-wrapper">
+                    <label class="edit-row-label">ARMY BASE</label>
+                    <div class="tags-wrapper" id="tw-edit-f-army-base" onclick="document.getElementById('edit-f-army-base').focus()">
+                        <input type="text" id="edit-f-army-base" class="edit-row-input" style="border:none;" placeholder="Base">
+                    </div>
+                    <div class="autocomplete-dropdown" id="dropdown-edit-f-army-base"></div>
+                    <div class="dynamic-stats" id="stats-edit-f-army-base"></div>
+                </div>
+
+                <!-- Previous Works -->
+                <div class="edit-row-v2 autocomplete-wrapper">
+                    <label class="edit-row-label">PREVIOUS WORKS</label>
+                    <div class="tags-wrapper" id="tw-edit-f-prev-work" onclick="document.getElementById('edit-f-prev-work').focus()">
+                        <input type="text" id="edit-f-prev-work" class="edit-row-input" style="border:none;" placeholder="Companies">
+                    </div>
+                    <div class="autocomplete-dropdown" id="dropdown-edit-f-prev-work"></div>
+                    <div class="dynamic-stats" id="stats-edit-f-prev-work"></div>
+                </div>
+
+                <!-- Other Chapters -->
+                <div class="edit-row-v2 autocomplete-wrapper">
+                    <label class="edit-row-label">OTHER CHAPTERS</label>
+                    <div class="tags-wrapper" id="tw-edit-f-other-value" onclick="document.getElementById('edit-f-other-value').focus()">
+                        <input type="text" id="edit-f-other-value" class="edit-row-input" style="border:none;" placeholder="Mechina, etc.">
+                    </div>
+                    <div class="autocomplete-dropdown" id="dropdown-edit-f-other-value"></div>
+                    <div class="dynamic-stats" id="stats-edit-f-other-value"></div>
+                </div>
+                
+                <input type="hidden" id="edit-f-desc" value="">
+                <input type="hidden" id="edit-f-tags" value="">
+                <input type="hidden" id="edit-form-person-id" value="">
+                
+                <button onclick="saveEditedPerson()" style="background: #000; color: #fff; padding: 14px; border-radius: 8px; border: none; font-size: 13px; font-weight: 600; letter-spacing: 1.5px; cursor: pointer; margin-top: 15px; margin-bottom: 20px; transition: all 0.2s; text-transform: uppercase;">UPDATE DETAILS</button>
+            </div>
+            
+            <!-- Connections Tab -->
+            <div id="edit-connections-tab-content" style="display: none; flex: 1; flex-direction: column; overflow: hidden;">
+                <p style="font-size: 13px; color: #666; margin-top: 0; margin-bottom: 15px; line-height: 1.4;">Manage connections for this person. These relationships build the graph.</p>
+                <style>
+                    #edit-modal-connections-wrapper #connections-section {
+                        padding-right: 0 !important;
+                    }
+                    #edit-modal-connections-wrapper .btn-add-more-conn {
+                        color: #111 !important;
+                        border: 1px dashed rgba(0,0,0,0.3) !important;
+                    }
+                    #edit-modal-connections-wrapper .btn-add-more-conn:hover {
+                        background: rgba(0,0,0,0.03) !important;
+                    }
+                </style>
+                <div id="edit-modal-connections-wrapper" style="flex: 1; overflow-y: auto; overflow-x: hidden; position: relative;">
+                    <button type="button" class="btn-add-more-conn" id="btn-edit-add-conn" style="width:100%; border:1px dashed rgba(0,0,0,0.3); background:transparent; color:#111; font-size: 11px; font-weight: 500; letter-spacing: 1px; padding:15px; border-radius:8px; cursor:pointer; text-transform: uppercase; transition: 0.2s; margin-bottom: 15px;">+ Add connection</button>
+                    <div id="edit-connections-list"></div>
+                </div>
+            </div>
+            
+            <script>
+                function switchEditTab(tabName) {
+                    const detailsTab = document.getElementById('tab-edit-details');
+                    const connsTab = document.getElementById('tab-edit-connections');
+                    const detailsContent = document.getElementById('edit-person-form');
+                    const connsContent = document.getElementById('edit-connections-tab-content');
+                    
+                    if (tabName === 'details') {
+                        detailsTab.style.borderColor = '#000';
+                        detailsTab.style.color = '#000';
+                        connsTab.style.borderColor = 'transparent';
+                        connsTab.style.color = '#999';
+                        
+                        detailsContent.style.display = 'flex';
+                        connsContent.style.display = 'none';
+                    } else {
+                        connsTab.style.borderColor = '#000';
+                        connsTab.style.color = '#000';
+                        detailsTab.style.borderColor = 'transparent';
+                        detailsTab.style.color = '#999';
+                        
+                        connsContent.style.display = 'flex';
+                        detailsContent.style.display = 'none';
+                    }
+                }
+            </script>
+        </div>
+    </div>
 
     <!-- About Modal -->
     <div id="about-modal" class="modal">
@@ -1113,6 +1404,24 @@
                 margin-top: 8px;
                 min-height: 18px;
             }
+            .wizard-inner-content {
+                position: absolute;
+                top: 20%;
+                left: 50px;
+                width: calc(100% - 330px);
+            }
+            .wizard-inner-content.name-group {
+                top: 5%;
+            }
+            
+
+            .wizard-form-area.edit-mode h2[id^="step-"] {
+                display: none !important;
+            }
+            .wizard-form-area.edit-mode #edit-name-group {
+                display: block !important;
+                margin-bottom: 0 !important;
+            }
             
             /* --- TAGS SYSTEM --- */
             .tags-wrapper {
@@ -1156,7 +1465,7 @@
             .suggested-card {
                 position: relative;
                 background: transparent;
-                border: 1px solid rgba(245, 245, 245, 0.15);
+                border: 1px solid rgba(0, 0, 0, 0.08);
                 border-radius: 12px;
                 padding: 24px 30px;
                 margin-bottom: 16px;
@@ -1181,7 +1490,7 @@
                 min-width: 0;
             }
             .btn-dismiss-rec:hover {
-                color: rgba(245, 245, 245, 1) !important;
+                color: #000 !important;
                 background: transparent !important;
             }
             .suggested-card-content {
@@ -1199,8 +1508,8 @@
             .suggested-name {
                 font-family: 'Helvetica', Arial, sans-serif;
                 font-size: 20px;
-                font-weight: 300;
-                color: #F5F5F5;
+                font-weight: 500;
+                color: #111;
                 letter-spacing: -0.01em;
                 margin-bottom: 8px;
                 text-wrap: balance;
@@ -1208,8 +1517,8 @@
             .suggested-meta {
                 font-family: 'Helvetica', Arial, sans-serif;
                 font-size: 14px;
-                color: rgba(245,245,245,0.6);
-                font-weight: 300;
+                color: #666;
+                font-weight: 400;
                 letter-spacing: 0.2px;
                 text-wrap: balance;
             }
@@ -1220,10 +1529,11 @@
             .btn-connect-sleek {
                 font-family: 'Helvetica', Arial, sans-serif;
                 background: transparent;
-                color: #E6E6E6;
-                border: none;
-                padding: 10px;
-                font-weight: 300;
+                color: #111;
+                border: 1px solid rgba(0,0,0,0.1);
+                border-radius: 8px;
+                padding: 10px 16px;
+                font-weight: 500;
                 font-size: 11px;
                 cursor: pointer;
                 transition: 0.2s;
@@ -1237,7 +1547,8 @@
                 transform: scale(1.02);
             }
             .btn-connect-sleek.added {
-                color: rgba(245,245,245,0.3);
+                color: #888;
+                border-color: transparent;
                 cursor: default;
                 transform: none;
             }
@@ -1251,7 +1562,7 @@
             .suggested-shared-label {
                 font-family: 'Helvetica', Arial, sans-serif;
                 font-size: 11px;
-                color: rgba(245,245,245,0.4);
+                color: #888;
                 text-transform: uppercase;
                 letter-spacing: 1.5px;
                 font-weight: 500;
@@ -1260,13 +1571,13 @@
                 font-family: 'Helvetica', Arial, sans-serif;
                 display: flex;
                 align-items: center;
-                background: #000;
-                border: 1px solid rgba(245,245,245,0.2);
+                background: #f5f5f5;
+                border: 1px solid rgba(0,0,0,0.05);
                 border-radius: 12px;
                 padding: 4px 12px;
-                font-weight: 300;
+                font-weight: 400;
                 font-size: 14px;
-                color: #fff;
+                color: #333;
                 white-space: nowrap;
             }
 
@@ -1423,23 +1734,20 @@
                     <h2 id="step-4-title">Where does your story begin?</h2>
                     
                     <!-- Full Name Block (only visible when adding connections) -->
-                    <div class="chapter-block" id="edit-name-group" style="display: none; position: absolute; top: 5%; left: 50px; width: calc(100% - 330px); z-index: 40;">
+                    <div class="chapter-block wizard-inner-content name-group" id="edit-name-group" style="display: none; z-index: 40;">
                         <label class="editorial-label">Full Name</label>
                         <input type="text" id="f-name" class="editorial-input" required>
                     </div>
 
                     <!-- 20% Block: Birth Year & Country -->
-                    <div style="position: absolute; top: 20%; left: 50px; width: calc(100% - 330px); z-index: 30;">
-
-                        <div style="display:flex; flex-direction: column; gap:80px;">
-                            <div>
-                                <label class="editorial-label">Birth Year</label>
-                                <input type="number" id="f-birth-year" class="editorial-input" placeholder="YYYY" min="1900" max="2026">
-                            </div>
-                            <div>
-                                <label class="editorial-label">Country</label>
-                                <input type="text" id="f-country" class="editorial-input" placeholder="e.g. Israel" value="Israel">
-                            </div>
+                    <div class="wizard-inner-content" style="z-index: 30; display:flex; flex-direction: column; gap:80px;">
+                        <div>
+                            <label class="editorial-label">Birth Year</label>
+                            <input type="number" id="f-birth-year" class="editorial-input" placeholder="YYYY" min="1900" max="2026">
+                        </div>
+                        <div>
+                            <label class="editorial-label">Country</label>
+                            <input type="text" id="f-country" class="editorial-input" placeholder="e.g. Israel" value="Israel">
                         </div>
                     </div>
                 </div>
@@ -1448,7 +1756,7 @@
                 <div id="wizard-step-4a" class="wizard-step" style="height: 100%;">
                     <h2 id="step-4a-title">Where are you located?</h2>
                     <!-- Current City & Checkbox and Originally From -->
-                    <div style="position: absolute; top: 20%; left: 50px; width: calc(100% - 330px); z-index: 20; display: flex; flex-direction: column; gap: 40px;">
+                    <div class="wizard-inner-content" style="z-index: 20; display: flex; flex-direction: column; gap: 40px;">
                         <div>
                             <div class="chapter-block autocomplete-wrapper" style="margin-bottom: 0px;">
                                 <label class="editorial-label">Current City</label>
@@ -1481,7 +1789,7 @@
                 <!-- STEP 5 CURRENT POSITION -->
                 <div id="wizard-step-5" class="wizard-step" style="height: 100%;">
                     <h2 id="step-5-title">What keeps you busy?</h2>
-                    <div style="position: absolute; top: 20%; left: 50px; width: calc(100% - 330px); z-index: 20; display: flex; flex-direction: column; gap: 80px;">
+                    <div class="wizard-inner-content" style="z-index: 20; display: flex; flex-direction: column; gap: 80px;">
                         <div class="chapter-block autocomplete-wrapper">
                         <label class="editorial-label" style="display: block; margin-bottom: 5px;">Current Role</label>
                         <div style="font-size: 14px; opacity: 0.7; font-weight: 300; margin-bottom: 15px;">(If you're a student, you can write that instead)</div>
@@ -1506,7 +1814,7 @@
                 <!-- STEP 6 EDUCATION -->
                 <div id="wizard-step-6" class="wizard-step" style="height: 100%;">
                     <h2 id="step-6-title">Where did you study?</h2>
-                    <div style="position: absolute; top: 20%; left: 50px; width: calc(100% - 330px); z-index: 20; display: flex; flex-direction: column; gap: 30px;">
+                    <div class="wizard-inner-content" style="z-index: 20; display: flex; flex-direction: column; gap: 30px;">
                         <div class="chapter-block autocomplete-wrapper">
                         <label class="editorial-label">School / High School</label>
                         <div class="tags-wrapper" id="tw-f-highschool" onclick="document.getElementById('f-highschool').focus()">
@@ -1539,7 +1847,7 @@
                 <!-- STEP 7 ARMY -->
                 <div id="wizard-step-7" class="wizard-step" style="height: 100%;">
                     <h2 id="step-7-title">Military Service</h2>
-                    <div style="position: absolute; top: 20%; left: 50px; width: calc(100% - 330px); z-index: 20; display: flex; flex-direction: column; gap: 80px;">
+                    <div class="wizard-inner-content" style="z-index: 20; display: flex; flex-direction: column; gap: 80px;">
                         <div class="chapter-block autocomplete-wrapper">
                         <label class="editorial-label">Military Role</label>
                         <div class="tags-wrapper" id="tw-f-army-role" onclick="document.getElementById('f-army-role').focus()">
@@ -1563,7 +1871,7 @@
                 <!-- STEP 8 GENERAL -->
                 <div id="wizard-step-8" class="wizard-step" style="height: 100%;">
                     <h2 id="step-8-title">Other Chapters & Topics</h2>
-                    <div style="position: absolute; top: 20%; left: 50px; width: calc(100% - 330px); z-index: 20; display: flex; flex-direction: column; gap: 80px;">
+                    <div class="wizard-inner-content" style="z-index: 20; display: flex; flex-direction: column; gap: 80px;">
                         <div class="chapter-block autocomplete-wrapper">
                         <label class="editorial-label">Other Chapters (Mechina, Shnat Sherut, etc.)</label>
                         <div class="tags-wrapper" id="tw-f-other-value" onclick="document.getElementById('f-other-value').focus()">
@@ -3186,35 +3494,62 @@
 
         function showPersonCard(index, person) {
             document.getElementById('info-name').textContent = person.name;
-            document.getElementById('info-role').textContent = person.role || '';
+            document.getElementById('info-role').style.display = 'none';
             const currentYear = new Date().getFullYear();
             const birthYear = person.age ? currentYear - parseInt(person.age) : null;
-            document.getElementById('info-age').textContent = birthYear ? `Birth Year: ${birthYear}` : '';
-            document.getElementById('info-city').textContent = person.city ? `${person.city}, ${person.country}` : '';
-            let descText = (person.description || '').trim();
-            if (descText) {
-                // Prevent orphan words by replacing the last space with a non-breaking space
-                descText = descText.replace(/ ([^ ]+)$/, '&nbsp;$1');
-            }
-            document.getElementById('info-description').innerHTML = descText;
+            document.getElementById('info-age').style.display = 'none';
+            document.getElementById('info-city').style.display = 'none';
+            document.getElementById('info-description').style.display = 'none';
             
-            // Extract chapters from tags
+            // Extract chapters from tags and other info
             const chaptersContainer = document.getElementById('info-chapters');
             if (chaptersContainer) {
                 chaptersContainer.innerHTML = '';
                 let chaptersHTML = '';
                 
-                const prefixMap = {
-                    'workplace': 'Current Workplace',
-                    'highschool': 'High School',
-                    'military': 'Military Service',
-                    'education': 'Higher Education',
-                    'prevwork': 'Previous Work',
-                    'youth': 'Youth Movement / Mechina',
-                    'community': 'Community',
-                    'other': 'Other'
-                };
-                
+                // 1. Split Card for Age, Location, Country
+                if (birthYear || person.city || person.country) {
+                    chaptersHTML += `<div style="display: flex; gap: 8px; margin-bottom: 8px;">`;
+                    if (birthYear) {
+                        chaptersHTML += `
+                            <div class="info-row-v2" style="flex: 1; flex-direction: column; align-items: flex-start; justify-content: center; padding: 12px 14px; gap: 4px;">
+                                <div class="info-row-label" style="font-size: 11px;">AGE</div>
+                                <div class="info-row-value" style="text-align: left; max-width: 100%; font-size: 14px;">${currentYear - birthYear}</div>
+                            </div>
+                        `;
+                    }
+                    if (person.city) {
+                        const singleCity = person.city.split(',')[0].trim();
+                        chaptersHTML += `
+                            <div class="info-row-v2" style="flex: 1; flex-direction: column; align-items: flex-start; justify-content: center; padding: 12px 14px; gap: 4px;">
+                                <div class="info-row-label" style="font-size: 11px;">LOCATION</div>
+                                <div class="info-row-value" style="text-align: left; max-width: 100%; font-size: 14px;">${singleCity}</div>
+                            </div>
+                        `;
+                    }
+                    if (person.country) {
+                        chaptersHTML += `
+                            <div class="info-row-v2" style="flex: 1; flex-direction: column; align-items: flex-start; justify-content: center; padding: 12px 14px; gap: 4px;">
+                                <div class="info-row-label" style="font-size: 11px;">COUNTRY</div>
+                                <div class="info-row-value" style="text-align: left; max-width: 100%; font-size: 14px;">${person.country}</div>
+                            </div>
+                        `;
+                    }
+                    chaptersHTML += `</div>`;
+                }
+
+                // 2. Work (Role)
+                if (person.role) {
+                    chaptersHTML += `
+                        <div class="info-row-v2">
+                            <div class="info-row-label">WORK</div>
+                            <div class="info-row-value">${person.role}</div>
+                        </div>
+                    `;
+                }
+
+                // Extract tags into an object
+                const parsedTags = {};
                 if (person.tags) {
                     const tArr = Array.isArray(person.tags) ? person.tags : person.tags.split(',');
                     tArr.forEach(t => {
@@ -3224,20 +3559,40 @@
                             const prefix = parts[0].trim().toLowerCase();
                             let val = parts.slice(1).join(':').trim();
                             val = val.replace(/#/g, '');
-                            if (prefixMap[prefix] && val) {
-                                chaptersHTML += `
-                                    <div style="margin-bottom: 15px;">
-                                        <div style="font-size: 10px; color: rgba(245,245,245,0.4); text-transform: uppercase; letter-spacing: 1.5px; margin-bottom: 4px; font-weight: 200;">${prefixMap[prefix]}</div>
-                                        <div style="font-size: 14px; color: rgba(245,245,245,0.9); font-weight: 300; letter-spacing: 0.5px;">${val}</div>
-                                    </div>
-                                `;
+                            if (val) {
+                                if (!parsedTags[prefix]) parsedTags[prefix] = [];
+                                parsedTags[prefix].push(val);
                             }
                         }
                     });
                 }
+
+                // 3. Render remaining sections in specific order
+                const sectionOrder = [
+                    { key: 'workplace', label: 'Current Workplace' },
+                    { key: 'community', label: 'Hometown' },
+                    { key: 'education', label: 'Higher Education' },
+                    { key: 'military', label: 'Military Service' },
+                    { key: 'highschool', label: 'High School' },
+                    { key: 'prevwork', label: 'Previous Work' },
+                    { key: 'youth', label: 'Mechina' },
+                    { key: 'other', label: 'Other' }
+                ];
+
+                sectionOrder.forEach(sec => {
+                    if (parsedTags[sec.key]) {
+                        const val = parsedTags[sec.key].join(' / ');
+                        chaptersHTML += `
+                            <div class="info-row-v2">
+                                <div class="info-row-label">${sec.label}</div>
+                                <div class="info-row-value">${val}</div>
+                            </div>
+                        `;
+                    }
+                });
                 
                 if (chaptersHTML) {
-                    chaptersContainer.innerHTML = `<div style="border-top: 1px solid rgba(245,245,245,0.2); padding-top: 15px;">${chaptersHTML}</div>`;
+                    chaptersContainer.innerHTML = `<div>${chaptersHTML}</div>`;
                 }
             }
             
@@ -3251,15 +3606,11 @@
                     const targetPerson = people.find(p => p.id === c.id);
                     if (targetPerson) {
                         const d = document.createElement('div');
-                        d.style.cssText = 'display: flex; align-items: center; background: transparent; padding: 4px 6px; margin-bottom: 2px; cursor: pointer; transition: 0.2s; border-radius: 10px;';
-                        d.innerHTML = `
-                            <div style="flex: 1; display: flex; justify-content: space-between; align-items: center;">
-                                <span style="font-size: 11px; color: #F5F5F5;">• ${targetPerson.name}</span>
-                            </div>
-                        `;
+                        d.style.cssText = 'cursor: pointer; transition: background 0.2s; padding: 10px 12px; margin-bottom: 4px; border-radius: 8px; font-size: 14px; font-weight: 400; color: #111; border: 1px solid rgba(0,0,0,0.05); background: #fafafa;';
+                        d.innerHTML = `<div>${targetPerson.name}</div>`;
                         
-                        d.addEventListener('mouseenter', () => d.style.background = 'rgba(245,245,245,0.05)');
-                        d.addEventListener('mouseleave', () => d.style.background = 'transparent');
+                        d.addEventListener('mouseenter', () => d.style.background = '#f0f0f0');
+                        d.addEventListener('mouseleave', () => d.style.background = '#fafafa');
                         
                         d.addEventListener('click', () => {
                             connSecCard.style.display = 'block';
@@ -3317,18 +3668,22 @@
                 suggDiv.style.display = 'block';
                 topScores.forEach(match => {
                     const d = document.createElement('div');
-                    d.style.cssText = 'display: flex; align-items: center; background: transparent; padding: 2px 0; margin-bottom: 2px; cursor: pointer; transition: 0.2s;';
-                    let sharedText = match.shared.length > 0 ? match.shared.join(', ') : 'Similar background';
+                    d.style.cssText = 'cursor: pointer; transition: background 0.2s; padding: 10px 12px; margin-bottom: 4px; border-radius: 8px; font-size: 14px; font-weight: 400; color: #111; border: 1px solid rgba(0,0,0,0.05); background: #fafafa; display: flex; align-items: center; justify-content: space-between; gap: 10px;';
+                    
+                    // only show first two shared concepts to prevent overflow
+                    let sharedConcepts = match.shared.slice(0, 2);
+                    let sharedText = sharedConcepts.length > 0 ? sharedConcepts.join(', ') : 'Similar background';
+                    
                     d.innerHTML = `
-                        <div style="width: 6px; height: 6px; border-radius: 50%; background: #4CAF50; margin-right: 8px;"></div>
-                        <div style="flex: 1; display: flex; justify-content: space-between; align-items: center;">
-                            <span style="font-size: 11px; font-weight: bold; color: #F5F5F5;">${match.person.name}</span>
-                            <span style="font-size: 9px; color: #aaa;">${sharedText}</span>
+                        <div style="display: flex; align-items: center; gap: 8px; min-width: 0;">
+                            <div style="width: 8px; height: 8px; border-radius: 50%; background: #4CAF50; flex-shrink: 0;"></div>
+                            <div style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${match.person.name}</div>
                         </div>
+                        <div style="font-size: 11px; color: rgba(0,0,0,0.4); text-transform: uppercase; letter-spacing: 0.5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; text-align: right; flex-shrink: 1;">${sharedText}</div>
                     `;
                     
-                    d.addEventListener('mouseenter', () => d.style.background = 'rgba(245,245,245,0.05)');
-                    d.addEventListener('mouseleave', () => d.style.background = 'transparent');
+                    d.addEventListener('mouseenter', () => d.style.background = '#f0f0f0');
+                    d.addEventListener('mouseleave', () => d.style.background = '#fafafa');
                     
                     suggList.appendChild(d);
                     
@@ -4216,7 +4571,7 @@
                     if (currentStr === '0') processStep0();
                     else if (currentStr === '4') processStep4();
                     else if (currentStr === '4a') showSummaryScreen(1, '4a');
-                    else if (currentStr === 'rec-1') {
+                    else if (currentStr === 'rec-1' || currentStr === 'conn-1') {
                         window._nextWizardStep = '5';
                         window._isPartialAdd = true;
                         processStep9();
@@ -4224,8 +4579,14 @@
                     
                     else if (currentStr === '5') goToWizardStep('6');
                     
+                    else if (currentStr === 'rec-2' || currentStr === 'conn-2') {
+                        window._nextWizardStep = '6';
+                        window._isPartialAdd = true;
+                        processStep9();
+                    }
+                    
                     else if (currentStr === '6') showSummaryScreen(3, '6');
-                    else if (currentStr === 'rec-3') {
+                    else if (currentStr === 'rec-3' || currentStr === 'conn-3') {
                         const cityOrigin = getFieldValues('tw-f-origin-city', 'f-origin-city').join(' ').toLowerCase();
                         const cityCurrent = getFieldValues('tw-f-city', 'f-city').join(' ').toLowerCase();
                         const hebrewRegex = /[\u0590-\u05FF]/;
@@ -4236,13 +4597,18 @@
                     }
                     
                     else if (currentStr === '7') showSummaryScreen(4, '7');
-                    else if (currentStr === 'rec-4') {
+                    else if (currentStr === 'rec-4' || currentStr === 'conn-4') {
                         window._nextWizardStep = '8';
                         window._isPartialAdd = true;
                         processStep9();
                     }
                     
                     else if (currentStr === '8') showSummaryScreen(5, '8');
+                    else if (currentStr === 'rec-5' || currentStr === 'conn-5') {
+                        window._nextWizardStep = null;
+                        window._isPartialAdd = false;
+                        processStep9();
+                    }
                 };
             } else {
                 globalFooter.style.display = 'none';
@@ -4891,6 +5257,19 @@
         setupAutocomplete('f-army-base', 'armybase');
         setupAutocomplete('f-prev-work', 'prevwork');
         setupAutocomplete('f-other-value', 'dynamic:other-category');
+        
+        // Initialize autocomplete for Edit Modal fields
+        setupAutocomplete('edit-f-city', 'city');
+        setupAutocomplete('edit-f-origin-city', 'city');
+        setupAutocomplete('edit-f-role', 'role');
+        setupAutocomplete('edit-f-workplace', 'workplace');
+        setupAutocomplete('edit-f-highschool', 'highschool');
+        setupAutocomplete('edit-f-university', 'university');
+        setupAutocomplete('edit-f-degree', 'degree');
+        setupAutocomplete('edit-f-army-role', 'armyrole');
+        setupAutocomplete('edit-f-army-base', 'armybase');
+        setupAutocomplete('edit-f-prev-work', 'prevwork');
+        setupAutocomplete('edit-f-other-value', 'dynamic:other-category');
 
         // Typing Reaction: Subtle network movement
         document.getElementById('add-modal').addEventListener('input', (e) => {
@@ -5411,7 +5790,7 @@
                                 document.querySelectorAll('.wizard-step.active').forEach(el => el.classList.remove('active'));
                                 const nextStepEl = document.getElementById('wizard-step-' + currentConn);
                                 if (nextStepEl) nextStepEl.classList.add('active');
-                                document.getElementById('btn-next').click();
+                                document.getElementById('btn-wizard-global-next').click();
                             }
                         } else {
                             renderNextCard(); // Pop up the next one!
@@ -5440,11 +5819,62 @@
             return visibleCount > 0;
         }
 
+        window.openEditModal = function(personData) {
+            const editOverlay = document.getElementById('edit-person-overlay');
+            if (editOverlay) editOverlay.classList.add('visible');
+            
+            document.getElementById('edit-form-person-id').value = personData.id;
+            document.getElementById('edit-f-name').value = personData.name || '';
+            
+            const editByField = document.getElementById('edit-f-birth-year');
+            if (editByField && personData.age) {
+                editByField.value = new Date().getFullYear() - parseInt(personData.age);
+            }
+            
+            const loadTagsEdit = (wrapperId, inputId, valueStr) => {
+                const wrapper = document.getElementById(wrapperId);
+                const input = document.getElementById(inputId);
+                if (!wrapper || !input) return;
+                wrapper.querySelectorAll('.tag-item').forEach(t => t.remove());
+                input.value = '';
+                if (valueStr) {
+                    valueStr.split(',').map(v => v.trim()).filter(v => v).forEach(v => {
+                        addTag(wrapperId, inputId, v, null);
+                    });
+                }
+            };
+
+            loadTagsEdit('tw-edit-f-city', 'edit-f-city', personData.city);
+            loadTagsEdit('tw-edit-f-origin-city', 'edit-f-origin-city', personData.origin_city);
+            loadTagsEdit('tw-edit-f-role', 'edit-f-role', personData.role);
+            loadTagsEdit('tw-edit-f-workplace', 'edit-f-workplace', personData.workplace);
+            loadTagsEdit('tw-edit-f-highschool', 'edit-f-highschool', personData.highschool);
+            loadTagsEdit('tw-edit-f-university', 'edit-f-university', personData.university);
+            loadTagsEdit('tw-edit-f-degree', 'edit-f-degree', personData.degree);
+            loadTagsEdit('tw-edit-f-army-role', 'edit-f-army-role', personData.army_role);
+            loadTagsEdit('tw-edit-f-army-base', 'edit-f-army-base', personData.army_base);
+            loadTagsEdit('tw-edit-f-prev-work', 'edit-f-prev-work', personData.prev_work);
+            loadTagsEdit('tw-edit-f-other-value', 'edit-f-other-value', personData.mechina); // Maps to Mechina/Shnat Sherut
+            
+            document.getElementById('edit-f-country').value = personData.country || '';
+            document.getElementById('edit-f-desc').value = personData.description || '';
+            document.getElementById('edit-f-tags').value = personData.tags || '';
+            
+            document.getElementById('edit-connections-list').innerHTML = '';
+            // Prepopulate connections if any exist
+            if (personData.connections && personData.connections.length > 0) {
+                personData.connections.forEach(c => addConnectionEntry(c.id, c.type, c.strength, true));
+            }
+        };
+
         function openModal(mode, personData = null, defaultConnectionNodeId = null, isResumingWizard = false) {
+
+            
             modal.classList.add('visible');
             overlay.classList.add('visible');
             document.getElementById('form-mode').value = mode;
             document.getElementById('connections-list').innerHTML = '';
+            document.getElementById('wizard-form-area').classList.remove('edit-mode'); // Always Add mode now
             
             if (mode === 'add') {
                 const instr = document.getElementById('add-person-instructions');
@@ -5473,6 +5903,7 @@
                 }
 
                 document.getElementById('connections-section').style.display = 'block';
+                document.getElementById('connections-section').style.paddingRight = '180px';
                 // Move connections back to step 9 for Add flow
                 document.getElementById('wizard-step-9-original-parent').appendChild(document.getElementById('connections-section'));
                 document.getElementById('edit-connections-accordion').style.display = 'none';
@@ -5506,11 +5937,21 @@
 
                 loadTags('tw-f-role', 'f-role', personData.role);
                 loadTags('tw-f-city', 'f-city', personData.city);
+                loadTags('tw-f-origin-city', 'f-origin-city', personData.origin_city);
+                loadTags('tw-f-workplace', 'f-workplace', personData.workplace);
+                loadTags('tw-f-highschool', 'f-highschool', personData.highschool);
+                loadTags('tw-f-university', 'f-university', personData.university);
+                loadTags('tw-f-degree', 'f-degree', personData.degree);
+                loadTags('tw-f-army-role', 'f-army-role', personData.army_role);
+                loadTags('tw-f-army-base', 'f-army-base', personData.army_base);
+                loadTags('tw-f-prev-work', 'f-prev-work', personData.prev_work);
+                loadTags('tw-f-other-value', 'f-other-value', personData.mechina); // Maps to Mechina/Shnat Sherut
                 
                 document.getElementById('f-country').value = personData.country || '';
                 document.getElementById('f-desc').value = personData.description || '';
                 document.getElementById('f-tags').value = personData.tags || '';
                 document.getElementById('connections-section').style.display = 'block';
+                document.getElementById('connections-section').style.paddingRight = '180px';
                 
                 // Prepopulate connections if any exist
                 if (personData.connections && personData.connections.length > 0) {
@@ -5521,39 +5962,6 @@
                     // Move connections section into the accordion for Edit mode
                     document.getElementById('edit-connections-content').appendChild(document.getElementById('connections-section'));
                     document.getElementById('edit-connections-accordion').style.display = 'block';
-                    document.getElementById('edit-connections-content').style.display = 'none';
-                    document.getElementById('edit-conns-arrow').style.transform = 'rotate(0deg)';
-                } else {
-                    document.getElementById('wizard-step-9-original-parent').appendChild(document.getElementById('connections-section'));
-                    document.getElementById('edit-connections-accordion').style.display = 'none';
-                }
-                
-                // Show Edit mode UI directly (bypass wizard steps)
-                document.querySelectorAll('.wizard-step').forEach(el => {
-                    el.classList.remove('active');
-                    el.style.display = 'none';
-                });
-                // We show all form sections at once for Edit mode
-                ['wizard-step-4', 'wizard-step-4a', 'wizard-step-5', 'wizard-step-6', 'wizard-step-9'].forEach(id => {
-                    const el = document.getElementById(id);
-                    if (el) {
-                        el.style.display = 'block';
-                        void el.offsetWidth;
-                        el.classList.add('active');
-                    }
-                });
-                
-                // Show global footer and configure for edit mode
-                const globalFooter = document.getElementById('global-wizard-footer');
-                if (globalFooter) {
-                    globalFooter.style.display = 'flex';
-                    const btnBack = document.getElementById('btn-wizard-global-back');
-                    if (btnBack) btnBack.style.visibility = 'hidden';
-                    const btnNext = document.getElementById('btn-wizard-global-next');
-                    if (btnNext) {
-                        btnNext.textContent = 'Update Network';
-                        btnNext.onclick = () => { processStep9(); };
-                    }
                 }
             }
         }
@@ -5576,12 +5984,48 @@
             overlay.classList.remove('visible');
         }
 
-        document.getElementById('btn-add-connection').addEventListener('click', () => openModal('add'));
+        document.getElementById('btn-add-connection').addEventListener('click', () => {
+            window._wizardIsResuming = false;
+            openModal('add');
+        });
         document.getElementById('btn-theme').addEventListener('click', () => {
             document.body.classList.toggle('light-mode');
             const isLight = document.body.classList.contains('light-mode');
             document.getElementById('btn-theme').textContent = isLight ? '[ night ]' : '[ day ]';
         });
+
+        const audioElem = document.getElementById('bg-audio');
+        const soundBtn = document.getElementById('btn-sound');
+
+        // Sync button text with actual audio state
+        audioElem.addEventListener('play', () => {
+            soundBtn.textContent = '[ silence ]';
+        });
+        audioElem.addEventListener('pause', () => {
+            soundBtn.textContent = '[ listen ]';
+        });
+
+        // Toggle on click
+        soundBtn.addEventListener('click', (e) => {
+            e.stopPropagation(); // Prevent document click from overriding
+            if (audioElem.paused) {
+                audioElem.play().catch(e => console.log('Audio play failed:', e));
+            } else {
+                audioElem.pause();
+            }
+        });
+
+        // Try to play on first user interaction if autoplay was blocked
+        const playOnFirstInteraction = () => {
+            if (audioElem.paused) {
+                audioElem.play().catch(e => console.log('Auto-play on interaction failed:', e));
+            }
+            document.removeEventListener('click', playOnFirstInteraction);
+            document.removeEventListener('keydown', playOnFirstInteraction);
+        };
+        document.addEventListener('click', playOnFirstInteraction);
+        document.addEventListener('keydown', playOnFirstInteraction);
+
         document.getElementById('btn-close-modal').addEventListener('click', closeModal);
         overlay.addEventListener('click', closeModal);
 
@@ -5613,18 +6057,35 @@
         // Update datalist when typing name or connections
         document.getElementById('f-name').addEventListener('input', updateDatalist);
 
-        function addConnectionEntry(defaultTargetId = null, defaultType = 'friend', defaultStrength = 3) {
+        function addConnectionEntry(defaultTargetId = null, defaultType = 'friend', defaultStrength = 3, isCompact = false) {
+            if (document.getElementById('edit-person-overlay') && document.getElementById('edit-person-overlay').classList.contains('visible')) {
+                isCompact = true;
+            }
+            
             const div = document.createElement('div');
             div.className = 'connection-entry';
-            div.style.background = 'transparent';
-            div.style.border = '1px solid rgba(255,255,255,0.15)';
-            div.style.borderRadius = '8px';
-            div.style.padding = '30px'; // Increased padding
-            div.style.display = 'flex';
-            div.style.justifyContent = 'space-between';
-            div.style.alignItems = 'center';
-            div.style.marginBottom = '15px'; // Increased margin
-            div.style.position = 'relative'; 
+            
+            if (isCompact) {
+                div.style.background = '#fdfdfd';
+                div.style.border = '1px solid rgba(0,0,0,0.06)';
+                div.style.borderRadius = '8px';
+                div.style.padding = '12px 16px';
+                div.style.display = 'flex';
+                div.style.flexDirection = 'column';
+                div.style.gap = '10px';
+                div.style.marginBottom = '8px';
+                div.style.position = 'relative';
+            } else {
+                div.style.background = 'transparent';
+                div.style.border = '1px solid rgba(255,255,255,0.15)';
+                div.style.borderRadius = '8px';
+                div.style.padding = '30px';
+                div.style.display = 'flex';
+                div.style.justifyContent = 'space-between';
+                div.style.alignItems = 'center';
+                div.style.marginBottom = '15px';
+                div.style.position = 'relative'; 
+            }
             
             let defaultName = '';
             let infoString = 'Select a person...';
@@ -5647,39 +6108,74 @@
                 return 'Friend';
             };
 
-            div.innerHTML = `
-                <div style="flex: 1; display: flex; flex-direction: column; position: relative;">
-                    <input type="text" class="conn-target" placeholder="Search Name..." value="${defaultName}" autocomplete="off" style="font-family: 'Helvetica', Arial, sans-serif; font-weight: 300; font-size: 16px; border: none; outline: none; background: transparent; color: #F5F5F5; padding: 0; margin-bottom: 4px; width: 100%;">
-                    <div class="conn-info" style="font-family: 'Helvetica', Arial, sans-serif; font-size: 11px; color: rgba(255,255,255,0.5);">${infoString}</div>
-                    <div class="conn-autocomplete" style="display: none; position: absolute; top: 100%; left: 0; background: rgba(10,10,10,0.95); border: 1px solid rgba(255,255,255,0.2); border-radius: 8px; z-index: 100; min-width: 200px; flex-direction: column; max-height: 400px; overflow-y: auto; box-shadow: 0 4px 15px rgba(0,0,0,0.5); margin-top: 5px;"></div>
-                </div>
-                
-                <div style="display: flex; gap: 30px; align-items: center;">
-                    <div style="display: flex; flex-direction: column; position: relative;">
-                        <div style="font-family: 'Helvetica', Arial, sans-serif; font-size: 12px; letter-spacing: 1px; color: rgba(255,255,255,0.5); text-transform: uppercase; margin-bottom: 4px;">Relationship</div>
-                        <div class="conn-type-display" style="font-family: 'Helvetica', Arial, sans-serif; font-size: 16px; font-weight: 300; color: #F5F5F5; cursor: pointer; display: flex; justify-content: space-between; align-items: center; min-width: 100px;"><span>${getRelLabel(defaultType)}</span> <span style="font-size: 8px;">▼</span></div>
-                        <div class="conn-type-dropdown" style="display: none; position: absolute; top: 100%; left: 0; background: rgba(10,10,10,0.95); border: 1px solid rgba(255,255,255,0.2); border-radius: 8px; z-index: 100; min-width: 160px; flex-direction: column; padding: 5px; box-shadow: 0 4px 15px rgba(0,0,0,0.5); margin-top: 5px;">
-                            <div class="conn-type-option" data-val="friend" style="padding: 12px 15px; font-size: 13px; cursor: pointer; color: #F5F5F5; transition: 0.2s; border-radius: 4px;" onmouseover="this.style.background='rgba(255,255,255,0.1)'" onmouseout="this.style.background='transparent'">Friend</div>
-                            <div class="conn-type-option" data-val="acquaintance" style="padding: 12px 15px; font-size: 13px; cursor: pointer; color: #F5F5F5; transition: 0.2s; border-radius: 4px;" onmouseover="this.style.background='rgba(255,255,255,0.1)'" onmouseout="this.style.background='transparent'">Acquaintance</div>
-                            <div class="conn-type-option" data-val="family_core" style="padding: 12px 15px; font-size: 13px; cursor: pointer; color: #F5F5F5; transition: 0.2s; border-radius: 4px;" onmouseover="this.style.background='rgba(255,255,255,0.1)'" onmouseout="this.style.background='transparent'">Family (Close)</div>
-                            <div class="conn-type-option" data-val="family_extended" style="padding: 12px 15px; font-size: 13px; cursor: pointer; color: #F5F5F5; transition: 0.2s; border-radius: 4px;" onmouseover="this.style.background='rgba(255,255,255,0.1)'" onmouseout="this.style.background='transparent'">Family (Ext)</div>
+            if (isCompact) {
+                div.innerHTML = `
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                        <div style="flex: 1; display: flex; flex-direction: column; position: relative;">
+                            <input type="text" class="conn-target" placeholder="Search Name..." value="${defaultName}" autocomplete="off" style="font-family: 'Helvetica', Arial, sans-serif; font-weight: 500; font-size: 15px; border: none; outline: none; background: transparent; color: #111; padding: 0; margin-bottom: 2px; width: 100%; border-bottom: 1px solid rgba(0,0,0,0.05);">
+                            <div class="conn-info" style="font-family: 'Helvetica', Arial, sans-serif; font-size: 10px; color: #888;">${infoString}</div>
+                            <div class="conn-autocomplete" style="display: none; position: absolute; top: 100%; left: 0; background: #fff; border: 1px solid rgba(0,0,0,0.1); border-radius: 8px; z-index: 100; min-width: 200px; flex-direction: column; max-height: 200px; overflow-y: auto; box-shadow: 0 4px 15px rgba(0,0,0,0.1); margin-top: 5px;"></div>
                         </div>
-                        <input type="hidden" class="conn-type" value="${defaultType}">
+                        <button type="button" class="btn-remove-conn" style="background: transparent; border: none; color: #999; cursor: pointer; font-size: 20px; padding: 0 0 0 15px; line-height: 1; transition: 0.2s;">&times;</button>
                     </div>
                     
-                    <div style="width: 1px; height: 24px; background: rgba(255,255,255,0.15);"></div>
+                    <div style="display: flex; gap: 15px; align-items: center; margin-top: 5px;">
+                        <div style="flex: 1; display: flex; flex-direction: column; position: relative;">
+                            <div style="font-size: 9px; letter-spacing: 1px; color: #888; text-transform: uppercase; margin-bottom: 4px;">Relationship</div>
+                            <div class="conn-type-display" style="font-size: 13px; font-weight: 500; color: #333; cursor: pointer; display: flex; justify-content: space-between; align-items: center; background: rgba(0,0,0,0.04); padding: 6px 10px; border-radius: 6px;"><span>${getRelLabel(defaultType)}</span> <span style="font-size: 8px;">▼</span></div>
+                            <div class="conn-type-dropdown" style="display: none; position: absolute; top: 100%; left: 0; background: #fff; border: 1px solid rgba(0,0,0,0.1); border-radius: 8px; z-index: 100; min-width: 140px; flex-direction: column; padding: 5px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); margin-top: 5px;">
+                                <div class="conn-type-option" data-val="friend" style="padding: 10px 12px; font-size: 12px; cursor: pointer; color: #333; transition: 0.2s; border-radius: 4px;" onmouseover="this.style.background='rgba(0,0,0,0.05)'" onmouseout="this.style.background='transparent'">Friend</div>
+                                <div class="conn-type-option" data-val="acquaintance" style="padding: 10px 12px; font-size: 12px; cursor: pointer; color: #333; transition: 0.2s; border-radius: 4px;" onmouseover="this.style.background='rgba(0,0,0,0.05)'" onmouseout="this.style.background='transparent'">Acquaintance</div>
+                                <div class="conn-type-option" data-val="family_core" style="padding: 10px 12px; font-size: 12px; cursor: pointer; color: #333; transition: 0.2s; border-radius: 4px;" onmouseover="this.style.background='rgba(0,0,0,0.05)'" onmouseout="this.style.background='transparent'">Family (Close)</div>
+                                <div class="conn-type-option" data-val="family_extended" style="padding: 10px 12px; font-size: 12px; cursor: pointer; color: #333; transition: 0.2s; border-radius: 4px;" onmouseover="this.style.background='rgba(0,0,0,0.05)'" onmouseout="this.style.background='transparent'">Family (Ext)</div>
+                            </div>
+                            <input type="hidden" class="conn-type" value="${defaultType}">
+                        </div>
+                        
+                        <div style="flex: 1; display: flex; flex-direction: column; position: relative;">
+                            <div style="font-size: 9px; letter-spacing: 1px; color: #888; text-transform: uppercase; margin-bottom: 4px;">Strength</div>
+                            <div style="display: flex; align-items: center; width: 100%; height: 24px; position: relative;">
+                                <input type="range" class="conn-strength strength-slider" min="1" max="5" value="${defaultStrength}" style="width: 100%;">
+                                <div class="conn-strength-label" style="position: absolute; top: 18px; font-size: 9px; color: #888; transform: translateX(-50%); pointer-events: none;">${defaultStrength}</div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            } else {
+                div.innerHTML = `
+                    <div style="flex: 1; display: flex; flex-direction: column; position: relative;">
+                        <input type="text" class="conn-target" placeholder="Search Name..." value="${defaultName}" autocomplete="off" style="font-family: 'Helvetica', Arial, sans-serif; font-weight: 300; font-size: 16px; border: none; outline: none; background: transparent; color: #F5F5F5; padding: 0; margin-bottom: 4px; width: 100%;">
+                        <div class="conn-info" style="font-family: 'Helvetica', Arial, sans-serif; font-size: 11px; color: rgba(255,255,255,0.5);">${infoString}</div>
+                        <div class="conn-autocomplete" style="display: none; position: absolute; top: 100%; left: 0; background: rgba(10,10,10,0.95); border: 1px solid rgba(255,255,255,0.2); border-radius: 8px; z-index: 100; min-width: 200px; flex-direction: column; max-height: 400px; overflow-y: auto; box-shadow: 0 4px 15px rgba(0,0,0,0.5); margin-top: 5px;"></div>
+                    </div>
+                    
+                    <div style="display: flex; gap: 30px; align-items: center;">
+                        <div style="display: flex; flex-direction: column; position: relative;">
+                            <div style="font-family: 'Helvetica', Arial, sans-serif; font-size: 12px; letter-spacing: 1px; color: rgba(255,255,255,0.5); text-transform: uppercase; margin-bottom: 4px;">Relationship</div>
+                            <div class="conn-type-display" style="font-family: 'Helvetica', Arial, sans-serif; font-size: 16px; font-weight: 300; color: #F5F5F5; cursor: pointer; display: flex; justify-content: space-between; align-items: center; min-width: 100px;"><span>${getRelLabel(defaultType)}</span> <span style="font-size: 8px;">▼</span></div>
+                            <div class="conn-type-dropdown" style="display: none; position: absolute; top: 100%; left: 0; background: rgba(10,10,10,0.95); border: 1px solid rgba(255,255,255,0.2); border-radius: 8px; z-index: 100; min-width: 160px; flex-direction: column; padding: 5px; box-shadow: 0 4px 15px rgba(0,0,0,0.5); margin-top: 5px;">
+                                <div class="conn-type-option" data-val="friend" style="padding: 12px 15px; font-size: 13px; cursor: pointer; color: #F5F5F5; transition: 0.2s; border-radius: 4px;" onmouseover="this.style.background='rgba(255,255,255,0.1)'" onmouseout="this.style.background='transparent'">Friend</div>
+                                <div class="conn-type-option" data-val="acquaintance" style="padding: 12px 15px; font-size: 13px; cursor: pointer; color: #F5F5F5; transition: 0.2s; border-radius: 4px;" onmouseover="this.style.background='rgba(255,255,255,0.1)'" onmouseout="this.style.background='transparent'">Acquaintance</div>
+                                <div class="conn-type-option" data-val="family_core" style="padding: 12px 15px; font-size: 13px; cursor: pointer; color: #F5F5F5; transition: 0.2s; border-radius: 4px;" onmouseover="this.style.background='rgba(255,255,255,0.1)'" onmouseout="this.style.background='transparent'">Family (Close)</div>
+                                <div class="conn-type-option" data-val="family_extended" style="padding: 12px 15px; font-size: 13px; cursor: pointer; color: #F5F5F5; transition: 0.2s; border-radius: 4px;" onmouseover="this.style.background='rgba(255,255,255,0.1)'" onmouseout="this.style.background='transparent'">Family (Ext)</div>
+                            </div>
+                            <input type="hidden" class="conn-type" value="${defaultType}">
+                        </div>
+                        
+                        <div style="width: 1px; height: 24px; background: rgba(255,255,255,0.15);"></div>
 
-                    <div style="display: flex; flex-direction: column; position: relative;">
-                        <div style="font-family: 'Helvetica', Arial, sans-serif; font-size: 12px; letter-spacing: 1px; color: rgba(255,255,255,0.5); text-transform: uppercase; margin-bottom: 4px;">Strength</div>
-                        <div style="display: flex; align-items: center; width: 140px; height: 24px; position: relative;">
-                            <input type="range" class="conn-strength strength-slider" min="1" max="5" value="${defaultStrength}" style="width: 100%;">
-                            <div class="conn-strength-label" style="position: absolute; top: 20px; font-family: 'Helvetica', Arial, sans-serif; font-size: 10px; color: rgba(255,255,255,0.7); transform: translateX(-50%); pointer-events: none;">${defaultStrength}</div>
+                        <div style="display: flex; flex-direction: column; position: relative;">
+                            <div style="font-family: 'Helvetica', Arial, sans-serif; font-size: 12px; letter-spacing: 1px; color: rgba(255,255,255,0.5); text-transform: uppercase; margin-bottom: 4px;">Strength</div>
+                            <div style="display: flex; align-items: center; width: 140px; height: 24px; position: relative;">
+                                <input type="range" class="conn-strength strength-slider" min="1" max="5" value="${defaultStrength}" style="width: 100%;">
+                                <div class="conn-strength-label" style="position: absolute; top: 20px; font-family: 'Helvetica', Arial, sans-serif; font-size: 10px; color: rgba(255,255,255,0.7); transform: translateX(-50%); pointer-events: none;">${defaultStrength}</div>
+                            </div>
                         </div>
+                        
+                        <button type="button" class="btn-remove-conn" style="background: transparent; border: none; color: rgba(255,255,255,0.4); cursor: pointer; font-size: 18px; padding: 0 0 0 10px; line-height: 1; transition: 0.2s;">&times;</button>
                     </div>
-                    
-                    <button type="button" class="btn-remove-conn" style="background: transparent; border: none; color: rgba(255,255,255,0.4); cursor: pointer; font-size: 18px; padding: 0 0 0 10px; line-height: 1; transition: 0.2s;">&times;</button>
-                </div>
-            `;
+                `;
+            }
             
             // Name Autocomplete
             const targetInput = div.querySelector('.conn-target');
@@ -5827,11 +6323,119 @@
                 updateDatalist();
             };
             
-            connectionsList.prepend(div);
+            const targetList = isCompact ? document.getElementById('edit-connections-list') : connectionsList;
+            if (targetList) targetList.prepend(div);
             updateDatalist();
         }
 
         document.getElementById('btn-add-conn-entry').addEventListener('click', () => addConnectionEntry());
+        document.getElementById('btn-edit-add-conn').addEventListener('click', () => addConnectionEntry());
+
+        async function saveEditedPerson() {
+            const id = document.getElementById('edit-form-person-id').value;
+            if (!id) return;
+
+            let calcAge = '';
+            const by = document.getElementById('edit-f-birth-year').value.trim();
+            if (by) {
+                const byInt = parseInt(by);
+                if (byInt < 150) {
+                    calcAge = by;
+                } else {
+                    calcAge = (new Date().getFullYear() - byInt).toString();
+                }
+            }
+
+            let cityValues = getFieldValues('tw-edit-f-city', 'edit-f-city');
+            let cityVal = cityValues.map(c => {
+                const lowerCity = c.toLowerCase();
+                return ['ilaniya', 'moshav ilaniya', 'moshav ilania', 'אילניה', 'מושב אילניה'].includes(lowerCity) ? 'ilania' : c;
+            }).join(', ');
+
+            let generatedTags = [];
+            let generatedDesc = [];
+            
+            const addField = (values, prefix, isTag=true) => {
+                values.forEach(val => {
+                    if (val) {
+                        if (isTag) generatedTags.push(`${prefix}:${val}`);
+                        generatedDesc.push(`${prefix}: ${val}`);
+                    }
+                });
+            };
+            
+            addField(getFieldValues('tw-edit-f-workplace', 'edit-f-workplace'), 'workplace', true);
+            if (document.getElementById('edit-f-highschool')) addField(getFieldValues('tw-edit-f-highschool', 'edit-f-highschool'), 'highschool', true);
+            if (document.getElementById('edit-f-university')) addField(getFieldValues('tw-edit-f-university', 'edit-f-university'), 'university', true);
+            if (document.getElementById('edit-f-degree')) addField(getFieldValues('tw-edit-f-degree', 'edit-f-degree'), 'degree', true);
+            if (document.getElementById('edit-f-army-role')) addField(getFieldValues('tw-edit-f-army-role', 'edit-f-army-role'), 'armyrole', true);
+            if (document.getElementById('edit-f-army-base')) addField(getFieldValues('tw-edit-f-army-base', 'edit-f-army-base'), 'armybase', true);
+            if (document.getElementById('edit-f-prev-work')) addField(getFieldValues('tw-edit-f-prev-work', 'edit-f-prev-work'), 'prevwork', true);
+            addField(getFieldValues('tw-edit-f-other-value', 'edit-f-other-value'), 'other', true);
+
+            const userTags = document.getElementById('edit-f-tags') ? document.getElementById('edit-f-tags').value : '';
+            const allTags = [userTags, ...generatedTags].filter(Boolean).join(', ');
+            
+            const userDesc = document.getElementById('edit-f-desc') ? document.getElementById('edit-f-desc').value : '';
+            const allDesc = [userDesc, ...generatedDesc].filter(Boolean).join('\n');
+
+            const data = {
+                name: document.getElementById('edit-f-name').value,
+                age: calcAge,
+                role: getFieldValues('tw-edit-f-role', 'edit-f-role').join(', '),
+                city: cityVal,
+                country: document.getElementById('edit-f-country').value || 'Israel',
+                description: allDesc,
+                tags: allTags,
+            };
+
+            const originCity = getFieldValues('tw-edit-f-origin-city', 'edit-f-origin-city').join(', ');
+            if (originCity && originCity !== data.city) {
+                data.description = `[Originally from ${originCity}]\n` + data.description;
+            }
+
+            // Also collect connections if they were edited
+            const connectionDivs = document.querySelectorAll('.connection-entry');
+            const connectionsData = Array.from(connectionDivs).map(div => {
+                const targetName = div.querySelector('.conn-target').value.trim();
+                if (!targetName) return null;
+                
+                const targetPerson = people.find(p => p.name === targetName);
+                if (!targetPerson) return null;
+                
+                return {
+                    id: targetPerson.id,
+                    type: div.querySelector('.conn-type').value || 'colleague',
+                    strength: parseInt(div.querySelector('.conn-strength').value) || 3
+                };
+            }).filter(Boolean);
+            if (connectionsData.length > 0) {
+                data.connections = connectionsData;
+            }
+
+            try {
+                const res = await fetch(`/api/people/${id}`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(data)
+                });
+                
+                if (!res.ok) throw new Error('Failed to update person');
+                const updatedPerson = await res.json();
+                people[id] = { ...people[id], ...updatedPerson };
+                if (window.updateNetworkVisualization) {
+                    window.updateNetworkVisualization();
+                } else if (window.renderNextCard) {
+                    document.getElementById('people-grid').innerHTML = '';
+                    visibleCount = 0;
+                    for(let i=0; i<20; i++) renderNextCard();
+                }
+                document.getElementById('edit-person-overlay').classList.remove('visible');
+            } catch (error) {
+                console.error('Error updating person:', error);
+                alert('Error updating details.');
+            }
+        }
 
         form.addEventListener('submit', async (e) => {
             e.preventDefault();
@@ -6032,7 +6636,7 @@
                     
                     // Use standard selectNode behavior for both add and edit
                     setTimeout(() => {
-                        selectNode(targetIdx, true, 600); // 600 gives a wide enough FOV while remaining personal
+                        selectNode(targetIdx, true); // 600 gives a wide enough FOV while remaining personal
                     }, 100);
                 }
                 
@@ -6047,7 +6651,7 @@
 
         document.getElementById('btn-edit-node').addEventListener('click', () => {
             if (selectedNodeId !== null && people[selectedNodeId]) {
-                openModal('edit', people[selectedNodeId]);
+                openEditModal(people[selectedNodeId]);
             }
         });
 
