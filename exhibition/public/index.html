@@ -764,6 +764,8 @@
         .summary-row-value {
             font-size: 16px;
             font-weight: 300;
+            text-align: right;
+            max-width: 65%;
         }
 
     </style>
@@ -3220,7 +3222,8 @@
                         if (t.includes(':')) {
                             const parts = t.split(':');
                             const prefix = parts[0].trim().toLowerCase();
-                            const val = parts.slice(1).join(':').trim();
+                            let val = parts.slice(1).join(':').trim();
+                            val = val.replace(/#/g, '');
                             if (prefixMap[prefix] && val) {
                                 chaptersHTML += `
                                     <div style="margin-bottom: 15px;">
@@ -4430,7 +4433,8 @@
             const makeRow = (label, value) => {
                 const isEmpty = !value || value.trim() === '';
                 const styleClass = isEmpty ? 'empty-row' : 'filled-row';
-                return `<div class="summary-row-v2 ${styleClass}"><span class="summary-row-label">${label}:</span><span class="summary-row-value">${isEmpty ? '---' : value}</span></div>`;
+                const cleanValue = isEmpty ? '---' : value.replace(/#/g, '');
+                return `<div class="summary-row-v2 ${styleClass}"><span class="summary-row-label">${label}:</span><span class="summary-row-value">${cleanValue}</span></div>`;
             };
             
             const name = document.getElementById('f-name').value || document.getElementById('f-name-initial').value || '';
@@ -6028,7 +6032,7 @@
                     
                     // Use standard selectNode behavior for both add and edit
                     setTimeout(() => {
-                        selectNode(targetIdx, true, 1000); // 1000 gives a wide enough FOV while remaining personal
+                        selectNode(targetIdx, true, 600); // 600 gives a wide enough FOV while remaining personal
                     }, 100);
                 }
                 
