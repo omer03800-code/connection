@@ -3075,10 +3075,13 @@
                 
                 const colors = globalGeometry.attributes.color.array;
                 for (let i = 0; i < numStrands; i++) {
-                    if (i === id || focusedNeighbors.has(i)) {
-                        colors[i] = 1.0;
-                    } else {
-                        colors[i] = 0.05;
+                    const isRelevant = (i === id || focusedNeighbors.has(i));
+                    const val = isRelevant ? 1.0 : 0.0;
+                    for (let j = 0; j < pPerStrand; j++) {
+                        const idx = (i * pPerStrand + j) * 3;
+                        colors[idx] = val;
+                        colors[idx+1] = val;
+                        colors[idx+2] = val;
                     }
                 }
                 globalGeometry.attributes.color.needsUpdate = true;
@@ -6025,7 +6028,7 @@
                     
                     // Use standard selectNode behavior for both add and edit
                     setTimeout(() => {
-                        selectNode(targetIdx, true, 1400); // 1400 ensures FOV covers 550 radius perfectly
+                        selectNode(targetIdx, true, 1000); // 1000 gives a wide enough FOV while remaining personal
                     }, 100);
                 }
                 
