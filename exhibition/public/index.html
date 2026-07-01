@@ -3520,8 +3520,8 @@
             const cullThreshold = 0.1; // Hide hairs almost immediately when starting to zoom in!
             if (strandSegs) strandSegs.visible = (layoutMode !== 'path') && (zoomLevel <= cullThreshold) && (currentSearchNodes.size === 0); // Hide structural tail lines on zoom and in path mode AND during search!
             
-            // Hide the straight solid lines during search or path mode, relying purely on the curved connection lines!
-            const showSolidLines = (layoutMode !== 'path') && (currentSearchNodes.size === 0);
+            // Hide the straight solid lines during search, path mode, or focus mode, relying purely on the curved connection lines!
+            const showSolidLines = (layoutMode !== 'path') && (layoutMode !== 'focus') && (currentSearchNodes.size === 0);
             if (lineSegFamily) lineSegFamily.visible = showSolidLines;
             if (lineSegFriend) lineSegFriend.visible = showSolidLines;
             if (lineSegAcq) lineSegAcq.visible = showSolidLines;
