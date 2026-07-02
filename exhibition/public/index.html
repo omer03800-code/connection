@@ -1251,24 +1251,26 @@
     <div id="about-modal" class="modal">
         <span class="close-btn" id="btn-close-about" onclick="document.getElementById('about-modal').classList.remove('visible'); document.getElementById('modal-overlay').classList.remove('visible');" style="position: absolute; top: 40px; right: 40px; font-size: 32px; font-weight: 300; cursor: pointer; color: inherit; z-index: 10; line-height: 1;">&times;</span>
         
-        <div style="position: relative; width: 100%; height: 100%; display: flex; flex-direction: column; padding: 12vh 10% 0; font-family: 'Helvetica', Arial, sans-serif;">
+        <div style="position: relative; width: 100%; height: 100%; display: flex; flex-direction: column; padding: calc(12vh + 5px) 10% 0; font-family: 'Helvetica', Arial, sans-serif;">
             
             <h1 style="font-weight: 800; font-size: 15vw; line-height: 0.85; margin-bottom: 6vh; text-transform: uppercase; letter-spacing: -0.02em; word-break: keep-all; color: inherit; z-index: 2; user-select: none;">
                 FEED THE<br>BEAST
             </h1>
             
             <div style="position: relative; width: 100%; z-index: 2;">
-                <div style="max-width: 650px; font-weight: 300; font-size: 18px; line-height: 1.6; color: inherit; opacity: 0.85;">
-                    <p style="margin-bottom: 25px;">An interactive installation that reveals the hidden<br>network of human connections surrounding us.</p>
+                <!-- Paragraph text moved to the right and aligned with "H" -->
+                <div style="margin-left: 53%; max-width: 800px; font-weight: 300; font-size: 18px; line-height: 1.6; color: inherit; opacity: 0.85;">
+                    <p style="margin-bottom: 25px;">An interactive installation that reveals the hidden network of human connections surrounding us.</p>
                     
-                    <p style="margin-bottom: 25px;">Each node represents a real person.<br>Each line represents a real relationship.<br>Together, they form a living organism.</p>
+                    <p style="margin-bottom: 25px;">Each node represents a real person. Each line represents a real relationship. Together, they form a living organism.</p>
                     
-                    <p style="margin-bottom: 25px;">Explore the system, trace paths between individuals,<br>uncover hidden links, and discover how people are<br>connected in ways that often remain unseen.</p>
+                    <p style="margin-bottom: 25px;">Explore the system, trace paths between individuals, uncover hidden links, and discover how people are connected in ways that often remain unseen.</p>
                     
-                    <p style="margin-bottom: 25px;">The organism is never complete.<br>With every new participant and every<br>new connection,<br>it grows, adapts, and reorganizes itself.</p>
+                    <p style="margin-bottom: 25px;">The organism is never complete. With every new participant and every new connection, it grows, adapts, and reorganizes itself.</p>
                 </div>
                 
-                <div style="position: absolute; right: 0; bottom: 140px; font-size: 12px; font-weight: 300; letter-spacing: 1.5px; text-transform: uppercase; color: inherit; opacity: 0.5; user-select: none;">
+                <!-- Button moved to the left -->
+                <div style="position: absolute; left: 0; bottom: 140px; font-size: 12px; font-weight: 300; letter-spacing: 1.5px; text-transform: uppercase; color: inherit; opacity: 0.5; user-select: none;">
                     [ SCROLL TO EXPLORE ]
                 </div>
             </div>
