@@ -799,6 +799,32 @@
             max-width: 65%;
         }
 
+        .network-toast {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(255, 255, 255, 0.95) !important;
+            color: #0a0a0a !important;
+            padding: 35px 50px;
+            border-radius: 12px;
+            font-family: inherit;
+            font-size: 28px;
+            text-align: center;
+            z-index: 999999;
+            backdrop-filter: blur(20px) !important;
+            -webkit-backdrop-filter: blur(20px) !important;
+            opacity: 0;
+            transition: opacity 0.8s ease-in-out;
+            font-weight: 300;
+            pointer-events: none;
+            border: 1px solid rgba(0, 0, 0, 0.1);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+            letter-spacing: 1px;
+        }
+        body.light-mode .network-toast {
+            filter: invert(1) !important;
+        }
     </style>
 </head>
 
@@ -824,7 +850,7 @@
             </div>
 
             <div id="search-wrapper" style="position: relative; display: flex; align-items: center; margin: 0; width: auto;">
-                <input type="text" id="search-input" class="info-action-btn" placeholder="[ FIND ANYTHING ]" autocomplete="off" style="margin: 0; width: 170px; cursor: text; border-radius: 10px;">
+                <input type="text" id="search-input" class="info-action-btn" placeholder="[ FIND ANYTHING ]" autocomplete="off" style="margin: 0; width: 170px; cursor: text; border-radius: 10px; text-transform: none;">
                 <div id="search-dropdown" style="display: none; position: absolute; top: 100%; left: 0; min-width: 280px; background: rgba(0,0,0,0.3); backdrop-filter: blur(25px); border: 1px solid rgba(245,245,245,0.2); border-radius: 10px; z-index: 1000; margin-top: 8px; max-height: 400px; overflow-y: auto; overflow-x: hidden; padding: 8px 0; box-shadow: 0 4px 20px rgba(0,0,0,0.5);">
                 </div>
             </div>
@@ -843,9 +869,9 @@
                 <div style="display: flex; align-items: center; gap: 15px; margin-top: 6px;">
                     <div id="info-menu-container" style="position: relative;">
                         <button id="btn-info-menu" style="background:transparent; border:none; color:#000; font-size:22px; cursor:pointer; padding:0; line-height:0.8; opacity:0.6; letter-spacing:2px; outline:none;">...</button>
-                        <div id="info-menu-dropdown" style="display: none; position: absolute; right: 0; top: 20px; background: #fff; border: 1px solid rgba(0,0,0,0.1); padding: 12px; border-radius: 10px; z-index: 100; min-width: 140px; box-shadow: 0 4px 15px rgba(0,0,0,0.1);">
-                            <button id="btn-edit-node" class="info-action-btn" style="display: block; width:100%; margin-bottom: 12px; text-align: left; white-space: nowrap; color: #000; border: 1px solid rgba(0,0,0,0.1);">[ EDIT ]</button>
-                            <button id="btn-delete-node" class="info-action-btn" style="display: block; width:100%; margin-bottom: 0; text-align: left; white-space: nowrap; color: #ff4444; border: 1px solid rgba(0,0,0,0.1);">[ DELETE ]</button>
+                        <div id="info-menu-dropdown" style="display: none; position: absolute; right: 0; top: 20px; background: #fff; border: 1px solid rgba(0,0,0,0.1); padding: 4px 0; border-radius: 10px; z-index: 100; min-width: 120px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); overflow: hidden;">
+                            <button id="btn-edit-node" class="info-action-btn" style="display: block; width:100%; height: auto; line-height: normal; margin: 0; padding: 10px 0; text-align: center; white-space: nowrap; color: #000; border: none; background: transparent; transition: background 0.2s;">[ EDIT ]</button>
+                            <button id="btn-delete-node" class="info-action-btn" style="display: block; width:100%; height: auto; line-height: normal; margin: 0; padding: 10px 0; text-align: center; white-space: nowrap; color: #ff4444; border: none; background: transparent; transition: background 0.2s;">[ DELETE ]</button>
                         </div>
                     </div>
                     <button id="btn-close-card" style="background:transparent; border:none; color:#000; font-size:24px; cursor:pointer; padding:0; line-height:0.8; font-weight:100; opacity:0.6; outline:none;">&times;</button>
@@ -939,43 +965,53 @@
 
     <div id="modal-overlay" class="modal-overlay"></div>
 
+    <style>
+        #btn-edit-node:hover { background: #000 !important; color: #fff !important; }
+        #btn-delete-node:hover { background: #ff4444 !important; color: #fff !important; }
+    </style>
     <!-- Dedicated Edit Person Modal -->
     <div id="edit-person-overlay" class="modal-overlay" style="z-index: 2000;">
-        <div id="edit-person-modal" style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 500px; height: 85vh; max-height: 800px; background: #ffffff; color: #000000; border: 1px solid rgba(0,0,0,0.05); border-radius: 16px; padding: 25px 35px; display: flex; flex-direction: column; box-shadow: 0 4px 30px rgba(0,0,0,0.15); overflow: hidden;">
+        <div id="edit-person-modal" style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 500px; height: 65vh; background: #ffffff; color: #000000; border: 1px solid rgba(0,0,0,0.05); border-radius: 16px; padding: 25px 35px; display: flex; flex-direction: column; box-shadow: 0 4px 30px rgba(0,0,0,0.15); overflow: hidden;">
             <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 25px;">
                 <input type="text" id="edit-f-name" style="font-size: 32px; font-weight: 500; letter-spacing: -0.5px; background: transparent; border: none; border-bottom: 1px solid rgba(0,0,0,0.1); outline: none; width: 85%; color: #000; font-family: inherit; padding-bottom: 4px;" placeholder="Full Name">
                 <span class="close-btn" onclick="document.getElementById('edit-person-overlay').classList.remove('visible');" style="font-size: 28px; cursor: pointer; opacity: 0.4; line-height: 1; transition: 0.2s;">&times;</span>
             </div>
             
             <!-- Tabs -->
-            <div style="display: flex; border-bottom: 1px solid rgba(0,0,0,0.08); margin-bottom: 15px;">
+            <div style="display: flex; border-bottom: 1px solid rgba(0,0,0,0.08); margin-bottom: 15px; flex-shrink: 0;">
                 <div id="tab-edit-details" onclick="switchEditTab('details')" style="flex: 1; text-align: center; padding-bottom: 12px; cursor: pointer; font-size: 13px; font-weight: 600; text-transform: uppercase; letter-spacing: 1.5px; border-bottom: 2px solid #000; color: #000; transition: 0.2s;">Edit Details</div>
                 <div id="tab-edit-connections" onclick="switchEditTab('connections')" style="flex: 1; text-align: center; padding-bottom: 12px; cursor: pointer; font-size: 13px; font-weight: 600; text-transform: uppercase; letter-spacing: 1.5px; border-bottom: 2px solid transparent; color: #999; transition: 0.2s;">Connections</div>
             </div>
             
             <!-- Details Tab -->
-            <div id="edit-person-form" style="flex: 1; overflow-y: auto; overflow-x: hidden; padding-right: 5px; display: flex; flex-direction: column; gap: 8px;">
+            <div id="edit-person-form" style="flex: 1; display: flex; flex-direction: column; overflow: hidden;">
+                <div style="flex: 1; overflow-y: auto; overflow-x: hidden; padding-right: 5px; display: flex; flex-direction: column; gap: 8px;">
                 
                 <style>
                     .edit-row-v2 {
                         display: flex;
-                        flex-direction: column;
-                        padding: 8px 12px;
-                        border-radius: 8px;
+                        flex-direction: row;
+                        align-items: center;
+                        padding: 10px 16px;
+                        border-radius: 10px;
                         background: #fdfdfd;
                         border: 1px solid rgba(0,0,0,0.06);
-                        margin-bottom: 4px;
-                        transition: background 0.2s;
+                        margin-bottom: 6px;
+                        transition: background 0.2s, box-shadow 0.2s;
                     }
                     .edit-row-v2:focus-within {
-                        background: #f5f5f5;
+                        background: #ffffff;
+                        box-shadow: 0 2px 10px rgba(0,0,0,0.05);
                     }
                     .edit-row-label {
                         font-size: 10px;
                         color: #888;
                         text-transform: uppercase;
                         letter-spacing: 1.5px;
-                        margin-bottom: 4px;
+                        margin-bottom: 0;
+                        margin-right: 15px;
+                        flex-shrink: 0;
+                        min-width: 80px;
                     }
                     .edit-row-input {
                         font-size: 15px;
@@ -983,15 +1019,40 @@
                         font-weight: 400;
                         background: transparent;
                         border: none;
-                        border-bottom: 1px solid rgba(0,0,0,0.05);
                         outline: none;
                         width: 100%;
                         font-family: inherit;
-                        padding-bottom: 4px;
-                        transition: border-color 0.2s;
+                        padding: 0;
+                        text-align: left;
                     }
-                    .edit-row-input:focus { border-bottom-color: #000; }
                     
+                    /* Tags Wrapper overrides for Edit Modal */
+                    #edit-person-form .tags-wrapper {
+                        display: flex;
+                        flex-wrap: wrap;
+                        gap: 6px;
+                        align-items: center;
+                        justify-content: flex-start;
+                        border-bottom: none;
+                        padding-bottom: 0;
+                        min-height: auto;
+                        flex: 1;
+                    }
+                    #edit-person-form .tags-wrapper .edit-row-input {
+                        flex: 1 1 10px;
+                        min-width: 0;
+                        width: 0;
+                        text-align: left;
+                    }
+                    
+                    #edit-person-form .edit-row-input::placeholder {
+                        color: rgba(0,0,0,0.2) !important;
+                    }
+                    
+                    #edit-person-form .tags-wrapper:has(.tag-item) .edit-row-input::placeholder {
+                        color: transparent !important;
+                    }
+
                     /* Make tags look white and sleek in the edit modal */
                     #edit-person-form .tag-item {
                         background: #ffffff !important;
@@ -999,9 +1060,12 @@
                         border: 1px solid rgba(0,0,0,0.15) !important;
                         font-weight: 400 !important;
                         box-shadow: 0 1px 3px rgba(0,0,0,0.02);
+                        padding: 4px 10px !important;
+                        font-size: 15px !important;
                     }
                     #edit-person-form .tag-item span:last-child {
                         color: rgba(0,0,0,0.4) !important;
+                        margin-left: 6px;
                     }
                     #edit-person-form .tag-item span:last-child:hover {
                         color: rgba(0,0,0,0.8) !important;
@@ -1115,31 +1179,35 @@
                     <div class="dynamic-stats" id="stats-edit-f-army-base"></div>
                 </div>
 
-                <!-- Previous Works -->
-                <div class="edit-row-v2 autocomplete-wrapper">
-                    <label class="edit-row-label">PREVIOUS WORKS</label>
-                    <div class="tags-wrapper" id="tw-edit-f-prev-work" onclick="document.getElementById('edit-f-prev-work').focus()">
-                        <input type="text" id="edit-f-prev-work" class="edit-row-input" style="border:none;" placeholder="Companies">
-                    </div>
-                    <div class="autocomplete-dropdown" id="dropdown-edit-f-prev-work"></div>
-                    <div class="dynamic-stats" id="stats-edit-f-prev-work"></div>
+                <!-- Advanced Details Toggle -->
+                <div id="toggle-advanced-container" style="text-align:center; padding: 10px 0;">
+                    <span id="btn-toggle-advanced-details" style="font-size: 11px; text-transform: uppercase; cursor: pointer; color: #888; letter-spacing: 1.5px; font-weight: 500;" onclick="toggleAdvancedDetails(this)">[ + MORE DETAILS ]</span>
                 </div>
 
-                <!-- Other Chapters -->
-                <div class="edit-row-v2 autocomplete-wrapper">
-                    <label class="edit-row-label">OTHER CHAPTERS</label>
-                    <div class="tags-wrapper" id="tw-edit-f-other-value" onclick="document.getElementById('edit-f-other-value').focus()">
-                        <input type="text" id="edit-f-other-value" class="edit-row-input" style="border:none;" placeholder="Mechina, etc.">
+                <!-- Advanced Details Container -->
+                <div id="advanced-details-container" style="display:none; flex-direction: column; gap: 8px;">
+                    <!-- Previous Works -->
+                    <div class="edit-row-v2 autocomplete-wrapper">
+                        <label class="edit-row-label">PREVIOUS WORKS</label>
+                        <div class="tags-wrapper" id="tw-edit-f-prev-work" onclick="document.getElementById('edit-f-prev-work').focus()">
+                            <input type="text" id="edit-f-prev-work" class="edit-row-input" style="border:none;" placeholder="Companies">
+                        </div>
+                        <div class="autocomplete-dropdown" id="dropdown-edit-f-prev-work"></div>
+                        <div class="dynamic-stats" id="stats-edit-f-prev-work"></div>
                     </div>
-                    <div class="autocomplete-dropdown" id="dropdown-edit-f-other-value"></div>
-                    <div class="dynamic-stats" id="stats-edit-f-other-value"></div>
+
+                    <!-- Other Chapters (Dynamic) -->
+                    <div id="dynamic-other-chapters-wrapper" style="display: flex; flex-direction: column; gap: 8px;">
+                        <!-- Rows will be injected here via JS -->
+                    </div>
                 </div>
                 
+                </div> <!-- End of scroll area -->
                 <input type="hidden" id="edit-f-desc" value="">
                 <input type="hidden" id="edit-f-tags" value="">
                 <input type="hidden" id="edit-form-person-id" value="">
                 
-                <button onclick="saveEditedPerson()" style="background: #000; color: #fff; padding: 14px; border-radius: 8px; border: none; font-size: 13px; font-weight: 600; letter-spacing: 1.5px; cursor: pointer; margin-top: 15px; margin-bottom: 20px; transition: all 0.2s; text-transform: uppercase;">UPDATE DETAILS</button>
+                <button onclick="saveEditedPerson()" style="background: #000; color: #fff; padding: 14px; border-radius: 8px; border: none; font-size: 13px; font-weight: 600; letter-spacing: 1.5px; cursor: pointer; margin-top: 15px; margin-bottom: 20px; transition: all 0.2s; text-transform: uppercase; flex-shrink: 0;">UPDATE DETAILS</button>
             </div>
             
             <!-- Connections Tab -->
@@ -1381,6 +1449,22 @@
                 overflow-y: auto;
                 display: none;
             }
+            #edit-person-form .autocomplete-dropdown {
+                background: #ffffff;
+                border: 1px solid rgba(0,0,0,0.1);
+                box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            }
+            #edit-person-form .autocomplete-item {
+                color: #111;
+                border-bottom: 1px solid rgba(0,0,0,0.05);
+            }
+            #edit-person-form .autocomplete-item:hover, #edit-person-form .autocomplete-item.active {
+                background: rgba(0,0,0,0.05);
+            }
+            #edit-person-form .autocomplete-count {
+                color: rgba(0,0,0,0.5);
+            }
+
             .autocomplete-item {
                 padding: 12px 15px;
                 font-size: 13px;
@@ -2642,6 +2726,23 @@
             const searchDropdown = document.getElementById('search-dropdown');
             let searchDebounce = null;
             searchInput.addEventListener('input', (e) => {
+                const originalVal = e.target.value;
+                const start = e.target.selectionStart;
+                const end = e.target.selectionEnd;
+                
+                let newVal = originalVal.replace(/[\u0590-\u05FF]/g, '');
+                newVal = newVal.split(' ').map(word => {
+                    if (word.length > 0) {
+                        return word.charAt(0).toUpperCase() + word.slice(1);
+                    }
+                    return word;
+                }).join(' ');
+
+                if (originalVal !== newVal) {
+                    e.target.value = newVal;
+                    try { e.target.setSelectionRange(start, end); } catch (err) {}
+                }
+                
                 const term = e.target.value.trim();
                 clearTimeout(searchDebounce);
                 if (!term) { 
@@ -2704,16 +2805,7 @@
                                 nameDiv.className = 'search-item-name';
                                 nameDiv.textContent = m.name;
                                 
-                                const contextDiv = document.createElement('div');
-                                contextDiv.className = 'search-item-context';
-                                const contextParts = [];
-                                if (m.city) contextParts.push(m.city);
-                                if (m.role) contextParts.push(m.role);
-                                if (m.tags) contextParts.push(m.tags);
-                                contextDiv.textContent = contextParts.join(' • ');
-                                
                                 item.appendChild(nameDiv);
-                                if (contextParts.length > 0) item.appendChild(contextDiv);
                                 
                                 item.addEventListener('click', () => {
                                     searchInput.value = m.name;
@@ -2748,6 +2840,10 @@
             }
 
             searchInput.addEventListener('keydown', (e) => {
+                if (/[\u0590-\u05FF]/.test(e.key)) {
+                    e.preventDefault();
+                    return;
+                }
                 const items = searchDropdown.querySelectorAll('.search-dropdown-item');
                 if (e.key === 'ArrowDown') {
                     e.preventDefault();
@@ -3570,26 +3666,48 @@
                 // 3. Render remaining sections in specific order
                 const sectionOrder = [
                     { key: 'workplace', label: 'Current Workplace' },
-                    { key: 'community', label: 'Hometown' },
+                    { key: 'origin_city', label: 'Hometown' },
+                    { key: 'university', label: 'University' },
+                    { key: 'degree', label: 'Degree' },
                     { key: 'education', label: 'Higher Education' },
-                    { key: 'military', label: 'Military Service' },
                     { key: 'highschool', label: 'High School' },
+                    { key: 'armyrole', label: 'Military Role' },
+                    { key: 'armybase', label: 'Military Base' },
+                    { key: 'military', label: 'Military Service' },
                     { key: 'prevwork', label: 'Previous Work' },
                     { key: 'youth', label: 'Mechina' },
+                    { key: 'community', label: 'Community' },
                     { key: 'other', label: 'Other' }
                 ];
 
+                const renderedKeys = new Set();
+                
                 sectionOrder.forEach(sec => {
                     if (parsedTags[sec.key]) {
                         const val = parsedTags[sec.key].join(' / ');
                         chaptersHTML += `
                             <div class="info-row-v2">
-                                <div class="info-row-label">${sec.label}</div>
+                                <div class="info-row-label">${sec.label.toUpperCase()}</div>
+                                <div class="info-row-value">${val}</div>
+                            </div>
+                        `;
+                        renderedKeys.add(sec.key);
+                    }
+                });
+
+                // Render any dynamic tags that weren't in the predefined list
+                for (const key in parsedTags) {
+                    // Ignore internal non-display tags
+                    if (!renderedKeys.has(key) && !['city', 'country', 'role', 'name', 'age'].includes(key)) {
+                        const val = parsedTags[key].join(' / ');
+                        chaptersHTML += `
+                            <div class="info-row-v2">
+                                <div class="info-row-label">${key.toUpperCase()}</div>
                                 <div class="info-row-value">${val}</div>
                             </div>
                         `;
                     }
-                });
+                }
                 
                 if (chaptersHTML) {
                     chaptersContainer.innerHTML = `<div>${chaptersHTML}</div>`;
@@ -4753,6 +4871,74 @@
             document.getElementById('form-person-id').value = '';
             goToWizardStep('4a');
         });
+        
+        window.toggleAdvancedDetails = function(btn) {
+            const container = document.getElementById('advanced-details-container');
+            if (container.style.display === 'none') {
+                container.style.display = 'flex';
+                btn.textContent = '[ - LESS DETAILS ]';
+                setTimeout(() => {
+                    const scrollArea = document.querySelector('#edit-person-form > div');
+                    if (scrollArea) scrollArea.scrollTo({ top: scrollArea.scrollHeight, behavior: 'smooth' });
+                }, 50);
+            } else {
+                container.style.display = 'none';
+                btn.textContent = '[ + MORE DETAILS ]';
+            }
+        };
+
+        window.addDynamicOtherChapterRow = function(subject = '', value = '', isNew = false) {
+            const container = document.getElementById('dynamic-other-chapters-wrapper');
+            if (!container) return;
+            const row = document.createElement('div');
+            row.className = 'edit-row-v2';
+            row.style.display = 'flex';
+            row.style.flexDirection = 'row';
+            row.style.padding = '10px 16px';
+            if (isNew) {
+                row.style.opacity = '0';
+                row.style.transition = 'opacity 0.4s ease, transform 0.4s ease';
+                row.style.transform = 'translateY(10px)';
+            }
+            
+            row.innerHTML = `
+                <div style="display: flex; flex-direction: column; flex: 0 1 140px; border-right: 1px solid rgba(0,0,0,0.1); margin-right: 12px; padding-right: 12px;">
+                    <span style="font-size: 9px; color: #aaa; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 3px; font-weight: 500;">Subject</span>
+                    <input type="text" class="edit-row-input dyn-subject" placeholder="e.g. Course" value="${subject}" style="font-size: 13px; color: #111; font-weight: 500;" oninput="checkDynamicOtherRow(this)">
+                </div>
+                <div style="display: flex; flex-direction: column; flex: 1;">
+                    <span style="font-size: 9px; color: #aaa; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 3px; font-weight: 500;">Details</span>
+                    <input type="text" class="edit-row-input dyn-value" placeholder="e.g. Graphic Design" value="${value}" style="font-size: 14px;" oninput="checkDynamicOtherRow(this)">
+                </div>
+            `;
+            container.appendChild(row);
+
+            if (isNew) {
+                // Trigger reflow and fade in
+                void row.offsetWidth;
+                row.style.opacity = '1';
+                row.style.transform = 'translateY(0)';
+                // Scroll into view within the scrolling form container
+                setTimeout(() => {
+                    row.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                }, 100);
+            }
+        };
+
+        window.checkDynamicOtherRow = function(inputEl) {
+            const container = document.getElementById('dynamic-other-chapters-wrapper');
+            const rows = container.querySelectorAll('.edit-row-v2');
+            const lastRow = rows[rows.length - 1];
+            
+            // If the user typed in the last row, add a new empty one
+            if (inputEl.closest('.edit-row-v2') === lastRow) {
+                const subj = lastRow.querySelector('.dyn-subject').value.trim();
+                const val = lastRow.querySelector('.dyn-value').value.trim();
+                if (subj !== '' || val !== '') {
+                    window.addDynamicOtherChapterRow('', '', true); // Pass true to trigger animation and scroll
+                }
+            }
+        };
 
         function getFieldValues(wrapperId, inputId) {
             const wrapper = document.getElementById(wrapperId);
@@ -5142,29 +5328,7 @@
                 
 
                 
-                // Inline Autofill Logic (Word by Word)
-                if (!isDeleting && val.length > 0) {
-                    const startsWithMatches = Object.keys(counts)
-                        .filter(k => k.toLowerCase().startsWith(searchValForMatch.toLowerCase()))
-                        .sort((a, b) => counts[b] - counts[a]);
-                        
-                    if (startsWithMatches.length > 0) {
-                        const bestMatch = startsWithMatches[0];
-                        let remainder = bestMatch.substring(searchValForMatch.length);
-                        
-                        // Truncate remainder at the next space to only autofill one word at a time
-                        const nextSpaceIndex = remainder.indexOf(' ');
-                        if (nextSpaceIndex !== -1) {
-                            remainder = remainder.substring(0, nextSpaceIndex);
-                        }
-                        
-                        if (remainder.length > 0) {
-                            input.value = val + remainder;
-                            input.setSelectionRange(val.length, input.value.length);
-                        }
-                    }
-                }
-                
+
                 // Dropdown logic
                 const rawVal = input.value.substring(0, input.selectionStart || input.value.length).trim();
                 const searchVal = rawVal.replace(/^#/, '').toLowerCase();
@@ -5786,7 +5950,7 @@
                                 goToWizardStep(window._currentConnStep || 'conn-1');
                             } else {
                                 // Simulate 'Continue' click from the conn-X step to skip it and go to next question/network
-                                const currentConn = window._currentConnStep || 'conn-1';
+                    const currentConn = window._currentConnStep || 'conn-1';
                                 document.querySelectorAll('.wizard-step.active').forEach(el => el.classList.remove('active'));
                                 const nextStepEl = document.getElementById('wizard-step-' + currentConn);
                                 if (nextStepEl) nextStepEl.classList.add('active');
@@ -5819,9 +5983,45 @@
             return visibleCount > 0;
         }
 
+        window.parseTagsIntoPerson = function(person) {
+            if (!person || !person.tags) return;
+            // Clear out previously parsed fields so they don't compound on subsequent edits
+            const fields = ['origin_city', 'workplace', 'highschool', 'university', 'degree', 'armyrole', 'armybase', 'prevwork'];
+            fields.forEach(f => person[f] = '');
+
+            const tArr = person.tags.split(',');
+            tArr.forEach(t => {
+                t = t.trim();
+                if (t.includes(':')) {
+                    const parts = t.split(':');
+                    let key = parts[0].trim().toLowerCase();
+                    const val = parts.slice(1).join(':').trim();
+                    
+                    // Migrate legacy keys
+                    if (key === 'community') key = 'origin_city';
+                    if (key === 'education') key = 'university';
+                    if (key === 'military') key = 'armyrole';
+                    
+                    if (fields.includes(key)) {
+                        if (!person[key]) person[key] = val;
+                        else if (!person[key].includes(val)) {
+                            person[key] += ', ' + val;
+                        }
+                    }
+                }
+            });
+        };
+
         window.openEditModal = function(personData) {
+            parseTagsIntoPerson(personData);
+            
             const editOverlay = document.getElementById('edit-person-overlay');
             if (editOverlay) editOverlay.classList.add('visible');
+            
+            const advContainer = document.getElementById('advanced-details-container');
+            const togContainer = document.getElementById('toggle-advanced-container');
+            if (advContainer) advContainer.style.display = 'none';
+            if (togContainer) togContainer.style.display = 'block';
             
             document.getElementById('edit-form-person-id').value = personData.id;
             document.getElementById('edit-f-name').value = personData.name || '';
@@ -5851,14 +6051,50 @@
             loadTagsEdit('tw-edit-f-highschool', 'edit-f-highschool', personData.highschool);
             loadTagsEdit('tw-edit-f-university', 'edit-f-university', personData.university);
             loadTagsEdit('tw-edit-f-degree', 'edit-f-degree', personData.degree);
-            loadTagsEdit('tw-edit-f-army-role', 'edit-f-army-role', personData.army_role);
-            loadTagsEdit('tw-edit-f-army-base', 'edit-f-army-base', personData.army_base);
-            loadTagsEdit('tw-edit-f-prev-work', 'edit-f-prev-work', personData.prev_work);
-            loadTagsEdit('tw-edit-f-other-value', 'edit-f-other-value', personData.mechina); // Maps to Mechina/Shnat Sherut
+            loadTagsEdit('tw-edit-f-army-role', 'edit-f-army-role', personData.armyrole);
+            loadTagsEdit('tw-edit-f-army-base', 'edit-f-army-base', personData.armybase);
+            loadTagsEdit('tw-edit-f-prev-work', 'edit-f-prev-work', personData.prevwork);
             
             document.getElementById('edit-f-country').value = personData.country || '';
             document.getElementById('edit-f-desc').value = personData.description || '';
-            document.getElementById('edit-f-tags').value = personData.tags || '';
+            
+            const dynContainer = document.getElementById('dynamic-other-chapters-wrapper');
+            if (dynContainer) dynContainer.innerHTML = '';
+            
+            // Extract and populate dynamic tags
+            let leftoverTags = [];
+            if (personData.tags) {
+                const managedInputs = new Set(['origin_city', 'workplace', 'highschool', 'university', 'degree', 'armyrole', 'armybase', 'prevwork']);
+                const legacyKeys = new Set(['community', 'education', 'military', 'youth', 'other']);
+                
+                const tArr = personData.tags.split(',');
+                tArr.forEach(t => {
+                    t = t.trim();
+                    if (t.includes(':')) {
+                        const parts = t.split(':');
+                        const prefix = parts[0].trim();
+                        const key = prefix.toLowerCase();
+                        let val = parts.slice(1).join(':').trim();
+                        
+                        if (managedInputs.has(key)) {
+                            // Handled by specific inputs, do not add to leftovers
+                        } else if (legacyKeys.has(key) || ['city', 'country', 'role', 'name', 'age'].includes(key)) {
+                            // Legacy or metadata keys, do not add to leftovers
+                        } else {
+                            // Truly custom dynamic chapter
+                            addDynamicOtherChapterRow(prefix, val);
+                        }
+                    } else {
+                        leftoverTags.push(t);
+                    }
+                });
+            }
+            
+            // Always add one empty row at the end for new entries
+            addDynamicOtherChapterRow();
+
+            // Set the hidden tags field with only the non-dynamic tags (standard tags) so they aren't lost
+            document.getElementById('edit-f-tags').value = leftoverTags.join(', ');
             
             document.getElementById('edit-connections-list').innerHTML = '';
             // Prepopulate connections if any exist
@@ -5912,6 +6148,7 @@
                     addConnectionEntry(people[defaultConnectionNodeId].id);
                 }
             } else if (mode === 'edit') {
+                parseTagsIntoPerson(personData);
                 const instr = document.getElementById('add-person-instructions');
                 if (instr) instr.style.display = 'none';
                 document.getElementById('modal-title').textContent = 'Edit Person';
@@ -5942,9 +6179,9 @@
                 loadTags('tw-f-highschool', 'f-highschool', personData.highschool);
                 loadTags('tw-f-university', 'f-university', personData.university);
                 loadTags('tw-f-degree', 'f-degree', personData.degree);
-                loadTags('tw-f-army-role', 'f-army-role', personData.army_role);
-                loadTags('tw-f-army-base', 'f-army-base', personData.army_base);
-                loadTags('tw-f-prev-work', 'f-prev-work', personData.prev_work);
+                loadTags('tw-f-army-role', 'f-army-role', personData.armyrole);
+                loadTags('tw-f-army-base', 'f-army-base', personData.armybase);
+                loadTags('tw-f-prev-work', 'f-prev-work', personData.prevwork);
                 loadTags('tw-f-other-value', 'f-other-value', personData.mechina); // Maps to Mechina/Shnat Sherut
                 
                 document.getElementById('f-country').value = personData.country || '';
@@ -6331,7 +6568,36 @@
         document.getElementById('btn-add-conn-entry').addEventListener('click', () => addConnectionEntry());
         document.getElementById('btn-edit-add-conn').addEventListener('click', () => addConnectionEntry());
 
-        async function saveEditedPerson() {
+        // Prevent Hebrew typing immediately on keydown
+        document.getElementById('edit-person-modal').addEventListener('keydown', (e) => {
+            if (e.target.tagName === 'INPUT' && e.target.type === 'text') {
+                if (/[\u0590-\u05FF]/.test(e.key)) {
+                    e.preventDefault();
+                    // Optional visual feedback
+                    e.target.style.transform = 'translateX(5px)';
+                    setTimeout(() => e.target.style.transform = 'translateX(-5px)', 50);
+                    setTimeout(() => e.target.style.transform = 'translateX(0)', 100);
+                }
+            }
+        });
+
+        // Add English and capitalization constraint to all text inputs in edit modal
+        document.getElementById('edit-person-modal').addEventListener('input', (e) => {
+            if (e.target.tagName === 'INPUT' && e.target.type === 'text') {
+                let val = e.target.value;
+                // Strip non-English letters, allow numbers and basic punctuation
+                val = val.replace(/[\u0590-\u05FF]/g, '');
+                // Capitalize first letter
+                if (val.length > 0) {
+                    val = val.charAt(0).toUpperCase() + val.slice(1);
+                }
+                if (e.target.value !== val) {
+                    e.target.value = val;
+                }
+            }
+        });
+
+        window.saveEditedPerson = async function() {
             const id = document.getElementById('edit-form-person-id').value;
             if (!id) return;
 
@@ -6364,6 +6630,7 @@
                 });
             };
             
+            addField(getFieldValues('tw-edit-f-origin-city', 'edit-f-origin-city'), 'origin_city', true);
             addField(getFieldValues('tw-edit-f-workplace', 'edit-f-workplace'), 'workplace', true);
             if (document.getElementById('edit-f-highschool')) addField(getFieldValues('tw-edit-f-highschool', 'edit-f-highschool'), 'highschool', true);
             if (document.getElementById('edit-f-university')) addField(getFieldValues('tw-edit-f-university', 'edit-f-university'), 'university', true);
@@ -6371,7 +6638,20 @@
             if (document.getElementById('edit-f-army-role')) addField(getFieldValues('tw-edit-f-army-role', 'edit-f-army-role'), 'armyrole', true);
             if (document.getElementById('edit-f-army-base')) addField(getFieldValues('tw-edit-f-army-base', 'edit-f-army-base'), 'armybase', true);
             if (document.getElementById('edit-f-prev-work')) addField(getFieldValues('tw-edit-f-prev-work', 'edit-f-prev-work'), 'prevwork', true);
-            addField(getFieldValues('tw-edit-f-other-value', 'edit-f-other-value'), 'other', true);
+            
+            // Dynamic Other Chapters
+            const dynContainer = document.getElementById('dynamic-other-chapters-wrapper');
+            if (dynContainer) {
+                const rows = dynContainer.querySelectorAll('.edit-row-v2');
+                rows.forEach(r => {
+                    const subj = r.querySelector('.dyn-subject').value.trim();
+                    const val = r.querySelector('.dyn-value').value.trim();
+                    if (subj && val) {
+                        generatedTags.push(`${subj}:${val}`);
+                        generatedDesc.push(`${subj}: ${val}`);
+                    }
+                });
+            }
 
             const userTags = document.getElementById('edit-f-tags') ? document.getElementById('edit-f-tags').value : '';
             const allTags = [userTags, ...generatedTags].filter(Boolean).join(', ');
@@ -6387,9 +6667,17 @@
                 country: document.getElementById('edit-f-country').value || 'Israel',
                 description: allDesc,
                 tags: allTags,
+                origin_city: getFieldValues('tw-edit-f-origin-city', 'edit-f-origin-city').join(', '),
+                workplace: getFieldValues('tw-edit-f-workplace', 'edit-f-workplace').join(', '),
+                highschool: document.getElementById('edit-f-highschool') ? getFieldValues('tw-edit-f-highschool', 'edit-f-highschool').join(', ') : '',
+                university: document.getElementById('edit-f-university') ? getFieldValues('tw-edit-f-university', 'edit-f-university').join(', ') : '',
+                degree: document.getElementById('edit-f-degree') ? getFieldValues('tw-edit-f-degree', 'edit-f-degree').join(', ') : '',
+                armyrole: document.getElementById('edit-f-army-role') ? getFieldValues('tw-edit-f-army-role', 'edit-f-army-role').join(', ') : '',
+                armybase: document.getElementById('edit-f-army-base') ? getFieldValues('tw-edit-f-army-base', 'edit-f-army-base').join(', ') : '',
+                prevwork: document.getElementById('edit-f-prev-work') ? getFieldValues('tw-edit-f-prev-work', 'edit-f-prev-work').join(', ') : ''
             };
 
-            const originCity = getFieldValues('tw-edit-f-origin-city', 'edit-f-origin-city').join(', ');
+            const originCity = data.origin_city;
             if (originCity && originCity !== data.city) {
                 data.description = `[Originally from ${originCity}]\n` + data.description;
             }
@@ -6421,15 +6709,52 @@
                 });
                 
                 if (!res.ok) throw new Error('Failed to update person');
-                const updatedPerson = await res.json();
-                people[id] = { ...people[id], ...updatedPerson };
-                if (window.updateNetworkVisualization) {
-                    window.updateNetworkVisualization();
-                } else if (window.renderNextCard) {
-                    document.getElementById('people-grid').innerHTML = '';
-                    visibleCount = 0;
-                    for(let i=0; i<20; i++) renderNextCard();
+                const result = await res.json();
+                
+                const personIdx = people.findIndex(p => p.id == id);
+                if (personIdx !== -1) {
+                    people[personIdx] = { ...people[personIdx], ...data };
+                    
+                    const nodeIdx = dbIdToIdx ? dbIdToIdx[id] : undefined;
+                    if (typeof selectedNodeId !== 'undefined' && selectedNodeId == nodeIdx) {
+                        showPersonCard(nodeIdx, people[personIdx]);
+                    }
                 }
+                
+                // Fetch fresh data and rebuild 3D scene while preserving camera state
+                if (typeof window.init === 'function') {
+                    const currentSelectedId = typeof selectedNodeId !== 'undefined' ? selectedNodeId : null;
+                    const camPos = typeof camera !== 'undefined' ? camera.position.clone() : null;
+                    const camTarget = typeof controls !== 'undefined' ? controls.target.clone() : null;
+                    
+                    await window.init();
+                    
+                    // Restore state immediately after init
+                    if (currentSelectedId !== null && typeof selectedNodeId !== 'undefined') {
+                        selectedNodeId = currentSelectedId;
+                    }
+                    if (camPos && typeof camera !== 'undefined') {
+                        camera.position.copy(camPos);
+                    }
+                    if (camTarget && typeof controls !== 'undefined') {
+                        controls.target.copy(camTarget);
+                    }
+                    if (typeof isCameraAnimating !== 'undefined') {
+                        isCameraAnimating = false; // Stop camera from flying back to center
+                    }
+                }
+                
+                // Show cheeky toast
+                const notif = document.createElement('div');
+                notif.className = 'network-toast';
+                notif.innerHTML = `Looking fresh!<br><span style="font-size:15px; opacity:0.6; display:block; margin-top:12px; letter-spacing: 0.5px;">Details successfully updated.</span>`;
+                document.body.appendChild(notif);
+                requestAnimationFrame(() => notif.style.opacity = '1');
+                setTimeout(() => {
+                    notif.style.opacity = '0';
+                    setTimeout(() => notif.remove(), 800);
+                }, 2500);
+
                 document.getElementById('edit-person-overlay').classList.remove('visible');
             } catch (error) {
                 console.error('Error updating person:', error);
@@ -6471,12 +6796,13 @@
                 });
             };
             
+            addField(getFieldValues('tw-f-origin-city', 'f-origin-city'), 'origin_city', true);
             addField(getFieldValues('tw-f-workplace', 'f-workplace'), 'workplace', true);
-            if (document.getElementById('f-highschool')) addField([document.getElementById('f-highschool').value], 'highschool', true);
-            if (document.getElementById('f-university')) addField([document.getElementById('f-university').value], 'university', true);
-            if (document.getElementById('f-degree')) addField([document.getElementById('f-degree').value], 'degree', true);
-            if (document.getElementById('f-army-role')) addField([document.getElementById('f-army-role').value], 'armyrole', true);
-            if (document.getElementById('f-army-base')) addField([document.getElementById('f-army-base').value], 'armybase', true);
+            if (document.getElementById('f-highschool')) addField(getFieldValues('tw-f-highschool', 'f-highschool'), 'highschool', true);
+            if (document.getElementById('f-university')) addField(getFieldValues('tw-f-university', 'f-university'), 'university', true);
+            if (document.getElementById('f-degree')) addField(getFieldValues('tw-f-degree', 'f-degree'), 'degree', true);
+            if (document.getElementById('f-army-role')) addField(getFieldValues('tw-f-army-role', 'f-army-role'), 'armyrole', true);
+            if (document.getElementById('f-army-base')) addField(getFieldValues('tw-f-army-base', 'f-army-base'), 'armybase', true);
             addField(getFieldValues('tw-f-other-value', 'f-other-value'), 'other', true);
 
             const userTags = document.getElementById('f-tags') ? document.getElementById('f-tags').value : '';
@@ -6493,9 +6819,16 @@
                 country: document.getElementById('f-country').value || 'Israel',
                 description: allDesc,
                 tags: allTags,
+                origin_city: getFieldValues('tw-f-origin-city', 'f-origin-city').join(', '),
+                workplace: getFieldValues('tw-f-workplace', 'f-workplace').join(', '),
+                highschool: document.getElementById('f-highschool') ? getFieldValues('tw-f-highschool', 'f-highschool').join(', ') : '',
+                university: document.getElementById('f-university') ? getFieldValues('tw-f-university', 'f-university').join(', ') : '',
+                degree: document.getElementById('f-degree') ? getFieldValues('tw-f-degree', 'f-degree').join(', ') : '',
+                armyrole: document.getElementById('f-army-role') ? getFieldValues('tw-f-army-role', 'f-army-role').join(', ') : '',
+                armybase: document.getElementById('f-army-base') ? getFieldValues('tw-f-army-base', 'f-army-base').join(', ') : ''
             };
 
-            const originCity = getFieldValues('tw-f-origin-city', 'f-origin-city').join(', ');
+            const originCity = data.origin_city;
             if (originCity && originCity !== data.city) {
                 data.description = `[Originally from ${originCity}]\n` + data.description;
             }
