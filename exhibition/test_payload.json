@@ -1,0 +1,24 @@
+{
+  "name": "Test Person 2",
+  "age": "",
+  "role": "test",
+  "city": "test",
+  "country": "Israel",
+  "description": "test",
+  "tags": "test",
+  "origin_city": "test",
+  "workplace": "test",
+  "highschool": "test",
+  "university": "test",
+  "degree": "test",
+  "armyrole": "test",
+  "armybase": "test",
+  "added_by": "test",
+  "connections": [
+    {
+      "id": 1,
+      "type": "friend",
+      "strength": 3
+    }
+  ]
+}

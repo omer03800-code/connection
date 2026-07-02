@@ -9,6 +9,8 @@
     "import": "node --experimental-sqlite scripts/import-csv.js"
   },
   "dependencies": {
-    "express": "^4.18.2"
+    "express": "^4.18.2",
+    "jsdom": "^29.1.1",
+    "puppeteer": "^25.3.0"
   }
 }
