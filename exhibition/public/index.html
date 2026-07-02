@@ -4638,20 +4638,21 @@
                 
                 const checkInputs = () => {
                     const fields = inputFieldsMap[currentStr];
-                    if (!fields) {
-                        btnNext.style.opacity = '1';
-                        btnNext.style.pointerEvents = 'auto';
-                        return;
-                    }
-                    
                     let hasValue = false;
-                    fields.forEach(fid => {
-                        const el = document.getElementById(fid);
-                        if (el && el.value.trim().length > 0) hasValue = true;
-                        
-                        const tw = document.getElementById('tw-' + fid);
-                        if (tw && tw.querySelectorAll('.tag-item').length > 0) hasValue = true;
-                    });
+                    
+                    if (currentStr === '8') {
+                        hasValue = true;
+                    } else if (!fields) {
+                        hasValue = true;
+                    } else {
+                        fields.forEach(fid => {
+                            const el = document.getElementById(fid);
+                            if (el && el.value.trim().length > 0) hasValue = true;
+                            
+                            const tw = document.getElementById('tw-' + fid);
+                            if (tw && tw.querySelectorAll('.tag-item').length > 0) hasValue = true;
+                        });
+                    }
                     
                     if (hasValue) {
                         btnNext.style.opacity = '1';
