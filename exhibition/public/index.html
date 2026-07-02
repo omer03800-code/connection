@@ -58,7 +58,7 @@
             line-height: 30px;
             transition: all 0.2s ease;
             outline: none;
-            font-weight: 300;
+            font-weight: 400;
             text-decoration: none;
             box-sizing: border-box;
         }
@@ -67,16 +67,6 @@
             background: #000;
             color: #fff !important;
             border-color: #000;
-        }
-        body.light-mode .btn-feed-more {
-            color: #F5F5F5 !important;
-            background: transparent !important;
-            border-color: transparent !important;
-        }
-        body.light-mode .btn-feed-more:hover {
-            color: #000 !important;
-            background: #fff !important;
-            border-color: #fff !important;
         }
         
         #top-bar {
@@ -1745,6 +1735,24 @@
             border-radius: 12px; pointer-events: auto; text-align: center; 
             box-shadow: 0 20px 60px rgba(0,0,0,0.08); z-index: 100; 
             color: #0a0a0a !important;
+        }
+        .btn-close-feed-more {
+            position: absolute;
+            top: 10px;
+            right: 12px;
+            background: transparent;
+            border: none;
+            font-size: 18px;
+            font-weight: 300;
+            color: #111111;
+            cursor: pointer;
+            opacity: 0.5;
+            transition: opacity 0.2s;
+            padding: 0;
+            line-height: 1;
+        }
+        .btn-close-feed-more:hover {
+            opacity: 1;
         }
         body.light-mode #feed-more-popup-v2 {
             filter: invert(1) hue-rotate(180deg) !important;
@@ -3929,13 +3937,27 @@
                     popupCopy = "Is that all you got?<br>Feed the beast more!";
                 }
                 
-                const feedMorePopup = document.createElement('div');
-                feedMorePopup.id = 'feed-more-popup-v2';
-                feedMorePopup.innerHTML = `
-                    <div style="font-size: 14px; font-weight: 300; margin-bottom: 15px; opacity: 0.9; text-shadow: none;">${popupCopy}</div>
-                    <button class="btn-feed-more" onclick="window.resumeFeedMore()">[ FEED ME MORE ]</button>
-                `;
-                labelObjects[index].element.appendChild(feedMorePopup);
+                // Wait for the success Swal popup (3500ms) to disappear before showing this
+                setTimeout(() => {
+                    // Make sure the node is still selected
+                    if (selectedNodeId !== index) return;
+
+                    const feedMorePopup = document.createElement('div');
+                    feedMorePopup.id = 'feed-more-popup-v2';
+                    feedMorePopup.innerHTML = `
+                        <button class="btn-close-feed-more" onclick="window.closeFeedMore()">&times;</button>
+                        <div style="font-size: 14px; font-weight: 300; margin-bottom: 15px; opacity: 0.9; text-shadow: none;">${popupCopy}</div>
+                        <button class="btn-feed-more" onclick="window.resumeFeedMore()">[ FEED ME MORE ]</button>
+                    `;
+                    labelObjects[index].element.appendChild(feedMorePopup);
+
+                    // Auto-close after 4 seconds
+                    window._feedMoreTimeout = setTimeout(() => {
+                        if (feedMorePopup && feedMorePopup.parentNode) {
+                            feedMorePopup.remove();
+                        }
+                    }, 4000);
+                }, 3500);
             }
             
             document.getElementById('info-panel-container').classList.add('visible');
@@ -3944,6 +3966,7 @@
 
         // Remove navigation buttons logic
         document.getElementById('btn-close-card').onclick = () => {
+            if (window._feedMoreTimeout) clearTimeout(window._feedMoreTimeout);
             document.getElementById('info-panel-container').classList.remove('visible');
             window._isPartialAdd = false;
             const existingPopup = document.getElementById('feed-more-popup-v2');
@@ -3951,7 +3974,14 @@
             selectedNodeId = null;
         };
 
+        window.closeFeedMore = () => {
+            if (window._feedMoreTimeout) clearTimeout(window._feedMoreTimeout);
+            const popup = document.getElementById('feed-more-popup-v2');
+            if (popup) popup.remove();
+        };
+
         window.resumeFeedMore = () => {
+            if (window._feedMoreTimeout) clearTimeout(window._feedMoreTimeout);
             const popup = document.getElementById('feed-more-popup-v2');
             if (popup) popup.remove();
             document.getElementById('info-panel-container').classList.remove('visible');
