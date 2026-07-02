@@ -4948,13 +4948,13 @@
             }
             
             row.innerHTML = `
-                <div style="display: flex; flex-direction: column; flex: 0 1 180px; border-right: 1px solid rgba(0,0,0,0.1); margin-right: 15px; padding-right: 15px;">
-                    <span style="font-size: 10px; color: #111; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 5px;">Subject</span>
-                    <input type="text" class="editorial-input dyn-subject" placeholder="e.g. Course" value="${subject}" oninput="checkWizardDynamicOtherRow(this)" style="color: #111;">
+                <div style="display: flex; flex-direction: column; flex: 0 1 180px; border-right: 1px solid rgba(255,255,255,0.2); margin-right: 15px; padding-right: 15px;">
+                    <span style="font-size: 10px; color: rgba(255,255,255,0.6); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 5px;">Subject</span>
+                    <input type="text" class="editorial-input dyn-subject" placeholder="e.g. Course" value="${subject}" oninput="checkWizardDynamicOtherRow(this)">
                 </div>
                 <div style="display: flex; flex-direction: column; flex: 1;">
-                    <span style="font-size: 10px; color: #111; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 5px;">Details</span>
-                    <input type="text" class="editorial-input dyn-value" placeholder="e.g. Graphic Design" value="${value}" oninput="checkWizardDynamicOtherRow(this)" style="color: #111;">
+                    <span style="font-size: 10px; color: rgba(255,255,255,0.6); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 5px;">Details</span>
+                    <input type="text" class="editorial-input dyn-value" placeholder="e.g. Graphic Design" value="${value}" oninput="checkWizardDynamicOtherRow(this)">
                 </div>
             `;
             container.appendChild(row);
