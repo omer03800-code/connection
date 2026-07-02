@@ -6165,6 +6165,16 @@
             overlay.classList.add('visible');
             document.getElementById('form-mode').value = mode;
             document.getElementById('connections-list').innerHTML = '';
+            
+            // Initialize dynamic chapters if empty
+            const wizardDynContainer = document.getElementById('wizard-dynamic-other-chapters');
+            if (wizardDynContainer) {
+                if (!isResumingWizard || wizardDynContainer.children.length === 0) {
+                    wizardDynContainer.innerHTML = '';
+                    window.addWizardDynamicOtherChapterRow();
+                }
+            }
+            
             document.getElementById('wizard-form-area').classList.remove('edit-mode'); // Always Add mode now
             
             if (mode === 'add') {
