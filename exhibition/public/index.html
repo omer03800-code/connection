@@ -3945,18 +3945,17 @@
                     const feedMorePopup = document.createElement('div');
                     feedMorePopup.id = 'feed-more-popup-v2';
                     feedMorePopup.innerHTML = `
-                        <button class="btn-close-feed-more" onclick="window.closeFeedMore()">&times;</button>
                         <div style="font-size: 14px; font-weight: 300; margin-bottom: 15px; opacity: 0.9; text-shadow: none;">${popupCopy}</div>
                         <button class="btn-feed-more" onclick="window.resumeFeedMore()">[ FEED ME MORE ]</button>
                     `;
                     labelObjects[index].element.appendChild(feedMorePopup);
 
-                    // Auto-close after 4 seconds
+                    // Auto-close after 7 seconds
                     window._feedMoreTimeout = setTimeout(() => {
                         if (feedMorePopup && feedMorePopup.parentNode) {
                             feedMorePopup.remove();
                         }
-                    }, 4000);
+                    }, 7000);
                 }, 3500);
             }
             
@@ -5231,7 +5230,10 @@
         }
 
         function processStep9() {
-            goToWizardStep(10);
+            // Hide the modal immediately instead of going to step 10
+            document.getElementById('modal-overlay').classList.remove('visible');
+            document.getElementById('add-modal').classList.remove('visible');
+
             const playfulMsgs = [
                 "Looking for existing traces...",
                 "The beast needs more data...",
@@ -5245,16 +5247,26 @@
                 "Unveiling hidden paths..."
             ];
             
-            const msgEl = document.getElementById('loading-playful-msg');
-            if (msgEl) {
-                msgEl.innerText = playfulMsgs[Math.floor(Math.random() * playfulMsgs.length)];
-            }
+            const randomMsg = playfulMsgs[Math.floor(Math.random() * playfulMsgs.length)];
+
+            Swal.fire({
+                html: '<div class="swal2-spinner"></div><div class="swal2-title">Adding Person...</div><div class="swal2-html-container">' + randomMsg + '</div>',
+                showConfirmButton: false,
+                allowOutsideClick: false,
+                background: 'rgba(255, 255, 255, 0.95)',
+                color: '#111111',
+                backdrop: 'transparent',
+                customClass: {
+                    popup: 'glass-popup-white'
+                }
+            });
+            
             setTimeout(() => {
                 const addForm = document.getElementById('add-form');
                 if (addForm) {
                     addForm.dispatchEvent(new Event('submit', { cancelable: true, bubbles: true }));
                 }
-            }, 1500);
+            }, 100);
         }
 
         // --- AUTOCOMPLETE LOGIC ---
@@ -7043,6 +7055,9 @@
                         alert('Error: This person is already in the network! Please find them and add a connection directly.');
                         submitBtn.textContent = 'SAVE TO NETWORK';
                         submitBtn.disabled = false;
+                        document.getElementById('modal-overlay').classList.add('visible');
+                        document.getElementById('add-modal').classList.add('visible');
+                        if (typeof Swal !== 'undefined') Swal.close();
                         return;
                     }
                     if (!res.ok) throw new Error('Failed to add person');
@@ -7098,7 +7113,7 @@
                     }
 
                     Swal.fire({
-                        html: '<div class="swal2-spinner"></div><div class="swal2-title">' + titleStr + '</div><div class="swal2-html-container">' + textStr + '</div>',
+                        html: '<div class="swal2-title">' + titleStr + '</div><div class="swal2-html-container">' + textStr + '</div>',
                         showConfirmButton: false,
                         timer: 3500,
                         background: 'rgba(255, 255, 255, 0.95)',
@@ -7150,6 +7165,7 @@
                 
             } catch (err) {
                 console.error(err);
+                if (typeof Swal !== 'undefined') Swal.close();
                 alert('Error saving data');
             } finally {
                 submitBtn.textContent = 'SAVE TO NETWORK';
