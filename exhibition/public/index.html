@@ -975,7 +975,7 @@
         .swal-report-btn {
             display: inline-block;
             white-space: nowrap;
-            padding: 0 5px;
+            padding: 0 10px;
             margin: 0;
             background: transparent;
             color: #000;
@@ -7240,17 +7240,17 @@
                                     <svg fill="black" height="24" viewBox="0 0 24 24" width="24" xmlns="http://www.w3.org/2000/svg"><path d="M7 10l5 5 5-5z"/></svg>
                                 </div>
                                 <div id="report-reason-options" class="autocomplete-dropdown" style="display: none; position: relative; margin-top: 5px; background: #ffffff; border: 1px solid rgba(0,0,0,0.1); box-shadow: 0 4px 15px rgba(0,0,0,0.1); border-radius: 8px; z-index: 100; max-height: 200px; overflow-y: auto; text-align: left; width: 100%;">
-                                    <div class="report-option autocomplete-item" style="padding: 12px; color: #111; border-bottom: 1px solid rgba(0,0,0,0.05); cursor: pointer;" data-value="Incorrect personal information">Incorrect personal information</div>
-                                    <div class="report-option autocomplete-item" style="padding: 12px; color: #111; border-bottom: 1px solid rgba(0,0,0,0.05); cursor: pointer;" data-value="Incorrect relationship">Incorrect relationship</div>
-                                    <div class="report-option autocomplete-item" style="padding: 12px; color: #111; border-bottom: 1px solid rgba(0,0,0,0.05); cursor: pointer;" data-value="Duplicate person">Duplicate person</div>
-                                    <div class="report-option autocomplete-item" style="padding: 12px; color: #111; border-bottom: 1px solid rgba(0,0,0,0.05); cursor: pointer;" data-value="Removal request">Removal request</div>
-                                    <div class="report-option autocomplete-item" style="padding: 12px; color: #111; cursor: pointer;" data-value="Other">Other</div>
+                                    <div class="report-option autocomplete-item" style="padding: 12px; color: #111; font-size: 16px; border-bottom: 1px solid rgba(0,0,0,0.05); cursor: pointer;" data-value="Incorrect personal information">Incorrect personal information</div>
+                                    <div class="report-option autocomplete-item" style="padding: 12px; color: #111; font-size: 16px; border-bottom: 1px solid rgba(0,0,0,0.05); cursor: pointer;" data-value="Incorrect relationship">Incorrect relationship</div>
+                                    <div class="report-option autocomplete-item" style="padding: 12px; color: #111; font-size: 16px; border-bottom: 1px solid rgba(0,0,0,0.05); cursor: pointer;" data-value="Duplicate person">Duplicate person</div>
+                                    <div class="report-option autocomplete-item" style="padding: 12px; color: #111; font-size: 16px; border-bottom: 1px solid rgba(0,0,0,0.05); cursor: pointer;" data-value="Removal request">Removal request</div>
+                                    <div class="report-option autocomplete-item" style="padding: 12px; color: #111; font-size: 16px; cursor: pointer;" data-value="Other">Other</div>
                                 </div>
                             </div>
 
-                            <div id="report-explanation-container" style="display: none;">
+                            <div id="report-explanation-container" style="display: block;">
                                 <label style="font-size: 13px; font-weight: 500; text-transform: uppercase; letter-spacing: 1px;">Explanation</label>
-                                <textarea id="report-explanation" oninput="this.value = this.value.replace(/[\\u0590-\\u05FF]/g, '')" style="width: 100%; margin: 8px 0 0; padding: 8px 0; font-size: 16px; border: none; border-bottom: 1px solid rgba(0,0,0,0.2); border-radius: 0; background: transparent; outline: none; min-height: 80px; resize: vertical; color: #000; font-family: inherit;" placeholder="Please provide a short explanation..."></textarea>
+                                <textarea id="report-explanation" oninput="this.value = this.value.replace(/[\\u0590-\\u05FF]/g, '')" style="width: 100%; margin: 8px 0 0; padding: 8px 0; font-size: 16px; font-weight: 300; border: none; border-bottom: 1px solid rgba(0,0,0,0.2); border-radius: 0; background: transparent; outline: none; min-height: 80px; resize: vertical; color: #000; font-family: inherit;" placeholder="Please provide a short explanation..."></textarea>
                             </div>
                         </div>
                     `,
@@ -7287,12 +7287,6 @@
                                 text.textContent = window._selectedReportReason;
                                 text.style.color = '#000';
                                 options.style.display = 'none';
-                                
-                                if (['Incorrect personal information', 'Incorrect relationship', 'Other'].includes(window._selectedReportReason)) {
-                                    explanationContainer.style.display = 'block';
-                                } else {
-                                    explanationContainer.style.display = 'none';
-                                }
                             });
                         });
                     },
