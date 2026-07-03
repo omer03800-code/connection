@@ -962,12 +962,18 @@
             flex-direction: row !important;
             flex-wrap: nowrap !important;
             align-items: center !important;
-            justify-content: center !important;
-            gap: 10px !important;
+            justify-content: space-between !important;
+            width: 100% !important;
+            box-sizing: border-box !important;
+        }
+        
+        .glass-popup-white .swal2-html-container {
+            overflow: visible !important;
         }
         
         .swal-report-btn {
             display: inline-block;
+            white-space: nowrap;
             padding: 0 5px;
             margin: 0;
             background: transparent;
@@ -7232,7 +7238,7 @@
                                     <span id="report-reason-text">Select a reason...</span>
                                     <svg fill="black" height="24" viewBox="0 0 24 24" width="24" xmlns="http://www.w3.org/2000/svg"><path d="M7 10l5 5 5-5z"/></svg>
                                 </div>
-                                <div id="report-reason-options" class="autocomplete-dropdown" style="display: none; background: #ffffff; border: 1px solid rgba(0,0,0,0.1); box-shadow: 0 4px 15px rgba(0,0,0,0.1); border-radius: 8px; z-index: 100; max-height: 200px; overflow-y: auto; text-align: left; width: 100%;">
+                                <div id="report-reason-options" class="autocomplete-dropdown" style="display: none; position: absolute; top: 100%; left: 0; background: #ffffff; border: 1px solid rgba(0,0,0,0.1); box-shadow: 0 4px 15px rgba(0,0,0,0.1); border-radius: 8px; z-index: 100; max-height: 200px; overflow-y: auto; text-align: left; width: 100%;">
                                     <div class="report-option autocomplete-item" style="padding: 12px; color: #111; border-bottom: 1px solid rgba(0,0,0,0.05); cursor: pointer;" data-value="Incorrect personal information">Incorrect personal information</div>
                                     <div class="report-option autocomplete-item" style="padding: 12px; color: #111; border-bottom: 1px solid rgba(0,0,0,0.05); cursor: pointer;" data-value="Incorrect relationship">Incorrect relationship</div>
                                     <div class="report-option autocomplete-item" style="padding: 12px; color: #111; border-bottom: 1px solid rgba(0,0,0,0.05); cursor: pointer;" data-value="Duplicate person">Duplicate person</div>
