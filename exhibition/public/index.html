@@ -958,21 +958,26 @@
         
         .swal-report-btn {
             display: inline-block;
-            padding: 10px 15px;
+            padding: 0 10px;
             margin: 0 5px;
             background: transparent;
             color: #000;
-            border: none;
+            border: 1px solid rgba(0,0,0,0.1);
+            border-radius: 10px;
             font-size: 12px;
             font-weight: 300;
             letter-spacing: 1.5px;
             text-transform: uppercase;
             cursor: pointer;
-            transition: background 0.2s, color 0.2s;
+            transition: all 0.2s ease;
+            height: 32px;
+            line-height: 30px;
+            box-sizing: border-box;
         }
         .swal-report-btn:hover {
             background: #000;
             color: #fff;
+            border-color: #000;
         }
     </style>
     <!-- Dedicated Edit Person Modal -->
@@ -7199,12 +7204,12 @@
                 const person = people[selectedNodeId];
                 
                 const { value: formValues } = await Swal.fire({
-                    title: '<span style="font-weight:300; font-size:28px;">Report Issue</span>',
+                    title: '<div style="margin-top:-20px;"><span style="font-weight:300; font-size:28px;">Report Issue</span></div>',
                     html: `
-                        <p style="font-size:14px; color:rgba(0,0,0,0.6); margin-bottom:20px;">Report information about <strong>${person.name}</strong> that needs review.</p>
+                        <p style="font-size:14px; color:rgba(0,0,0,0.6); margin-bottom:15px; margin-top:-5px;">Report information about <strong>${person.name}</strong> that needs review.</p>
                         <div style="text-align: left;">
                             <label style="font-size: 13px; font-weight: 500; text-transform: uppercase; letter-spacing: 1px;">Reason</label>
-                            <select id="report-reason" style="width: 100%; margin: 8px 0 20px; padding: 8px 0; font-size: 16px; border: none; border-bottom: 1px solid rgba(0,0,0,0.2); border-radius: 0; background: transparent; outline: none; cursor: pointer;">
+                            <select id="report-reason" style="width: 100%; margin: 8px 0 20px; padding: 8px 0; font-size: 16px; border: none; border-bottom: 1px solid rgba(0,0,0,0.2); border-radius: 0; background: transparent; outline: none; cursor: pointer; color: #000; font-family: inherit;">
                                 <option value="" disabled selected>Select a reason...</option>
                                 <option value="Incorrect personal information">Incorrect personal information</option>
                                 <option value="Incorrect relationship">Incorrect relationship</option>
@@ -7214,7 +7219,7 @@
                             </select>
                             <div id="report-explanation-container" style="display: none;">
                                 <label style="font-size: 13px; font-weight: 500; text-transform: uppercase; letter-spacing: 1px;">Explanation</label>
-                                <textarea id="report-explanation" style="width: 100%; margin: 8px 0 0; padding: 8px 0; font-size: 14px; border: none; border-bottom: 1px solid rgba(0,0,0,0.2); border-radius: 0; background: transparent; outline: none; min-height: 80px; resize: vertical;" placeholder="Please provide a short explanation..."></textarea>
+                                <textarea id="report-explanation" oninput="this.value = this.value.replace(/[\\u0590-\\u05FF]/g, '')" style="width: 100%; margin: 8px 0 0; padding: 8px 0; font-size: 14px; border: none; border-bottom: 1px solid rgba(0,0,0,0.2); border-radius: 0; background: transparent; outline: none; min-height: 80px; resize: vertical; color: #000; font-family: inherit;" placeholder="Please provide a short explanation..."></textarea>
                             </div>
                         </div>
                     `,
