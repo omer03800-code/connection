@@ -2244,7 +2244,6 @@
 
         function countCompletedFields(person) {
             let count = 1; // Name is always present
-            if (person.connections && person.connections.length > 0) count++;
             if (person.city) count++;
             if (person.age) count++;
             if (person.role) count++;
@@ -4059,10 +4058,13 @@
                     const completedCount = countCompletedFields(person);
                     if (completedCount < 4) {
                         popupElement.style.display = 'block';
-                        // Force reflow
-                        void popupElement.offsetWidth;
-                        popupElement.style.opacity = '1';
-                        popupElement.style.transform = 'translateY(0)';
+                        // Remove synchronous layout to fix lag
+                        
+                        // Wait a tiny bit for display block to apply before animating
+                        requestAnimationFrame(() => {
+                            popupElement.style.opacity = '1';
+                            popupElement.style.transform = 'translateY(0)';
+                        });
                         
                         popupElement.onclick = () => {
                             popupElement.style.opacity = '0';
