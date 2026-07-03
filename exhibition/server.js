@@ -20,6 +20,7 @@ app.use(express.static(path.join(__dirname, 'public')));
 app.use('/api/people',      require('./routes/people'));
 app.use('/api/connections', require('./routes/connections'));
 app.use('/api/suggest',     require('./routes/suggest'));
+app.use('/api/report',      require('./routes/report'));
 
 // GET /api/graph — full graph (all people + all connections) — convenience endpoint
 app.get('/api/graph', (req, res) => {

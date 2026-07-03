@@ -858,7 +858,7 @@
                         <button id="btn-info-menu" style="background:transparent; border:none; color:#000; font-size:22px; cursor:pointer; padding:0; line-height:0.8; opacity:0.6; letter-spacing:2px; outline:none;">...</button>
                         <div id="info-menu-dropdown" style="display: none; position: absolute; right: 0; top: 20px; background: #fff; border: 1px solid rgba(0,0,0,0.1); padding: 4px 0; border-radius: 10px; z-index: 100; min-width: 120px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); overflow: hidden;">
                             <button id="btn-edit-node" class="info-action-btn" style="display: block; width:100%; height: auto; line-height: normal; margin: 0; padding: 10px 0; text-align: center; white-space: nowrap; color: #000; border: none; background: transparent; transition: background 0.2s;">[ EDIT ]</button>
-                            <button id="btn-delete-node" class="info-action-btn" style="display: block; width:100%; height: auto; line-height: normal; margin: 0; padding: 10px 0; text-align: center; white-space: nowrap; color: #ff4444; border: none; background: transparent; transition: background 0.2s;">[ DELETE ]</button>
+                            <button id="btn-report-node" class="info-action-btn" style="display: block; width:100%; height: auto; line-height: normal; margin: 0; padding: 10px 0; text-align: center; white-space: nowrap; color: #000; border: none; background: transparent; transition: background 0.2s;">[ REPORT ]</button>
                         </div>
                     </div>
                     <button id="btn-close-card" style="background:transparent; border:none; color:#000; font-size:24px; cursor:pointer; padding:0; line-height:0.8; font-weight:100; opacity:0.6; outline:none;">&times;</button>
@@ -954,7 +954,7 @@
 
     <style>
         #btn-edit-node:hover { background: #000 !important; color: #fff !important; }
-        #btn-delete-node:hover { background: #ff4444 !important; color: #fff !important; }
+        #btn-report-node:hover { background: #000 !important; color: #fff !important; }
     </style>
     <!-- Dedicated Edit Person Modal -->
     <div id="edit-person-overlay" class="modal-overlay" style="z-index: 2000;">
@@ -7175,20 +7175,99 @@
             }
         });
 
-        document.getElementById('btn-delete-node').addEventListener('click', async () => {
+        document.getElementById('btn-report-node').addEventListener('click', async () => {
             if (selectedNodeId !== null && people[selectedNodeId]) {
                 const person = people[selectedNodeId];
-                document.getElementById('loading').style.display = 'block';
-                try {
-                    if (confirm(`Are you sure you want to delete ${person.name}?`)) {
-                        await fetch(`/api/people/${person.id}`, { method: 'DELETE' });
-                        location.reload();
-                    } else {
-                        document.getElementById('loading').style.display = 'none';
+                
+                const { value: formValues } = await Swal.fire({
+                    title: '<span style="font-weight:300; font-size:28px;">Report Issue</span>',
+                    html: `
+                        <p style="font-size:14px; color:rgba(0,0,0,0.6); margin-bottom:20px;">Report information about <strong>${person.name}</strong> that needs review.</p>
+                        <div style="text-align: left;">
+                            <label style="font-size: 13px; font-weight: 500; text-transform: uppercase; letter-spacing: 1px;">Reason</label>
+                            <select id="report-reason" style="width: 100%; margin: 8px 0 20px; padding: 12px; font-size: 16px; border: 1px solid rgba(0,0,0,0.1); border-radius: 8px; background: rgba(255,255,255,0.5); outline: none;">
+                                <option value="" disabled selected>Select a reason...</option>
+                                <option value="Incorrect personal information">Incorrect personal information</option>
+                                <option value="Incorrect relationship">Incorrect relationship</option>
+                                <option value="Duplicate person">Duplicate person</option>
+                                <option value="Removal request">Removal request</option>
+                                <option value="Other">Other</option>
+                            </select>
+                            <div id="report-explanation-container" style="display: none;">
+                                <label style="font-size: 13px; font-weight: 500; text-transform: uppercase; letter-spacing: 1px;">Explanation</label>
+                                <textarea id="report-explanation" style="width: 100%; margin: 8px 0 0; padding: 12px; font-size: 14px; border: 1px solid rgba(0,0,0,0.1); border-radius: 8px; background: rgba(255,255,255,0.5); outline: none; min-height: 80px;" placeholder="Please provide a short explanation..."></textarea>
+                            </div>
+                        </div>
+                    `,
+                    focusConfirm: false,
+                    showCancelButton: true,
+                    confirmButtonText: 'SUBMIT REPORT',
+                    cancelButtonText: 'CANCEL',
+                    customClass: { 
+                        popup: 'glass-popup', 
+                        confirmButton: 'swal2-confirm glass-btn black-btn', 
+                        cancelButton: 'swal2-cancel glass-btn white-btn' 
+                    },
+                    didOpen: () => {
+                        const select = document.getElementById('report-reason');
+                        const container = document.getElementById('report-explanation-container');
+                        select.addEventListener('change', () => {
+                            if (['Incorrect personal information', 'Incorrect relationship', 'Other'].includes(select.value)) {
+                                container.style.display = 'block';
+                            } else {
+                                container.style.display = 'none';
+                            }
+                        });
+                    },
+                    preConfirm: () => {
+                        const reason = document.getElementById('report-reason').value;
+                        const explanation = document.getElementById('report-explanation').value;
+                        if (!reason) {
+                            Swal.showValidationMessage('Please select a reason');
+                            return false;
+                        }
+                        if (['Incorrect personal information', 'Incorrect relationship', 'Other'].includes(reason) && !explanation.trim()) {
+                            Swal.showValidationMessage('Please provide a short explanation');
+                            return false;
+                        }
+                        return { reason, explanation };
                     }
-                } catch (e) {
-                    console.error('Delete error', e);
-                    document.getElementById('loading').style.display = 'none';
+                });
+
+                if (formValues) {
+                    try {
+                        const res = await fetch('/api/report', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ 
+                                personId: person.id, 
+                                personName: person.name, 
+                                reason: formValues.reason, 
+                                explanation: formValues.explanation 
+                            })
+                        });
+                        
+                        if (res.ok) {
+                            Swal.fire({
+                                title: '<span style="font-weight:300; font-size:28px;">Report Received</span>',
+                                html: '<p style="font-size:16px; font-weight:300; opacity:0.8;">Thank you. The information has been submitted for review.</p>',
+                                showConfirmButton: false,
+                                timer: 4000,
+                                customClass: { popup: 'glass-popup' }
+                            });
+                        } else {
+                            throw new Error('Server error');
+                        }
+                    } catch (e) {
+                        console.error('Report error', e);
+                        Swal.fire({
+                            title: '<span style="font-weight:300; font-size:28px;">Error</span>',
+                            html: '<p style="font-size:16px; font-weight:300; opacity:0.8;">Could not submit report. Please try again later.</p>',
+                            showConfirmButton: true,
+                            confirmButtonText: 'OK',
+                            customClass: { popup: 'glass-popup', confirmButton: 'swal2-confirm glass-btn black-btn' }
+                        });
+                    }
                 }
             }
         });
