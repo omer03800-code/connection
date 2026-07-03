@@ -1,0 +1,632 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Six Degrees of Separation - Living Organism</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    html, body {
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      background-color: #000;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    }
+
+    #visualization {
+      width: 100%;
+      height: 100%;
+      display: block;
+    }
+
+    .hud {
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      pointer-events: none;
+    }
+
+    .info {
+      position: absolute;
+      top: 20px;
+      left: 20px;
+      color: #fff;
+      font-size: 12px;
+      opacity: 0.7;
+      pointer-events: auto;
+    }
+
+    .info h1 {
+      font-size: 24px;
+      margin-bottom: 10px;
+    }
+
+    .stats {
+      position: absolute;
+      top: 20px;
+      right: 20px;
+      color: #0f0;
+      font-family: monospace;
+      font-size: 12px;
+      opacity: 0.7;
+    }
+
+    .loading {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      color: #fff;
+      font-size: 18px;
+      opacity: 0.8;
+    }
+
+    .search-panel {
+      position: absolute;
+      bottom: 20px;
+      left: 20px;
+      background: rgba(0, 0, 0, 0.8);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      padding: 15px;
+      border-radius: 8px;
+      pointer-events: auto;
+    }
+
+    .search-panel input {
+      background: transparent;
+      border: 1px solid rgba(255, 255, 255, 0.3);
+      color: #fff;
+      padding: 8px 12px;
+      border-radius: 4px;
+      font-size: 14px;
+      width: 250px;
+      outline: none;
+    }
+
+    .search-panel input::placeholder {
+      color: rgba(255, 255, 255, 0.5);
+    }
+
+    .card-panel {
+      position: fixed;
+      right: -400px;
+      top: 0;
+      width: 400px;
+      height: 100%;
+      background: rgba(20, 20, 30, 0.95);
+      backdrop-filter: blur(10px);
+      border-left: 1px solid rgba(255, 255, 255, 0.1);
+      transition: right 0.3s ease;
+      overflow-y: auto;
+      padding: 20px;
+      color: #fff;
+      pointer-events: auto;
+    }
+
+    .card-panel.open {
+      right: 0;
+    }
+
+    .card-panel h2 {
+      font-size: 24px;
+      margin-bottom: 10px;
+    }
+
+    .card-panel .meta {
+      font-size: 12px;
+      opacity: 0.7;
+      margin-bottom: 20px;
+    }
+
+    .card-panel .tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 15px;
+    }
+
+    .card-panel .tag {
+      background: rgba(255, 255, 255, 0.1);
+      padding: 4px 8px;
+      border-radius: 4px;
+      font-size: 12px;
+    }
+  </style>
+</head>
+<body>
+  <div id="visualization"></div>
+
+  <div class="hud">
+    <div class="info">
+      <h1>Six Degrees</h1>
+      <p>Loading organism...</p>
+    </div>
+
+    <div class="stats" id="stats">
+      FPS: 0
+    </div>
+
+    <div class="search-panel">
+      <input type="text" id="search" placeholder="Search by name, city, role...">
+    </div>
+
+    <div class="card-panel" id="card-panel">
+      <h2 id="card-name">Person Name</h2>
+      <div class="meta" id="card-meta"></div>
+      <p id="card-description"></p>
+      <button id="path-btn" style="display: none; margin-top: 15px; background: rgba(78, 205, 196, 0.3); border: 1px solid #4ecdc4; color: #4ecdc4; padding: 8px 12px; border-radius: 4px; cursor: pointer; width: 100%; font-size: 14px;">Find Path to Another</button>
+      <div class="tags" id="card-tags"></div>
+    </div>
+
+    <div class="loading" id="loading">
+      Initializing visualization...
+    </div>
+  </div>
+
+  <!-- Load Three.js and D3 from vendor -->
+  <script src="client/vendor/three.min.js"></script>
+  <script src="client/vendor/d3.min.js"></script>
+
+  <script>
+    const API_BASE = 'http://localhost:3001/api';
+    let appState = {
+      people: [],
+      connections: [],
+      selectedPerson: null,
+      searchResults: new Set(),
+      personMaterialMap: new Map(),
+      pathfindMode: false,
+      pathfindStart: null,
+      pathfindEnd: null,
+      highlightedPath: []
+    };
+
+    async function initVisualization() {
+      // Fetch graph data
+      let graphData;
+      try {
+        const response = await fetch(`${API_BASE}/graph`);
+        graphData = await response.json();
+      } catch (e) {
+        document.getElementById('loading').innerHTML = `
+          Error loading data. Is the backend running?<br>
+          <code>cd /Users/omerbarak/Documents/פגמר/exhibition && node --experimental-sqlite server.js</code>
+        `;
+        console.error('Failed to fetch graph:', e);
+        return;
+      }
+
+      const { people, connections } = graphData;
+      appState.people = people;
+      appState.connections = connections;
+      console.log(`Loaded ${people.length} people and ${connections.length} connections`);
+
+      // Create renderer
+      const container = document.getElementById('visualization');
+      const canvas = document.createElement('canvas');
+      container.appendChild(canvas);
+
+      const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true });
+      const dpr = window.devicePixelRatio || 1;
+      renderer.setPixelRatio(dpr);
+      renderer.setClearColor(0x000000, 1);
+      renderer.setSize(window.innerWidth, window.innerHeight);
+
+      // Create scene and camera
+      const scene = new THREE.Scene();
+      scene.fog = new THREE.Fog(0x000000, 5000, 10000);
+
+      const camera = new THREE.PerspectiveCamera(
+        60,
+        window.innerWidth / window.innerHeight,
+        0.1,
+        10000
+      );
+      camera.position.z = 2500;
+
+      // Master group for rotation
+      const masterGroup = new THREE.Group();
+      scene.add(masterGroup);
+
+      // D3 Force simulation
+      const simulation = d3.forceSimulation(people)
+        .force('charge', d3.forceManyBody().strength(-500))
+        .force('link', d3.forceLink(connections)
+          .id(d => d.id)
+          .distance(150))
+        .force('collide', d3.forceCollide(80))
+        .alpha(1)
+        .alphaDecay(0.02);
+
+      for (let i = 0; i < 200; i++) {
+        simulation.tick();
+      }
+
+      // Convert positions
+      people.forEach(person => {
+        person.pos = new THREE.Vector3(person.x || 0, person.y || 0, (person.z || 0) * 2);
+      });
+
+      // Create nodes geometry
+      const positions = new Float32Array(people.length * 3);
+      const colors = new Float32Array(people.length * 3);
+
+      people.forEach((person, i) => {
+        const p = person.pos;
+        positions[i * 3] = p.x;
+        positions[i * 3 + 1] = p.y;
+        positions[i * 3 + 2] = p.z;
+
+        // Store person index for lookup
+        person._bufferIndex = i;
+
+        // Default white color
+        colors[i * 3] = 1.0;
+        colors[i * 3 + 1] = 1.0;
+        colors[i * 3 + 2] = 1.0;
+      });
+
+      const geometry = new THREE.BufferGeometry();
+      geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+      geometry.setAttribute('color', new THREE.BufferAttribute(colors, 3));
+
+      // Shader material for glow with highlighting
+      const vertexShader = `
+        attribute vec3 color;
+        varying vec3 vColor;
+
+        void main() {
+          vColor = color;
+          vec4 mvPosition = modelViewMatrix * vec4(position, 1.0);
+          gl_PointSize = 8.0 * (300.0 / -mvPosition.z);
+          gl_Position = projectionMatrix * mvPosition;
+        }
+      `;
+
+      const fragmentShader = `
+        varying vec3 vColor;
+
+        void main() {
+          vec2 uv = (gl_PointCoord - 0.5) * 2.0;
+          float dist = length(uv);
+          float alpha = exp(-dist * dist * 4.0);
+          gl_FragColor = vec4(vColor, alpha * 0.8);
+        }
+      `;
+
+      const material = new THREE.ShaderMaterial({
+        uniforms: {},
+        vertexShader,
+        fragmentShader,
+        blending: THREE.AdditiveBlending,
+        depthWrite: false,
+        transparent: true
+      });
+
+      const points = new THREE.Points(geometry, material);
+      appState.personMaterialMap.set('points', { geometry, material, colors });
+      masterGroup.add(points);
+
+      // Create arms for each node
+      people.forEach(person => {
+        const armsGroup = new THREE.Group();
+        for (let i = 0; i < 4; i++) {
+          const angle = (i / 4) * Math.PI * 2;
+          const armLength = 80 + Math.random() * 40;
+          const controlPoint = new THREE.Vector3(
+            person.pos.x + Math.cos(angle) * armLength * 0.7,
+            person.pos.y + Math.sin(angle) * armLength * 0.7,
+            person.pos.z + (Math.random() - 0.5) * armLength * 0.3
+          );
+          const endPoint = new THREE.Vector3(
+            person.pos.x + Math.cos(angle) * armLength,
+            person.pos.y + Math.sin(angle) * armLength,
+            person.pos.z + (Math.random() - 0.5) * armLength * 0.5
+          );
+
+          const curve = new THREE.QuadraticBezierCurve3(person.pos, controlPoint, endPoint);
+          const points = curve.getPoints(16);
+          const armGeometry = new THREE.BufferGeometry().setFromPoints(points);
+          const armMaterial = new THREE.LineBasicMaterial({
+            color: 0xffffff,
+            opacity: 0.15,
+            transparent: true,
+            blending: THREE.AdditiveBlending
+          });
+          const arm = new THREE.Line(armGeometry, armMaterial);
+          arm.userData = {
+            phase: Math.random() * Math.PI * 2,
+            speed: 0.01 + Math.random() * 0.01
+          };
+          armsGroup.add(arm);
+        }
+        armsGroup.userData = { rotSpeedX: (Math.random() - 0.5) * 0.002, rotSpeedY: (Math.random() - 0.5) * 0.002 };
+        masterGroup.add(armsGroup);
+      });
+
+      // Handle resize
+      window.addEventListener('resize', () => {
+        camera.aspect = window.innerWidth / window.innerHeight;
+        camera.updateProjectionMatrix();
+        renderer.setSize(window.innerWidth, window.innerHeight);
+      });
+
+      // Hide loading message
+      document.getElementById('loading').style.display = 'none';
+      document.querySelector('.info p').textContent = `${people.length} people • ${connections.length} connections`;
+
+      // Setup search
+      document.getElementById('search').addEventListener('input', (e) => {
+        const query = e.target.value.toLowerCase();
+        appState.searchResults.clear();
+
+        if (!query) {
+          // Reset all colors to white
+          const colors = appState.personMaterialMap.get('points').colors;
+          for (let i = 0; i < colors.length; i += 3) {
+            colors[i] = 1.0;
+            colors[i + 1] = 1.0;
+            colors[i + 2] = 1.0;
+          }
+          appState.personMaterialMap.get('points').geometry.attributes.color.needsUpdate = true;
+          return;
+        }
+
+        // Search across name, city, role, tags
+        people.forEach(person => {
+          const matches =
+            person.name.toLowerCase().includes(query) ||
+            (person.city && person.city.toLowerCase().includes(query)) ||
+            (person.role && person.role.toLowerCase().includes(query)) ||
+            (person.tags && person.tags.toLowerCase().includes(query));
+
+          if (matches) {
+            appState.searchResults.add(person.id);
+          }
+        });
+
+        // Update colors: highlight matches in yellow/gold, dim others
+        const colors = appState.personMaterialMap.get('points').colors;
+        people.forEach(person => {
+          const i = person._bufferIndex;
+          if (appState.searchResults.has(person.id)) {
+            // Highlight color: bright yellow/gold
+            colors[i * 3] = 1.0;
+            colors[i * 3 + 1] = 0.84;
+            colors[i * 3 + 2] = 0.0;
+          } else {
+            // Dimmed color
+            colors[i * 3] = 0.4;
+            colors[i * 3 + 1] = 0.4;
+            colors[i * 3 + 2] = 0.4;
+          }
+        });
+        appState.personMaterialMap.get('points').geometry.attributes.color.needsUpdate = true;
+      });
+
+      // Setup mouse interaction for card panel
+      const raycaster = new THREE.Raycaster();
+      const mouse = new THREE.Vector2();
+
+      renderer.domElement.addEventListener('click', (e) => {
+        mouse.x = (e.clientX / window.innerWidth) * 2 - 1;
+        mouse.y = -(e.clientY / window.innerHeight) * 2 + 1;
+        raycaster.setFromCamera(mouse, camera);
+
+        const intersects = raycaster.intersectObject(masterGroup, true);
+        if (intersects.length === 0) return;
+
+        // Find the closest points object
+        let closestIndex = null;
+        for (const intersection of intersects) {
+          if (intersection.object.type === 'Points') {
+            closestIndex = intersection.index;
+            break;
+          }
+        }
+
+        if (closestIndex !== null) {
+          // Find person by buffer index
+          const person = people.find(p => p._bufferIndex === closestIndex);
+          if (person) {
+            appState.selectedPerson = person.id;
+            openCardPanel(person);
+          }
+        }
+      });
+
+      function openCardPanel(person) {
+        const panel = document.getElementById('card-panel');
+        document.getElementById('card-name').textContent = person.name || 'Unknown';
+        document.getElementById('card-meta').textContent = [
+          person.age && `Age: ${person.age}`,
+          person.city && `📍 ${person.city}`,
+          person.country && person.country
+        ].filter(Boolean).join(' • ');
+        document.getElementById('card-description').textContent = person.description || '';
+
+        const tagsContainer = document.getElementById('card-tags');
+        tagsContainer.innerHTML = '';
+
+        if (person.tags) {
+          person.tags.split(',').forEach(tag => {
+            const tagEl = document.createElement('div');
+            tagEl.className = 'tag';
+            tagEl.textContent = tag.trim();
+            tagsContainer.appendChild(tagEl);
+          });
+        }
+
+        // Setup path button
+        const pathBtn = document.getElementById('path-btn');
+        pathBtn.style.display = 'block';
+        pathBtn.textContent = appState.pathfindStart === null ? 'Find Path to Another' : 'Complete Path';
+        pathBtn.onclick = () => startPathfind(person);
+
+        panel.classList.add('open');
+      }
+
+      function startPathfind(person) {
+        if (appState.pathfindStart === null) {
+          appState.pathfindStart = person.id;
+        } else {
+          appState.pathfindEnd = person.id;
+          const path = findShortestPath(appState.pathfindStart, appState.pathfindEnd);
+          if (path && path.length > 0) {
+            highlightPath(path);
+          }
+          appState.pathfindStart = null;
+          appState.pathfindEnd = null;
+        }
+      }
+
+      function findShortestPath(startId, endId) {
+        if (startId === endId) return [startId];
+
+        const adjMap = new Map();
+        people.forEach(p => adjMap.set(p.id, []));
+
+        connections.forEach(conn => {
+          adjMap.get(conn.source)?.push(conn.target);
+          adjMap.get(conn.target)?.push(conn.source);
+        });
+
+        const queue = [[startId]];
+        const visited = new Set([startId]);
+
+        while (queue.length > 0) {
+          const path = queue.shift();
+          const last = path[path.length - 1];
+
+          if (last === endId) return path;
+
+          const neighbors = adjMap.get(last) || [];
+          for (const neighbor of neighbors) {
+            if (!visited.has(neighbor)) {
+              visited.add(neighbor);
+              queue.push([...path, neighbor]);
+            }
+          }
+        }
+
+        return null;
+      }
+
+      function highlightPath(path) {
+        const colors = appState.personMaterialMap.get('points').colors;
+
+        // Reset all colors
+        people.forEach(person => {
+          const i = person._bufferIndex;
+          colors[i * 3] = 0.2;
+          colors[i * 3 + 1] = 0.2;
+          colors[i * 3 + 2] = 0.2;
+        });
+
+        // Highlight path nodes in cyan
+        path.forEach(personId => {
+          const person = people.find(p => p.id === personId);
+          if (person) {
+            const i = person._bufferIndex;
+            colors[i * 3] = 0.0;
+            colors[i * 3 + 1] = 1.0;
+            colors[i * 3 + 2] = 1.0;
+          }
+        });
+
+        appState.personMaterialMap.get('points').geometry.attributes.color.needsUpdate = true;
+        appState.highlightedPath = path;
+      }
+
+      // Close card panel on escape
+      document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') {
+          document.getElementById('card-panel').classList.remove('open');
+          appState.selectedPerson = null;
+          appState.pathfindStart = null;
+          appState.highlightedPath = [];
+          // Reset colors to white
+          const colors = appState.personMaterialMap.get('points').colors;
+          for (let i = 0; i < colors.length; i += 3) {
+            colors[i] = 1.0;
+            colors[i + 1] = 1.0;
+            colors[i + 2] = 1.0;
+          }
+          appState.personMaterialMap.get('points').geometry.attributes.color.needsUpdate = true;
+        }
+      });
+
+      // Animation loop
+      let frameCount = 0;
+      let lastTime = Date.now();
+
+      function animate() {
+        requestAnimationFrame(animate);
+
+        const time = Date.now() * 0.001;
+        const globalPulse = 0.5 + 0.3 * Math.sin(time * 0.3); // Slow global breathing
+
+        // Animate arms with enhanced breathing and rotation
+        masterGroup.children.forEach(child => {
+          // Skip the points geometry
+          if (child instanceof THREE.Points) return;
+
+          // Animate arms groups
+          if (child.userData.rotSpeedX !== undefined) {
+            // Continuous smooth rotation
+            child.rotation.x += child.userData.rotSpeedX * (0.5 + globalPulse);
+            child.rotation.y += child.userData.rotSpeedY * (0.5 + globalPulse);
+
+            // Animate each arm with breathing and wave motion
+            child.children.forEach((arm, armIndex) => {
+              // Primary breathing: scale variation (more pronounced)
+              const baseBreathe = 0.7 + 0.4 * Math.sin(time * arm.userData.speed + arm.userData.phase);
+
+              // Add global pulse for unified organism effect
+              const breathe = baseBreathe * (0.9 + 0.1 * globalPulse);
+              arm.scale.y = breathe;
+
+              // Secondary rotation: slight twist along the arm
+              const twist = 0.05 * Math.sin(time * arm.userData.speed * 0.5 + armIndex);
+              arm.rotation.z = twist;
+            });
+          }
+        });
+
+        // Global organism rotation - energetic but smooth
+        const rotationSpeed = 0.001 + 0.0005 * Math.sin(time * 0.2);
+        masterGroup.rotation.y += rotationSpeed;
+
+        // FPS counter
+        frameCount++;
+        const now = Date.now();
+        if (now >= lastTime + 1000) {
+          const fps = Math.round(frameCount * 1000 / (now - lastTime));
+          document.getElementById('stats').textContent = `FPS: ${fps}`;
+          frameCount = 0;
+          lastTime = now;
+        }
+
+        renderer.render(scene, camera);
+      }
+
+      animate();
+    }
+
+    // Start when ready
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', initVisualization);
+    } else {
+      initVisualization();
+    }
+  </script>
+</body>
+</html>
