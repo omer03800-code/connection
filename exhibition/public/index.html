@@ -965,6 +965,7 @@
             align-items: center !important;
             justify-content: space-between !important;
             width: 100% !important;
+            align-self: stretch !important;
             box-sizing: border-box !important;
         }
         
@@ -7248,7 +7249,7 @@
                                 </div>
                             </div>
 
-                            <div id="report-explanation-container" style="display: none;">
+                            <div id="report-explanation-container" style="display: block;">
                                 <label style="font-size: 13px; font-weight: 500; text-transform: uppercase; letter-spacing: 1px;">Explanation</label>
                                 <textarea id="report-explanation" oninput="this.value = this.value.replace(/[\\u0590-\\u05FF]/g, '')" style="width: 100%; margin: 8px 0 0; padding: 8px 0; font-size: 16px; font-weight: 300; border: none; border-bottom: 1px solid rgba(0,0,0,0.2); border-radius: 0; background: transparent; outline: none; min-height: 80px; resize: vertical; color: #000; font-family: inherit;" placeholder="Please provide a short explanation..."></textarea>
                             </div>
@@ -7273,26 +7274,11 @@
                         
                         display.addEventListener('click', (e) => {
                             e.stopPropagation();
-                            const isOpening = options.style.display === 'none';
-                            options.style.display = isOpening ? 'block' : 'none';
-                            // If explanation is hidden, opening dropdown needs to push buttons down so they don't overlap
-                            if (isOpening && explanationContainer.style.display === 'none') {
-                                explanationContainer.style.display = 'block';
-                                explanationContainer.style.visibility = 'hidden';
-                            } else if (!isOpening && explanationContainer.style.visibility === 'hidden') {
-                                explanationContainer.style.display = 'none';
-                                explanationContainer.style.visibility = '';
-                            }
+                            options.style.display = options.style.display === 'none' ? 'block' : 'none';
                         });
 
                         document.addEventListener('click', () => {
-                            if(options && options.style.display !== 'none') {
-                                options.style.display = 'none';
-                                if (explanationContainer.style.visibility === 'hidden') {
-                                    explanationContainer.style.display = 'none';
-                                    explanationContainer.style.visibility = '';
-                                }
-                            }
+                            if(options) options.style.display = 'none';
                         });
 
                         document.querySelectorAll('.report-option').forEach(opt => {
@@ -7302,13 +7288,6 @@
                                 text.textContent = window._selectedReportReason;
                                 text.style.color = '#000';
                                 options.style.display = 'none';
-                                explanationContainer.style.visibility = '';
-                                
-                                if (['Incorrect personal information', 'Incorrect relationship', 'Other'].includes(window._selectedReportReason)) {
-                                    explanationContainer.style.display = 'block';
-                                } else {
-                                    explanationContainer.style.display = 'none';
-                                }
                             });
                         });
                     },
