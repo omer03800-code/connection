@@ -955,6 +955,25 @@
     <style>
         #btn-edit-node:hover { background: #000 !important; color: #fff !important; }
         #btn-report-node:hover { background: #000 !important; color: #fff !important; }
+        
+        .swal-report-btn {
+            display: inline-block;
+            padding: 10px 15px;
+            margin: 0 5px;
+            background: transparent;
+            color: #000;
+            border: none;
+            font-size: 12px;
+            font-weight: 300;
+            letter-spacing: 1.5px;
+            text-transform: uppercase;
+            cursor: pointer;
+            transition: background 0.2s, color 0.2s;
+        }
+        .swal-report-btn:hover {
+            background: #000;
+            color: #fff;
+        }
     </style>
     <!-- Dedicated Edit Person Modal -->
     <div id="edit-person-overlay" class="modal-overlay" style="z-index: 2000;">
@@ -7185,7 +7204,7 @@
                         <p style="font-size:14px; color:rgba(0,0,0,0.6); margin-bottom:20px;">Report information about <strong>${person.name}</strong> that needs review.</p>
                         <div style="text-align: left;">
                             <label style="font-size: 13px; font-weight: 500; text-transform: uppercase; letter-spacing: 1px;">Reason</label>
-                            <select id="report-reason" style="width: 100%; margin: 8px 0 20px; padding: 12px; font-size: 16px; border: 1px solid rgba(0,0,0,0.1); border-radius: 8px; background: rgba(255,255,255,0.5); outline: none;">
+                            <select id="report-reason" style="width: 100%; margin: 8px 0 20px; padding: 8px 0; font-size: 16px; border: none; border-bottom: 1px solid rgba(0,0,0,0.2); border-radius: 0; background: transparent; outline: none; cursor: pointer;">
                                 <option value="" disabled selected>Select a reason...</option>
                                 <option value="Incorrect personal information">Incorrect personal information</option>
                                 <option value="Incorrect relationship">Incorrect relationship</option>
@@ -7195,18 +7214,19 @@
                             </select>
                             <div id="report-explanation-container" style="display: none;">
                                 <label style="font-size: 13px; font-weight: 500; text-transform: uppercase; letter-spacing: 1px;">Explanation</label>
-                                <textarea id="report-explanation" style="width: 100%; margin: 8px 0 0; padding: 12px; font-size: 14px; border: 1px solid rgba(0,0,0,0.1); border-radius: 8px; background: rgba(255,255,255,0.5); outline: none; min-height: 80px;" placeholder="Please provide a short explanation..."></textarea>
+                                <textarea id="report-explanation" style="width: 100%; margin: 8px 0 0; padding: 8px 0; font-size: 14px; border: none; border-bottom: 1px solid rgba(0,0,0,0.2); border-radius: 0; background: transparent; outline: none; min-height: 80px; resize: vertical;" placeholder="Please provide a short explanation..."></textarea>
                             </div>
                         </div>
                     `,
                     focusConfirm: false,
                     showCancelButton: true,
-                    confirmButtonText: 'SUBMIT REPORT',
-                    cancelButtonText: 'CANCEL',
+                    buttonsStyling: false,
+                    confirmButtonText: '[ SUBMIT REPORT ]',
+                    cancelButtonText: '[ CANCEL ]',
                     customClass: { 
-                        popup: 'glass-popup', 
-                        confirmButton: 'swal2-confirm glass-btn black-btn', 
-                        cancelButton: 'swal2-cancel glass-btn white-btn' 
+                        popup: 'glass-popup-white', 
+                        confirmButton: 'swal-report-btn', 
+                        cancelButton: 'swal-report-btn' 
                     },
                     didOpen: () => {
                         const select = document.getElementById('report-reason');
@@ -7253,7 +7273,7 @@
                                 html: '<p style="font-size:16px; font-weight:300; opacity:0.8;">Thank you. The information has been submitted for review.</p>',
                                 showConfirmButton: false,
                                 timer: 4000,
-                                customClass: { popup: 'glass-popup' }
+                                customClass: { popup: 'glass-popup-white' }
                             });
                         } else {
                             throw new Error('Server error');
@@ -7264,8 +7284,9 @@
                             title: '<span style="font-weight:300; font-size:28px;">Error</span>',
                             html: '<p style="font-size:16px; font-weight:300; opacity:0.8;">Could not submit report. Please try again later.</p>',
                             showConfirmButton: true,
-                            confirmButtonText: 'OK',
-                            customClass: { popup: 'glass-popup', confirmButton: 'swal2-confirm glass-btn black-btn' }
+                            buttonsStyling: false,
+                            confirmButtonText: '[ OK ]',
+                            customClass: { popup: 'glass-popup-white', confirmButton: 'swal-report-btn' }
                         });
                     }
                 }
