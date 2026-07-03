@@ -7297,7 +7297,7 @@
                         });
                     },
                     preConfirm: () => {
-                        const reason = document.getElementById('report-reason').value;
+                        const reason = window._selectedReportReason;
                         const explanation = document.getElementById('report-explanation').value;
                         if (!reason) {
                             Swal.showValidationMessage('Please select a reason');
