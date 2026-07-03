@@ -956,13 +956,21 @@
         #btn-edit-node:hover { background: #000 !important; color: #fff !important; }
         #btn-report-node:hover { background: #000 !important; color: #fff !important; }
         
+        .glass-popup-white .swal2-actions {
+            margin-top: 35px !important;
+            display: flex !important;
+            flex-direction: row !important;
+            justify-content: center !important;
+            gap: 15px !important;
+        }
+        
         .swal-report-btn {
             display: inline-block;
             padding: 0 10px;
-            margin: 0 5px;
+            margin: 0;
             background: transparent;
             color: #000;
-            border: 1px solid rgba(0,0,0,0.1);
+            border: none;
             border-radius: 10px;
             font-size: 12px;
             font-weight: 300;
@@ -7204,12 +7212,12 @@
                 const person = people[selectedNodeId];
                 
                 const { value: formValues } = await Swal.fire({
-                    title: '<div style="margin-top:-20px;"><span style="font-weight:300; font-size:28px;">Report Issue</span></div>',
+                    title: '<div style="margin-top:-10px;"><span style="font-weight:300; font-size:28px;">Report Issue</span></div>',
                     html: `
-                        <p style="font-size:14px; color:rgba(0,0,0,0.6); margin-bottom:15px; margin-top:-5px;">Report information about <strong>${person.name}</strong> that needs review.</p>
-                        <div style="text-align: left;">
+                        <p style="font-size:14px; color:rgba(0,0,0,0.6); margin-bottom: 25px;">Report information about <strong>${person.name}</strong> that needs review.</p>
+                        <div style="text-align: left; margin-top: 25px;">
                             <label style="font-size: 13px; font-weight: 500; text-transform: uppercase; letter-spacing: 1px;">Reason</label>
-                            <select id="report-reason" style="width: 100%; margin: 8px 0 20px; padding: 8px 0; font-size: 16px; border: none; border-bottom: 1px solid rgba(0,0,0,0.2); border-radius: 0; background: transparent; outline: none; cursor: pointer; color: #000; font-family: inherit;">
+                            <select id="report-reason" style="width: 100%; margin: 8px 0 20px; padding: 8px 0; font-size: 16px; border: none; border-bottom: 1px solid rgba(0,0,0,0.2); border-radius: 0; background: transparent url('data:image/svg+xml;utf8,<svg fill=%22black%22 height=%2224%22 viewBox=%220 0 24 24%22 width=%2224%22 xmlns=%22http://www.w3.org/2000/svg%22><path d=%22M7 10l5 5 5-5z%22/></svg>') no-repeat right center; outline: none; cursor: pointer; color: #000; font-family: inherit; appearance: none; -webkit-appearance: none;">
                                 <option value="" disabled selected>Select a reason...</option>
                                 <option value="Incorrect personal information">Incorrect personal information</option>
                                 <option value="Incorrect relationship">Incorrect relationship</option>
