@@ -960,13 +960,15 @@
             margin-top: 35px !important;
             display: flex !important;
             flex-direction: row !important;
+            flex-wrap: nowrap !important;
+            align-items: center !important;
             justify-content: center !important;
-            gap: 15px !important;
+            gap: 10px !important;
         }
         
         .swal-report-btn {
             display: inline-block;
-            padding: 0 10px;
+            padding: 0 5px;
             margin: 0;
             background: transparent;
             color: #000;
@@ -7214,17 +7216,31 @@
                 const { value: formValues } = await Swal.fire({
                     title: '<div style="margin-top:-10px;"><span style="font-weight:300; font-size:28px;">Report Issue</span></div>',
                     html: `
+                        <style>
+                            #report-explanation::placeholder {
+                                font-size: 16px;
+                                font-weight: 300;
+                                color: rgba(0,0,0,0.4);
+                            }
+                        </style>
                         <p style="font-size:14px; color:rgba(0,0,0,0.6); margin-bottom: 25px;">Report information about <strong>${person.name}</strong> that needs review.</p>
                         <div style="text-align: left; margin-top: 25px;">
                             <label style="font-size: 13px; font-weight: 500; text-transform: uppercase; letter-spacing: 1px;">Reason</label>
-                            <select id="report-reason" style="width: 100%; margin: 8px 0 20px; padding: 8px 0; font-size: 16px; border: none; border-bottom: 1px solid rgba(0,0,0,0.2); border-radius: 0; background: transparent url('data:image/svg+xml;utf8,<svg fill=%22black%22 height=%2224%22 viewBox=%220 0 24 24%22 width=%2224%22 xmlns=%22http://www.w3.org/2000/svg%22><path d=%22M7 10l5 5 5-5z%22/></svg>') no-repeat right center; outline: none; cursor: pointer; color: #000; font-family: inherit; appearance: none; -webkit-appearance: none;">
-                                <option value="" disabled selected>Select a reason...</option>
-                                <option value="Incorrect personal information">Incorrect personal information</option>
-                                <option value="Incorrect relationship">Incorrect relationship</option>
-                                <option value="Duplicate person">Duplicate person</option>
-                                <option value="Removal request">Removal request</option>
-                                <option value="Other">Other</option>
-                            </select>
+                            
+                            <div class="custom-report-dropdown" style="position: relative; width: 100%; margin: 8px 0 20px;">
+                                <div id="report-reason-display" style="padding: 8px 0; font-size: 16px; border-bottom: 1px solid rgba(0,0,0,0.2); cursor: pointer; color: #000; font-family: inherit; display: flex; justify-content: space-between; align-items: center;">
+                                    <span id="report-reason-text">Select a reason...</span>
+                                    <svg fill="black" height="24" viewBox="0 0 24 24" width="24" xmlns="http://www.w3.org/2000/svg"><path d="M7 10l5 5 5-5z"/></svg>
+                                </div>
+                                <div id="report-reason-options" class="autocomplete-dropdown" style="display: none; background: #ffffff; border: 1px solid rgba(0,0,0,0.1); box-shadow: 0 4px 15px rgba(0,0,0,0.1); border-radius: 8px; z-index: 100; max-height: 200px; overflow-y: auto; text-align: left; width: 100%;">
+                                    <div class="report-option autocomplete-item" style="padding: 12px; color: #111; border-bottom: 1px solid rgba(0,0,0,0.05); cursor: pointer;" data-value="Incorrect personal information">Incorrect personal information</div>
+                                    <div class="report-option autocomplete-item" style="padding: 12px; color: #111; border-bottom: 1px solid rgba(0,0,0,0.05); cursor: pointer;" data-value="Incorrect relationship">Incorrect relationship</div>
+                                    <div class="report-option autocomplete-item" style="padding: 12px; color: #111; border-bottom: 1px solid rgba(0,0,0,0.05); cursor: pointer;" data-value="Duplicate person">Duplicate person</div>
+                                    <div class="report-option autocomplete-item" style="padding: 12px; color: #111; border-bottom: 1px solid rgba(0,0,0,0.05); cursor: pointer;" data-value="Removal request">Removal request</div>
+                                    <div class="report-option autocomplete-item" style="padding: 12px; color: #111; cursor: pointer;" data-value="Other">Other</div>
+                                </div>
+                            </div>
+
                             <div id="report-explanation-container" style="display: none;">
                                 <label style="font-size: 13px; font-weight: 500; text-transform: uppercase; letter-spacing: 1px;">Explanation</label>
                                 <textarea id="report-explanation" oninput="this.value = this.value.replace(/[\\u0590-\\u05FF]/g, '')" style="width: 100%; margin: 8px 0 0; padding: 8px 0; font-size: 14px; border: none; border-bottom: 1px solid rgba(0,0,0,0.2); border-radius: 0; background: transparent; outline: none; min-height: 80px; resize: vertical; color: #000; font-family: inherit;" placeholder="Please provide a short explanation..."></textarea>
@@ -7242,14 +7258,35 @@
                         cancelButton: 'swal-report-btn' 
                     },
                     didOpen: () => {
-                        const select = document.getElementById('report-reason');
-                        const container = document.getElementById('report-explanation-container');
-                        select.addEventListener('change', () => {
-                            if (['Incorrect personal information', 'Incorrect relationship', 'Other'].includes(select.value)) {
-                                container.style.display = 'block';
-                            } else {
-                                container.style.display = 'none';
-                            }
+                        window._selectedReportReason = '';
+                        const display = document.getElementById('report-reason-display');
+                        const text = document.getElementById('report-reason-text');
+                        const options = document.getElementById('report-reason-options');
+                        const explanationContainer = document.getElementById('report-explanation-container');
+                        
+                        display.addEventListener('click', (e) => {
+                            e.stopPropagation();
+                            options.style.display = options.style.display === 'none' ? 'block' : 'none';
+                        });
+
+                        document.addEventListener('click', () => {
+                            if(options) options.style.display = 'none';
+                        });
+
+                        document.querySelectorAll('.report-option').forEach(opt => {
+                            opt.addEventListener('click', (e) => {
+                                e.stopPropagation();
+                                window._selectedReportReason = opt.getAttribute('data-value');
+                                text.textContent = window._selectedReportReason;
+                                text.style.color = '#000';
+                                options.style.display = 'none';
+                                
+                                if (['Incorrect personal information', 'Incorrect relationship', 'Other'].includes(window._selectedReportReason)) {
+                                    explanationContainer.style.display = 'block';
+                                } else {
+                                    explanationContainer.style.display = 'none';
+                                }
+                            });
                         });
                     },
                     preConfirm: () => {
