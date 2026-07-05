@@ -849,9 +849,6 @@
     <button id="btn-add-connection" class="info-action-btn" style="position: absolute; top: 20px; left: 50%; transform: translateX(-50%); margin: 0; z-index: 100;">[ FEED THE BEAST ]</button>
 
     <div id="info-panel-container">
-        <div id="feed-me-popup" style="display: none; background: rgba(0,0,0,0.85); backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.2); border-radius: 12px; padding: 16px 20px; color: #fff; font-size: 14px; font-weight: 500; pointer-events: auto; cursor: pointer; transition: opacity 0.3s, transform 0.3s; opacity: 0; transform: translateY(-10px); text-align: left; box-shadow: 0 4px 15px rgba(0,0,0,0.2);">
-            Hmm... this profile is looking a bit hungry. <span style="text-decoration: underline; margin-top: 5px; display: block; font-weight: 600;">Feed me more details?</span>
-        </div>
         <div id="info-card">
             <!-- Header: Name and Menu -->
             <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px;">
@@ -1137,90 +1134,90 @@
                 <!-- Current City -->
                 <div class="edit-row-v2 autocomplete-wrapper">
                     <label class="edit-row-label">CITY</label>
-                    <div class="tags-wrapper" id="tw-edit-f-city" onclick="document.getElementById('edit-f-city').focus()">
+                    <label class="tags-wrapper" id="tw-edit-f-city" for="edit-f-city" style="display:flex; cursor:text;">
                         <input type="text" id="edit-f-city" class="edit-row-input" style="border:none;" placeholder="Current City">
-                    </div>
-                    <div class="autocomplete-dropdown" id="dropdown-edit-f-city"></div>
+                    </label>
+                        <div class="autocomplete-dropdown" id="dropdown-edit-f-city"></div>
                     <div class="dynamic-stats" id="stats-edit-f-city"></div>
                 </div>
 
                 <!-- Originally From -->
                 <div class="edit-row-v2 autocomplete-wrapper">
                     <label class="edit-row-label">HOMETOWN</label>
-                    <div class="tags-wrapper" id="tw-edit-f-origin-city" onclick="document.getElementById('edit-f-origin-city').focus()">
+                    <label class="tags-wrapper" id="tw-edit-f-origin-city" for="edit-f-origin-city" style="display:flex; cursor:text;">
                         <input type="text" id="edit-f-origin-city" class="edit-row-input" style="border:none;" placeholder="Originally From">
-                    </div>
-                    <div class="autocomplete-dropdown" id="dropdown-edit-f-origin-city"></div>
+                    </label>
+                        <div class="autocomplete-dropdown" id="dropdown-edit-f-origin-city"></div>
                     <div class="dynamic-stats" id="stats-edit-f-origin-city"></div>
                 </div>
 
                 <!-- Current Role -->
                 <div class="edit-row-v2 autocomplete-wrapper">
                     <label class="edit-row-label">ROLE</label>
-                    <div class="tags-wrapper" id="tw-edit-f-role" onclick="document.getElementById('edit-f-role').focus()">
+                    <label class="tags-wrapper" id="tw-edit-f-role" for="edit-f-role" style="display:flex; cursor:text;">
                         <input type="text" id="edit-f-role" class="edit-row-input" style="border:none;" placeholder="Role / Job">
-                    </div>
-                    <div class="autocomplete-dropdown" id="dropdown-edit-f-role"></div>
+                    </label>
+                        <div class="autocomplete-dropdown" id="dropdown-edit-f-role"></div>
                     <div class="dynamic-stats" id="stats-edit-f-role"></div>
                 </div>
 
                 <!-- Current Workplace -->
                 <div class="edit-row-v2 autocomplete-wrapper">
                     <label class="edit-row-label">WORKPLACE</label>
-                    <div class="tags-wrapper" id="tw-edit-f-workplace" onclick="document.getElementById('edit-f-workplace').focus()">
+                    <label class="tags-wrapper" id="tw-edit-f-workplace" for="edit-f-workplace" style="display:flex; cursor:text;">
                         <input type="text" id="edit-f-workplace" class="edit-row-input" style="border:none;" placeholder="Workplace">
-                    </div>
-                    <div class="autocomplete-dropdown" id="dropdown-edit-f-workplace"></div>
+                    </label>
+                        <div class="autocomplete-dropdown" id="dropdown-edit-f-workplace"></div>
                     <div class="dynamic-stats" id="stats-edit-f-workplace"></div>
                 </div>
 
                 <!-- High School -->
                 <div class="edit-row-v2 autocomplete-wrapper">
                     <label class="edit-row-label">HIGH SCHOOL</label>
-                    <div class="tags-wrapper" id="tw-edit-f-highschool" onclick="document.getElementById('edit-f-highschool').focus()">
+                    <label class="tags-wrapper" id="tw-edit-f-highschool" for="edit-f-highschool" style="display:flex; cursor:text;">
                         <input type="text" id="edit-f-highschool" class="edit-row-input" style="border:none;" placeholder="School">
-                    </div>
-                    <div class="autocomplete-dropdown" id="dropdown-edit-f-highschool"></div>
+                    </label>
+                        <div class="autocomplete-dropdown" id="dropdown-edit-f-highschool"></div>
                     <div class="dynamic-stats" id="stats-edit-f-highschool"></div>
                 </div>
 
                 <!-- University -->
                 <div class="edit-row-v2 autocomplete-wrapper">
                     <label class="edit-row-label">UNIVERSITY</label>
-                    <div class="tags-wrapper" id="tw-edit-f-university" onclick="document.getElementById('edit-f-university').focus()">
+                    <label class="tags-wrapper" id="tw-edit-f-university" for="edit-f-university" style="display:flex; cursor:text;">
                         <input type="text" id="edit-f-university" class="edit-row-input" style="border:none;" placeholder="University">
-                    </div>
-                    <div class="autocomplete-dropdown" id="dropdown-edit-f-university"></div>
+                    </label>
+                        <div class="autocomplete-dropdown" id="dropdown-edit-f-university"></div>
                     <div class="dynamic-stats" id="stats-edit-f-university"></div>
                 </div>
 
                 <!-- Degree -->
                 <div class="edit-row-v2 autocomplete-wrapper">
                     <label class="edit-row-label">DEGREE</label>
-                    <div class="tags-wrapper" id="tw-edit-f-degree" onclick="document.getElementById('edit-f-degree').focus()">
+                    <label class="tags-wrapper" id="tw-edit-f-degree" for="edit-f-degree" style="display:flex; cursor:text;">
                         <input type="text" id="edit-f-degree" class="edit-row-input" style="border:none;" placeholder="Major">
-                    </div>
-                    <div class="autocomplete-dropdown" id="dropdown-edit-f-degree"></div>
+                    </label>
+                        <div class="autocomplete-dropdown" id="dropdown-edit-f-degree"></div>
                     <div class="dynamic-stats" id="stats-edit-f-degree"></div>
                 </div>
 
                 <!-- Army Role -->
                 <div class="edit-row-v2 autocomplete-wrapper">
                     <label class="edit-row-label">ARMY ROLE</label>
-                    <div class="tags-wrapper" id="tw-edit-f-army-role" onclick="document.getElementById('edit-f-army-role').focus()">
+                    <label class="tags-wrapper" id="tw-edit-f-army-role" for="edit-f-army-role" style="display:flex; cursor:text;">
                         <input type="text" id="edit-f-army-role" class="edit-row-input" style="border:none;" placeholder="Role">
-                    </div>
-                    <div class="autocomplete-dropdown" id="dropdown-edit-f-army-role"></div>
+                    </label>
+                        <div class="autocomplete-dropdown" id="dropdown-edit-f-army-role"></div>
                     <div class="dynamic-stats" id="stats-edit-f-army-role"></div>
                 </div>
 
                 <!-- Army Base -->
                 <div class="edit-row-v2 autocomplete-wrapper">
                     <label class="edit-row-label">ARMY BASE</label>
-                    <div class="tags-wrapper" id="tw-edit-f-army-base" onclick="document.getElementById('edit-f-army-base').focus()">
+                    <label class="tags-wrapper" id="tw-edit-f-army-base" for="edit-f-army-base" style="display:flex; cursor:text;">
                         <input type="text" id="edit-f-army-base" class="edit-row-input" style="border:none;" placeholder="Base">
-                    </div>
-                    <div class="autocomplete-dropdown" id="dropdown-edit-f-army-base"></div>
+                    </label>
+                        <div class="autocomplete-dropdown" id="dropdown-edit-f-army-base"></div>
                     <div class="dynamic-stats" id="stats-edit-f-army-base"></div>
                 </div>
 
@@ -1234,9 +1231,9 @@
                     <!-- Previous Works -->
                     <div class="edit-row-v2 autocomplete-wrapper">
                         <label class="edit-row-label">PREVIOUS WORKS</label>
-                        <div class="tags-wrapper" id="tw-edit-f-prev-work" onclick="document.getElementById('edit-f-prev-work').focus()">
+                        <label class="tags-wrapper" id="tw-edit-f-prev-work" for="edit-f-prev-work" style="display:flex; cursor:text;">
                             <input type="text" id="edit-f-prev-work" class="edit-row-input" style="border:none;" placeholder="Companies">
-                        </div>
+                        </label>
                         <div class="autocomplete-dropdown" id="dropdown-edit-f-prev-work"></div>
                         <div class="dynamic-stats" id="stats-edit-f-prev-work"></div>
                     </div>
@@ -1965,10 +1962,10 @@
                         <div>
                             <div class="chapter-block autocomplete-wrapper" style="margin-bottom: 0px;">
                                 <label class="editorial-label">Current City</label>
-                                <div class="tags-wrapper" id="tw-f-city" onclick="document.getElementById('f-city').focus()">
+                                <label class="tags-wrapper" id="tw-f-city" for="f-city" style="display:flex; cursor:text;">
                                     <input type="text" id="f-city" class="editorial-input auto-location" placeholder="Where do you live?">
-                                </div>
-                                <div class="autocomplete-dropdown" id="dropdown-f-city"></div>
+                                </label>
+                        <div class="autocomplete-dropdown" id="dropdown-f-city"></div>
                                 <div class="dynamic-stats" id="stats-f-city"></div>
                             </div>
 
@@ -1982,10 +1979,10 @@
                         <!-- Originally From -->
                         <div class="chapter-block autocomplete-wrapper" id="origin-city-wrapper">
                             <label class="editorial-label">Originally From</label>
-                            <div class="tags-wrapper" id="tw-f-origin-city" onclick="document.getElementById('f-origin-city').focus()">
+                            <label class="tags-wrapper" id="tw-f-origin-city" for="f-origin-city" style="display:flex; cursor:text;">
                                 <input type="text" id="f-origin-city" class="tag-input editorial-input auto-location" placeholder="Hometown" style="margin-top:0;">
-                            </div>
-                            <div class="autocomplete-dropdown" id="dropdown-f-origin-city"></div>
+                            </label>
+                        <div class="autocomplete-dropdown" id="dropdown-f-origin-city"></div>
                             <div class="dynamic-stats" id="stats-f-origin-city"></div>
                         </div>
                     </div>
@@ -1998,18 +1995,18 @@
                         <div class="chapter-block autocomplete-wrapper">
                         <label class="editorial-label" style="display: block; margin-bottom: 5px;">Current Role</label>
                         <div style="font-size: 14px; opacity: 0.7; font-weight: 300; margin-bottom: 15px;">(If you're a student, you can write that instead)</div>
-                        <div class="tags-wrapper" id="tw-f-role" onclick="document.getElementById('f-role').focus()">
+                        <label class="tags-wrapper" id="tw-f-role" for="f-role" style="display:flex; cursor:text;">
                             <input type="text" id="f-role" class="editorial-input auto-role" placeholder="e.g. Graphic Designer, Software Engineer">
-                        </div>
+                        </label>
                         <div class="autocomplete-dropdown" id="dropdown-f-role"></div>
                         <div class="dynamic-stats" id="stats-f-role"></div>
                     </div>
 
                         <div class="chapter-block autocomplete-wrapper">
                         <label class="editorial-label">Current Workplace</label>
-                        <div class="tags-wrapper" id="tw-f-workplace" onclick="document.getElementById('f-workplace').focus()">
+                        <label class="tags-wrapper" id="tw-f-workplace" for="f-workplace" style="display:flex; cursor:text;">
                             <input type="text" id="f-workplace" class="editorial-input auto-work" placeholder="Company or Institution">
-                        </div>
+                        </label>
                         <div class="autocomplete-dropdown" id="dropdown-f-workplace"></div>
                         <div class="dynamic-stats" id="stats-f-workplace"></div>
                     </div>
@@ -2021,28 +2018,28 @@
                     <h2 id="step-6-title">Where did you study?</h2>
                     <div class="wizard-inner-content" style="z-index: 20; display: flex; flex-direction: column; gap: 30px;">
                         <div class="chapter-block autocomplete-wrapper">
-                        <label class="editorial-label">School / High School</label>
-                        <div class="tags-wrapper" id="tw-f-highschool" onclick="document.getElementById('f-highschool').focus()">
+                        <label class="editorial-label" for="f-highschool">School / High School</label>
+                        <label class="tags-wrapper" id="tw-f-highschool" for="f-highschool" style="display:flex; cursor:text;">
                             <input type="text" id="f-highschool" class="editorial-input auto-highschool" placeholder="e.g. Kadoorie School">
-                        </div>
+                        </label>
                         <div class="autocomplete-dropdown" id="dropdown-f-highschool"></div>
                         <div class="dynamic-stats" id="stats-f-highschool"></div>
                     </div>
 
                         <div class="chapter-block autocomplete-wrapper">
-                        <label class="editorial-label">University</label>
-                        <div class="tags-wrapper" id="tw-f-university" onclick="document.getElementById('f-university').focus()">
+                        <label class="editorial-label" for="f-university">University</label>
+                        <label class="tags-wrapper" id="tw-f-university" for="f-university" style="display:flex; cursor:text;">
                             <input type="text" id="f-university" class="editorial-input auto-university" placeholder="e.g. Hebrew University">
-                        </div>
+                        </label>
                         <div class="autocomplete-dropdown" id="dropdown-f-university"></div>
                         <div class="dynamic-stats" id="stats-f-university"></div>
                     </div>
 
                         <div class="chapter-block autocomplete-wrapper">
-                        <label class="editorial-label">Degree / Major</label>
-                        <div class="tags-wrapper" id="tw-f-degree" onclick="document.getElementById('f-degree').focus()">
+                        <label class="editorial-label" for="f-degree">Degree / Major</label>
+                        <label class="tags-wrapper" id="tw-f-degree" for="f-degree" style="display:flex; cursor:text;">
                             <input type="text" id="f-degree" class="editorial-input auto-degree" placeholder="e.g. Computer Science">
-                        </div>
+                        </label>
                         <div class="autocomplete-dropdown" id="dropdown-f-degree"></div>
                         <div class="dynamic-stats" id="stats-f-degree"></div>
                     </div>
@@ -2055,18 +2052,18 @@
                     <div class="wizard-inner-content" style="z-index: 20; display: flex; flex-direction: column; gap: 80px;">
                         <div class="chapter-block autocomplete-wrapper">
                         <label class="editorial-label">Military Role</label>
-                        <div class="tags-wrapper" id="tw-f-army-role" onclick="document.getElementById('f-army-role').focus()">
+                        <label class="tags-wrapper" id="tw-f-army-role" for="f-army-role" style="display:flex; cursor:text;">
                             <input type="text" id="f-army-role" class="editorial-input auto-army-role" placeholder="e.g. Combat Soldier, Commander">
-                        </div>
+                        </label>
                         <div class="autocomplete-dropdown" id="dropdown-f-army-role"></div>
                         <div class="dynamic-stats" id="stats-f-army-role"></div>
                     </div>
 
                         <div class="chapter-block autocomplete-wrapper">
                         <label class="editorial-label">Army Base</label>
-                        <div class="tags-wrapper" id="tw-f-army-base" onclick="document.getElementById('f-army-base').focus()">
+                        <label class="tags-wrapper" id="tw-f-army-base" for="f-army-base" style="display:flex; cursor:text;">
                             <input type="text" id="f-army-base" class="editorial-input auto-army-base" placeholder="e.g. Kirya, Tzeelim">
-                        </div>
+                        </label>
                         <div class="autocomplete-dropdown" id="dropdown-f-army-base"></div>
                         <div class="dynamic-stats" id="stats-f-army-base"></div>
                     </div>
@@ -2240,41 +2237,6 @@
             if (person.tags && person.tags.length > 0) completeness += 0.025;
             if (person.connections && person.connections.length > 0) completeness += 0.025;
             return completeness;
-        }
-
-        function countCompletedFields(person) {
-            let count = 1; // Name is always present
-            if (person.city) count++;
-            if (person.age) count++;
-            if (person.role) count++;
-            
-            if (person.tags) {
-                const tStr = Array.isArray(person.tags) ? person.tags.join(',') : person.tags;
-                if (tStr.includes('highschool:')) count++;
-                if (tStr.includes('armyrole:') || tStr.includes('armybase:') || tStr.includes('military:')) count++;
-                if (tStr.includes('prevwork:')) count++;
-                if (tStr.includes('workplace:') || tStr.includes('university:') || tStr.includes('degree:') || tStr.includes('youth:') || tStr.includes('community:') || tStr.includes('other:')) count++;
-            }
-            return count;
-        }
-
-        function getFirstMissingStep(person) {
-            if (!person.connections || person.connections.length === 0) return 2;
-            if (!person.city) return 3;
-            if (!person.age) return 4;
-            if (!person.role) return 5;
-            
-            let hasHs = false, hasArmy = false, hasPrev = false;
-            if (person.tags) {
-                const tStr = Array.isArray(person.tags) ? person.tags.join(',') : person.tags;
-                if (tStr.includes('highschool:')) hasHs = true;
-                if (tStr.includes('armyrole:') || tStr.includes('armybase:') || tStr.includes('military:')) hasArmy = true;
-                if (tStr.includes('prevwork:')) hasPrev = true;
-            }
-            if (!hasHs) return 6;
-            if (!hasArmy) return 7;
-            if (!hasPrev) return 8;
-            return 9;
         }
         let dbIdToIdx = {};
         let numStrands = 0;
@@ -4046,52 +4008,6 @@
                         }
                     }, 7000);
                 }, 3500);
-            } else {
-                // New Feed Me More for existing people with incomplete profiles
-                const popupElement = document.getElementById('feed-me-popup');
-                if (popupElement) {
-                    if (window._feedMeTimeout) {
-                        clearTimeout(window._feedMeTimeout);
-                        window._feedMeTimeout = null;
-                    }
-                    
-                    const completedCount = countCompletedFields(person);
-                    if (completedCount < 4) {
-                        popupElement.style.display = 'block';
-                        // Remove synchronous layout to fix lag
-                        
-                        // Wait a tiny bit for display block to apply before animating
-                        requestAnimationFrame(() => {
-                            popupElement.style.opacity = '1';
-                            popupElement.style.transform = 'translateY(0)';
-                        });
-                        
-                        popupElement.onclick = () => {
-                            popupElement.style.opacity = '0';
-                            popupElement.style.transform = 'translateY(-10px)';
-                            setTimeout(() => popupElement.style.display = 'none', 300);
-                            
-                            // Open wizard in enrich mode
-                            const firstMissingStep = getFirstMissingStep(person);
-                            window._wizardIsResuming = true;
-                            currentWizardStep = firstMissingStep;
-                            openModal('enrich', person);
-                        };
-                        
-                        // Hide after 5 seconds
-                        window._feedMeTimeout = setTimeout(() => {
-                            popupElement.style.opacity = '0';
-                            popupElement.style.transform = 'translateY(-10px)';
-                            setTimeout(() => {
-                                popupElement.style.display = 'none';
-                            }, 300);
-                        }, 5000);
-                    } else {
-                        popupElement.style.display = 'none';
-                        popupElement.style.opacity = '0';
-                        popupElement.style.transform = 'translateY(-10px)';
-                    }
-                }
             }
             
             document.getElementById('info-panel-container').classList.add('visible');
@@ -6449,13 +6365,13 @@
                 if (defaultConnectionNodeId !== null && people[defaultConnectionNodeId]) {
                     addConnectionEntry(people[defaultConnectionNodeId].id);
                 }
-            } else if (mode === 'edit' || mode === 'enrich') {
+            } else if (mode === 'edit') {
                 parseTagsIntoPerson(personData);
                 const instr = document.getElementById('add-person-instructions');
                 if (instr) instr.style.display = 'none';
-                document.getElementById('modal-title').textContent = mode === 'enrich' ? 'Enrich Profile' : 'Edit Person';
+                document.getElementById('modal-title').textContent = 'Edit Person';
                 document.getElementById('form-person-id').value = personData.id;
-                document.getElementById('edit-name-group').style.display = mode === 'enrich' ? 'none' : 'block';
+                document.getElementById('edit-name-group').style.display = 'block';
                 document.getElementById('f-name').value = personData.name || '';
                 const byField = document.getElementById('f-birth-year');
                 if (byField && personData.age) {
@@ -6497,23 +6413,10 @@
                     personData.connections.forEach(c => addConnectionEntry(c.id, c.type, c.strength));
                 }
                 
-                if (mode === 'edit') {
-                    if (!isResumingWizard) {
-                        // Move connections section into the accordion for Edit mode
-                        document.getElementById('edit-connections-content').appendChild(document.getElementById('connections-section'));
-                        document.getElementById('edit-connections-accordion').style.display = 'block';
-                    }
-                } else if (mode === 'enrich') {
-                    // For enrich mode, treat it like add mode structurally
-                    document.getElementById('wizard-step-9-original-parent').appendChild(document.getElementById('connections-section'));
-                    document.getElementById('edit-connections-accordion').style.display = 'none';
-                    
-                    window._wizardIsResuming = true;
-                    if (typeof currentWizardStep !== 'undefined') {
-                        goToWizardStep(currentWizardStep);
-                    } else {
-                        goToWizardStep(0);
-                    }
+                if (!isResumingWizard) {
+                    // Move connections section into the accordion for Edit mode
+                    document.getElementById('edit-connections-content').appendChild(document.getElementById('connections-section'));
+                    document.getElementById('edit-connections-accordion').style.display = 'block';
                 }
             }
         }
@@ -6895,15 +6798,24 @@
         // Add English and capitalization constraint to all text inputs in edit modal
         document.getElementById('edit-person-modal').addEventListener('input', (e) => {
             if (e.target.tagName === 'INPUT' && e.target.type === 'text') {
-                let val = e.target.value;
+                const originalVal = e.target.value;
+                const start = e.target.selectionStart;
+                const end = e.target.selectionEnd;
+                
+                let val = originalVal;
                 // Strip non-English letters, allow numbers and basic punctuation
                 val = val.replace(/[\u0590-\u05FF]/g, '');
                 // Capitalize first letter
                 if (val.length > 0) {
                     val = val.charAt(0).toUpperCase() + val.slice(1);
                 }
-                if (e.target.value !== val) {
+                
+                if (originalVal !== val) {
                     e.target.value = val;
+                    // Preserve cursor position so it doesn't jump to the end
+                    try {
+                        e.target.setSelectionRange(start, end);
+                    } catch (err) {}
                 }
             }
         });
@@ -7213,7 +7125,7 @@
                     window._wizardIsResuming = false;
                     closeModal();
                     
-                } else if (mode === 'edit' || mode === 'enrich') {
+                } else if (mode === 'edit') {
                     const personId = document.getElementById('form-person-id').value;
                     const res = await fetch(`/api/people/${personId}`, {
                         method: 'PUT',
@@ -7240,7 +7152,7 @@
                 let titleStr = '';
                 let textStr = '';
                 
-                if (mode === 'edit' || mode === 'enrich') {
+                if (mode === 'edit') {
                     titleStr = 'The network evolved.';
                     textStr = 'Thanks for keeping it accurate.';
                 } else {
@@ -7273,9 +7185,9 @@
                     });
                 }
                 
-                if ((mode === 'add' || mode === 'edit' || mode === 'enrich') && numStrands > 0) {
+                if ((mode === 'add' || mode === 'edit') && numStrands > 0) {
                     let targetIdx = numStrands - 1;
-                    if (mode === 'edit' || mode === 'enrich') {
+                    if (mode === 'edit') {
                         const personId = parseInt(document.getElementById('form-person-id').value);
                         const idx = people.findIndex(p => p.id === personId);
                         if (idx !== -1) targetIdx = idx;
