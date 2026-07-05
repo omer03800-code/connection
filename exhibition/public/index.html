@@ -235,7 +235,8 @@
         
         body.light-mode #info-card,
         body.light-mode #conn-secondary-card,
-        body.light-mode #edit-person-modal {
+        body.light-mode #edit-person-modal,
+        body.light-mode .suggested-circle-card {
             filter: invert(1) hue-rotate(180deg);
         }
         #info-name { font-size: 28px; margin-bottom: 4px; font-weight: 500; letter-spacing: 0px; }
@@ -292,6 +293,25 @@
             background: white;
             color: black !important;
             border: 1px solid #F5F5F5;
+        }
+        .btn-sleek {
+            background: transparent;
+            border: none !important;
+            box-shadow: none !important;
+            outline: none !important;
+            border-radius: 4px;
+            color: #111111;
+            cursor: pointer;
+            font-size: 10px;
+            letter-spacing: 1.5px;
+            text-transform: uppercase;
+            padding: 4px 10px;
+            transition: all 0.2s ease;
+            font-weight: 300;
+        }
+        .btn-sleek:hover {
+            background: #111111;
+            color: #ffffff !important;
         }
         .tag-pill {
             display: inline-block;
@@ -1015,7 +1035,7 @@
     <div id="edit-person-overlay" class="modal-overlay" style="z-index: 2000;">
         <div id="edit-person-modal" style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 500px; height: 65vh; background: #ffffff; color: #000000; border: 1px solid rgba(0,0,0,0.05); border-radius: 16px; padding: 25px 35px; display: flex; flex-direction: column; box-shadow: 0 4px 30px rgba(0,0,0,0.15); overflow: hidden;">
             <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 25px;">
-                <input type="text" id="edit-f-name" style="font-size: 32px; font-weight: 500; letter-spacing: -0.5px; background: transparent; border: none; border-bottom: 1px solid rgba(0,0,0,0.1); outline: none; width: 85%; color: #000; font-family: inherit; padding-bottom: 4px;" placeholder="Full Name">
+                <input type="text" id="edit-f-name" style="text-transform: capitalize; font-size: 32px; font-weight: 500; letter-spacing: -0.5px; background: transparent; border: none; border-bottom: 1px solid rgba(0,0,0,0.1); outline: none; width: 85%; color: #000; font-family: inherit; padding-bottom: 4px;" placeholder="Full Name">
                 <span class="close-btn" onclick="document.getElementById('edit-person-overlay').classList.remove('visible');" style="font-size: 28px; cursor: pointer; opacity: 0.4; line-height: 1; transition: 0.2s;">&times;</span>
             </div>
             
@@ -1696,6 +1716,194 @@
             body.light-mode .suggested-card {
                 filter: invert(1) hue-rotate(180deg) !important;
             }
+
+            /* --- CIRCLES DESIGN V9 (Centered List) --- */
+            #recommendation-list {
+                display: flex;
+                flex-direction: column;
+                gap: 4px;
+                width: 100%;
+                max-width: 600px;
+                margin: 0;
+                padding-bottom: 80px;
+                text-align: left;
+            }
+            .suggested-circle-card {
+                background: #ffffff;
+                border: 1px solid rgba(0,0,0,0.05);
+                padding: 0;
+                border-radius: 16px;
+                color: #000000;
+                width: 100%;
+                pointer-events: auto;
+                box-shadow: none;
+                display: flex;
+                flex-direction: column;
+                transition: height 0.3s ease;
+                margin-bottom: 2px;
+            }
+            .circle-header-wrap {
+                position: relative;
+                cursor: pointer;
+            }
+            .circle-title {
+                font-family: 'Helvetica', Arial, sans-serif;
+                font-size: 20px;
+                font-weight: 400;
+                color: #111;
+                margin-bottom: 12px;
+                letter-spacing: -0.01em;
+            }
+            .circle-context-row {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                margin-bottom: 12px;
+            }
+            .circle-subtitle {
+                font-family: 'Helvetica', Arial, sans-serif;
+                font-size: 14px;
+                color: #555;
+            }
+            .circle-meta {
+                font-family: 'Helvetica', Arial, sans-serif;
+                font-size: 13px;
+                color: #888;
+            }
+            .circle-toggle {
+                font-family: 'Helvetica', Arial, sans-serif;
+                font-size: 11px;
+                font-weight: 600;
+                letter-spacing: 1px;
+                color: #111;
+                background: transparent;
+                border: none;
+                cursor: pointer;
+                text-transform: uppercase;
+            }
+            .circle-content {
+                display: none;
+                padding: 0 32px 32px 32px;
+                background: #FFFFFF !important;
+                border: none !important;
+            }
+            .circle-bulk-actions {
+                display: flex;
+                justify-content: center;
+                gap: 40px;
+                margin: 24px 0;
+            }
+            
+            /* Native Button Styles */
+            .btn-circle-action {
+                background: transparent !important;
+                border: none !important;
+                font-family: 'Helvetica', Arial, sans-serif;
+                font-size: 11px;
+                font-weight: 300;
+                letter-spacing: 1.5px;
+                color: #111 !important;
+                cursor: pointer;
+                padding: 0;
+                text-transform: uppercase;
+                transition: opacity 0.2s;
+            }
+            .btn-circle-action:hover {
+                opacity: 0.5;
+            }
+            .btn-circle-action:hover {
+                opacity: 0.5;
+            }
+            .btn-circle-action:disabled {
+                opacity: 0.3;
+                cursor: default;
+            }
+
+            /* Minimal Person Row */
+            .circle-content .suggested-card {
+                border: 1px solid rgba(0,0,0,0.06) !important;
+                background: #FFFFFF !important;
+                color: #111111 !important;
+                border-radius: 6px !important;
+                margin-bottom: 8px !important;
+                padding: 16px 20px !important;
+                display: flex !important;
+                flex-direction: column !important;
+                box-shadow: none !important;
+                animation: none !important;
+                transition: border-color 0.2s;
+            }
+            .circle-content .suggested-card:last-child {
+                margin-bottom: 0;
+            }
+            .circle-content .suggested-card-main {
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+            }
+            .circle-content .suggested-name {
+                font-family: 'Helvetica', Arial, sans-serif;
+                font-size: 15px;
+                font-weight: 400;
+                color: #111;
+                white-space: nowrap;
+                overflow: hidden;
+                text-overflow: ellipsis;
+            }
+            
+            .circle-footer {
+                display: flex;
+                justify-content: center;
+                margin-top: 24px;
+            }
+
+            /* Inline Customization Panel */
+            .suggested-card-edit {
+                display: none;
+                margin-top: 20px;
+                padding-top: 20px;
+                border-top: 1px solid rgba(0,0,0,0.05);
+            }
+            .edit-field-group {
+                display: flex;
+                gap: 32px;
+                margin-bottom: 20px;
+            }
+            .edit-label {
+                display: block;
+                font-size: 10px;
+                text-transform: uppercase;
+                color: #888;
+                margin-bottom: 8px;
+                letter-spacing: 1px;
+            }
+            .edit-select {
+                padding: 10px;
+                border: 1px solid #EAEAEA;
+                border-radius: 4px;
+                background: #FFF;
+                font-family: 'Helvetica', Arial, sans-serif;
+                font-size: 14px;
+                color: #111;
+                width: 160px;
+                outline: none;
+            }
+            .edit-slider-wrap {
+                display: flex;
+                align-items: center;
+                gap: 12px;
+            }
+            .edit-slider {
+                width: 140px;
+                accent-color: #111;
+            }
+            .edit-slider-val {
+                font-family: 'Helvetica', Arial, sans-serif;
+                font-size: 14px;
+                color: #111;
+                width: 16px;
+            }
+            
             .suggested-shared-pill {
                 font-family: 'Helvetica', Arial, sans-serif;
                 display: flex;
@@ -1898,7 +2106,7 @@
                     <!-- Text input aligned perfectly with "2. Your story" (40%) -->
                     <div class="chapter-block" style="position: absolute; top: 40%; left: 50px; transform: translateY(-50%); width: 360px; z-index: 20; margin-top: 0;">
                         <label class="editorial-label" id="step-1-title">What's your name?</label>
-                        <input type="text" id="f-name-initial" class="editorial-input" placeholder="e.g. John Doe" autocomplete="off" style="width: 100%;">
+                        <input type="text" id="f-name-initial" class="editorial-input" placeholder="e.g. John Doe" autocomplete="off" style="width: 100%; text-transform: capitalize;">
                     </div>
                 </div>
 
@@ -1938,7 +2146,7 @@
                     <!-- Full Name Block (only visible when adding connections) -->
                     <div class="chapter-block wizard-inner-content name-group" id="edit-name-group" style="display: none; z-index: 40;">
                         <label class="editorial-label">Full Name</label>
-                        <input type="text" id="f-name" class="editorial-input" required>
+                        <input type="text" id="f-name" class="editorial-input" required style="text-transform: capitalize;">
                     </div>
 
                     <!-- 20% Block: Birth Year & Country -->
@@ -2086,11 +2294,11 @@
                 </div>
 
                 <!-- STEP REC SHARED PATHS (Suggested Connections) -->
-                <div id="wizard-step-rec" class="wizard-step">
-                    <h2>Let's start building your network</h2>
-                    <p class="step-explanation">We found a few people who may already be part of it.</p>
+                <div id="wizard-step-rec" class="wizard-step" style="text-align: left; height: 100%; overflow-y: auto; padding-top: 40px; display: flex; flex-direction: column; align-items: flex-start;">
+                    <h2 style="font-size: 32px; font-weight: 300; letter-spacing: -0.5px; margin-bottom: 8px;">Let's find your people.</h2>
+                    <p class="step-explanation" style="font-size: 15px; margin-bottom: 32px;">We found a few groups you might already have in common with people.</p>
                     
-                    <div id="recommendation-list" style="padding-right: 180px;"></div>
+                    <div id="recommendation-list"></div>
                 </div>
 
                 <!-- STEP 9 ADD CONNECTIONS -->
@@ -2126,12 +2334,12 @@
                     </div>
 
                     <div style="margin-top: 30px; width: 100%; text-align: center;">
-                        <button type="button" id="btn-summary-feed-now" class="info-action-btn" style="margin: 0; color: #fff; border: none;">[ FEED IT NOW ]</button>
+                        <button type="button" id="btn-summary-feed-now" class="info-action-btn" style="margin: 0; border: none; position: relative; z-index: 1001; cursor: pointer;">[ FEED IT NOW ]</button>
                     </div>
 
-                    <div style="position: absolute; bottom: 0; left: 0; right: 0; padding: 20px 40px; display: flex; justify-content: space-between; align-items: center; z-index: 1000; background: transparent;">
-                        <button type="button" id="btn-summary-back" class="info-action-btn" style="margin: 0; opacity: 0.8;">[ BACK ]</button>
-                        <button type="button" id="btn-summary-continue" class="info-action-btn" style="margin: 0;">[ CONTINUE TO FEED ]</button>
+                    <div style="position: absolute; bottom: 0; left: 0; right: 0; padding: 20px 40px; display: flex; justify-content: space-between; align-items: center; z-index: 1000; background: transparent; pointer-events: none;">
+                        <button type="button" id="btn-summary-back" class="info-action-btn" style="margin: 0; opacity: 0.8; pointer-events: auto;">[ BACK ]</button>
+                        <button type="button" id="btn-summary-continue" class="info-action-btn" style="margin: 0; pointer-events: auto;">[ CONTINUE TO FEED ]</button>
                     </div>
                 </div>
 
@@ -5272,7 +5480,7 @@
             else if (sessionNum === 4) window._nextWizardStep = '8';
             else window._nextWizardStep = null;
             
-            if (hasRecs) {
+            if (hasRecs || isFeedNow) {
                 goToWizardStep(recStep);
             } else {
                 window._isPartialAdd = true;
@@ -6087,13 +6295,111 @@
                 }
             });
             
-            scores.sort((a, b) => b.score - a.score);
-            let pendingRecs = scores.map(s => ({person: s.person, shared: s.shared}));
+            const initialCircles = new Map();
+            const individuals = [];
+            
+            function parseConcept(conceptStr) {
+                let title = conceptStr;
+                let subtitle = "Community match";
+                
+                if (conceptStr.includes(':')) {
+                    const parts = conceptStr.split(':');
+                    const category = parts[0].toLowerCase().trim();
+                    const value = parts.slice(1).join(':').trim();
+                    title = value.split(' ').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
+                } else {
+                    title = conceptStr.split(' ').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
+                }
+                return { title, subtitle };
+            }
+
+            scores.forEach(s => {
+                s.shared.forEach(concept => {
+                    if (!initialCircles.has(concept)) {
+                        initialCircles.set(concept, { concept: concept, people: [], score: 0 });
+                    }
+                    if (!initialCircles.get(concept).people.some(p => p.person.id === s.person.id)) {
+                        initialCircles.get(concept).people.push(s);
+                        initialCircles.get(concept).score += s.score;
+                    }
+                });
+            });
+
+            const circlesArray = Array.from(initialCircles.values()).filter(c => c.people.length >= 2);
+            const mergedCircles = [];
+            const mergedIndices = new Set();
+            
+            for (let i = 0; i < circlesArray.length; i++) {
+                if (mergedIndices.has(i)) continue;
+                
+                let baseCircle = circlesArray[i];
+                let mergedConcepts = [baseCircle.concept];
+                let intersectionPeople = [...baseCircle.people];
+                
+                for (let j = i + 1; j < circlesArray.length; j++) {
+                    if (mergedIndices.has(j)) continue;
+                    
+                    const compareCircle = circlesArray[j];
+                    const baseIds = new Set(intersectionPeople.map(p => p.person.id));
+                    const compareIds = new Set(compareCircle.people.map(p => p.person.id));
+                    const intersection = new Set([...baseIds].filter(x => compareIds.has(x)));
+                    const union = new Set([...baseIds, ...compareIds]);
+                    const jaccard = intersection.size / union.size;
+                    
+                    if (jaccard >= 0.7 || intersection.size === compareIds.size || intersection.size === baseIds.size) {
+                        mergedIndices.add(j);
+                        if (!mergedConcepts.includes(compareCircle.concept)) {
+                            mergedConcepts.push(compareCircle.concept);
+                        }
+                        intersectionPeople = intersectionPeople.filter(p => compareIds.has(p.person.id));
+                    }
+                }
+                
+                if (intersectionPeople.length < 2) {
+                    intersectionPeople = [...baseCircle.people];
+                    mergedConcepts = [baseCircle.concept];
+                }
+                
+                const parsedConcepts = mergedConcepts.map(c => parseConcept(c));
+                const nonGenericTitles = parsedConcepts.map(pc => pc.title).filter(t => !['Student', 'Design', 'Tech'].includes(t));
+                let finalTitle = nonGenericTitles.length > 0 ? nonGenericTitles.slice(0, 2).join(' / ') : parsedConcepts[0].title;
+                
+                let finalSubtitle = parsedConcepts.map(pc => pc.title).join(' · ');
+                if (finalSubtitle === finalTitle) finalSubtitle = "Discovered connections";
+                
+                mergedCircles.push({
+                    title: finalTitle,
+                    subtitle: finalSubtitle,
+                    people: intersectionPeople.sort((a, b) => b.score - a.score),
+                    score: intersectionPeople.reduce((sum, p) => sum + p.score, 0)
+                });
+            }
+
+            mergedCircles.sort((a, b) => b.score - a.score);
+
+            scores.forEach(s => {
+                let belongsToValidCircle = false;
+                for (const mc of mergedCircles) {
+                    if (mc.people.some(p => p.person.id === s.person.id)) {
+                        belongsToValidCircle = true;
+                        break;
+                    }
+                }
+                if (!belongsToValidCircle) {
+                    individuals.push({ person: s.person, shared: s.shared, score: s.score });
+                }
+            });
+            individuals.sort((a, b) => b.score - a.score);
+
+            let pendingRecs = [];
+            mergedCircles.forEach(c => pendingRecs.push({ type: 'circle', data: c }));
+            individuals.forEach(ind => pendingRecs.push({ type: 'individual', data: ind }));
             
             const recList = document.getElementById('recommendation-list');
             recList.innerHTML = '';
             
             if (pendingRecs.length === 0) {
+                recList.innerHTML = '<p style="color: rgba(17,17,17,0.6); font-family: \'Space Mono\', monospace; font-size: 14px;">No connections found based on the info provided so far.</p>';
                 return false;
             }
             
@@ -6108,83 +6414,436 @@
                 currentRecIndex++;
                 visibleCount++;
 
-                const p = rec.person;
-                const sharedConcepts = rec.shared || [];
                 const div = document.createElement('div');
-                div.className = 'suggested-card';
-                // Add an entrance animation class if you like
-                div.style.animation = 'fadeInUp 0.3s ease-out';
                 
-                let sharedHTML = '';
-                if (sharedConcepts.length > 0) {
-                    const pillsHTML = sharedConcepts.map(c => {
-                        const match = c.match(/\(([^)]+)\)/);
-                        const shortLabel = match ? match[1] : c;
-                        return `<span class="suggested-shared-pill">${shortLabel}</span>`;
-                    }).join('');
-                    sharedHTML = `
-                        <div class="suggested-shared-wrap">
-                            <span class="suggested-shared-label">SHARED PATHS</span>
-                            <div style="display: flex; gap: 8px; flex-wrap: wrap;">${pillsHTML}</div>
-                        </div>
-                    `;
-                }
-
-                const metaStr = `${p.role || 'Unknown'} <span>•</span> ${p.city || 'Unknown'}`;
-                const metaNoOrphans = metaStr.replace(/ ([^ ]*)$/, '&nbsp;$1');
-
-                div.innerHTML = `
-                    <button type="button" class="btn-dismiss-rec" title="Dismiss" style="width: 24px; height: 24px; right: 10px; left: auto; padding: 0; margin: 0; min-width: 0;">✕</button>
-                    <div class="suggested-card-content">
-                        <div class="suggested-name">${p.name.replace(/ ([^ ]*)$/, '&nbsp;$1')}</div>
-                        <div class="suggested-meta">${metaNoOrphans}</div>
-                        ${sharedHTML}
-                    </div>
-                    <div class="suggested-card-action">
-                        <button type="button" class="btn-connect-sleek" data-id="${p.id}">[ CONNECT ]</button>
-                    </div>
-                `;
-                recList.appendChild(div);
+                const handleNextLogic = () => {
+                    if (currentRecIndex >= pendingRecs.length && visibleCount === 0) {
+                        if (window._addedSomeoneInRecs) {
+                            goToWizardStep(window._currentConnStep || 'conn-1');
+                        } else {
+                            const currentConn = window._currentConnStep || 'conn-1';
+                            document.querySelectorAll('.wizard-step.active').forEach(el => el.classList.remove('active'));
+                            const nextStepEl = document.getElementById('wizard-step-' + currentConn);
+                            if (nextStepEl) nextStepEl.classList.add('active');
+                            document.getElementById('btn-wizard-global-next').click();
+                        }
+                    } else {
+                        renderNextCard();
+                    }
+                };
                 
-                const removeCard = () => {
+                const removeMainCard = () => {
                     div.style.transition = 'all 0.3s ease';
                     div.style.opacity = '0';
                     div.style.transform = 'scale(0.95)';
                     setTimeout(() => {
                         div.remove();
                         visibleCount--;
-                        if (currentRecIndex >= pendingRecs.length && visibleCount === 0) {
-                            if (window._addedSomeoneInRecs) {
-                                goToWizardStep(window._currentConnStep || 'conn-1');
-                            } else {
-                                // Simulate 'Continue' click from the conn-X step to skip it and go to next question/network
-                    const currentConn = window._currentConnStep || 'conn-1';
-                                document.querySelectorAll('.wizard-step.active').forEach(el => el.classList.remove('active'));
-                                const nextStepEl = document.getElementById('wizard-step-' + currentConn);
-                                if (nextStepEl) nextStepEl.classList.add('active');
-                                document.getElementById('btn-wizard-global-next').click();
-                            }
-                        } else {
-                            renderNextCard(); // Pop up the next one!
-                        }
+                        handleNextLogic();
                     }, 300);
                 };
 
-                div.querySelector('.btn-dismiss-rec').addEventListener('click', () => {
-                    window._dismissedRecs = window._dismissedRecs || new Set();
-                    window._dismissedRecs.add(p.name);
-                    removeCard();
-                });
-                
-                div.querySelector('.btn-connect-sleek').addEventListener('click', (e) => {
-                    const id = parseInt(e.target.dataset.id);
-                    addConnectionEntry(id, 'acquaintance', 3);
-                    window._addedSomeoneInRecs = true;
-                    removeCard();
-                });
+                if (rec.type === 'circle') {
+                    const circle = rec.data;
+                    
+                    const getPersonalCopy = (cat) => {
+                        if (cat === 'university') return `Looks like you studied together.`;
+                        if (cat === 'highschool') return `Looks like you studied together.`;
+                        if (cat === 'workplace') return `Looks like you worked together.`;
+                        if (cat === 'origincity') return `You both grew up here.`;
+                        if (cat === 'armybase' || cat === 'armyrole') return `Looks like you served together.`;
+                        return `Looks like you crossed paths here.`;
+                    };
+                    div.className = 'suggested-circle-card';
+                    
+                    div.innerHTML = `
+                        <div class="circle-header-wrap" style="position: relative; padding: 25px; padding-bottom: 25px; cursor: pointer; display: flex; flex-direction: column; min-height: 120px;">
+                            <div style="position: absolute; top: 12px; right: 12px;">
+                                <button type="button" class="circle-dismiss" style="background:transparent; border:none; color:#000; font-size:14px; cursor:pointer; padding:4px; line-height:1; font-weight:300; opacity:0.25; outline:none;">&times;</button>
+                            </div>
+                            <div class="circle-title" style="font-size: 20px; font-weight: 500; letter-spacing: 0px; color: #000; line-height: 1.2; padding-right: 30px; margin-bottom: 8px;">${circle.title}</div>
+                            <div class="circle-tags" style="display: flex; flex-wrap: wrap; gap: 4px; margin-bottom: 16px;">
+                                ${(() => {
+                                    if (!circle.subtitle) return `<span class="tag-pill" style="color:#666; border-color:rgba(0,0,0,0.1); background:transparent;">#${getPersonalCopy(circle.category)}</span>`;
+                                    const tags = circle.subtitle.split(' · ');
+                                    return tags.map(t => `<span class="tag-pill" style="color:#666; border-color:rgba(0,0,0,0.1); background:transparent;">#${t}</span>`).join('');
+                                })()}
+                            </div>
+                            <div style="display: flex; justify-content: space-between; align-items: flex-end; margin-top: auto;">
+                                <div class="circle-meta" style="display: flex; align-items: center; gap: 8px; font-size: 10px; text-transform: uppercase; letter-spacing: 1.5px; color: #666; font-weight: 500; height: 16px; white-space: nowrap;">
+                                    <span style="white-space: nowrap;">${circle.people.length} people &middot; Friend &middot; Strength 3</span>
+                                </div>
+                                <div style="display: flex; gap: 10px; align-items: center; height: 16px;">
+                                    <button type="button" class="circle-toggle btn-sleek" style="margin: 0; white-space: nowrap;">[ EXPAND ]</button>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="circle-content" style="display: none; padding: 0 25px 25px 25px;">
+                            <div class="circle-bulk-actions" style="display: flex; gap: 10px; margin-bottom: 25px;">
+                                <button type="button" class="btn-sleek btn-bulk-connect" style="margin: 0;">[ I KNOW EVERYONE ]</button>
+                                <button type="button" class="btn-sleek btn-bulk-partial" style="margin: 0;">[ I KNOW SOME ]</button>
+                            </div>
+
+                            <div class="circle-people-list" style="display: flex; flex-direction: column; gap: 0;"></div>
+                        </div>
+                    `;
+                    
+                    const headerWrap = div.querySelector('.circle-header-wrap');
+                    const content = div.querySelector('.circle-content');
+                    const peopleList = div.querySelector('.circle-people-list');
+                    const toggleBtn = div.querySelector('.circle-toggle');
+                    const toggleFunc = () => {
+                        if (content.style.display === 'block') {
+                            content.style.display = 'none';
+                            headerWrap.style.paddingBottom = '25px';
+                            if (toggleBtn) toggleBtn.innerText = '[ EXPAND ]';
+                        } else {
+                            content.style.display = 'block';
+                            headerWrap.style.paddingBottom = '0';
+                            if (toggleBtn) toggleBtn.innerText = '[ CLOSE ]';
+                        }
+                    };
+                    
+                    headerWrap.addEventListener('click', (e) => {
+                        toggleFunc();
+                    });
+
+                    const dismissBtn = div.querySelector('.circle-dismiss');
+                    if (dismissBtn) {
+                        dismissBtn.addEventListener('click', (e) => {
+                            e.stopPropagation();
+                            window._dismissedRecs = window._dismissedRecs || new Set();
+                            circle.people.forEach(p => window._dismissedRecs.add(p.person.name));
+                            removeMainCard();
+                        });
+                    }
+                    
+
+                    
+                    div.querySelector('.btn-bulk-partial').addEventListener('click', (e) => {
+                        e.stopPropagation();
+                        // Open all inline editors inside this circle
+                        const editors = peopleList.querySelectorAll('.suggested-card-edit');
+                        editors.forEach(ed => ed.style.display = 'block');
+                        const allEditBtns = peopleList.querySelectorAll('.btn-customize-person');
+                        allEditBtns.forEach(btn => btn.style.display = 'none');
+                        e.target.style.display = 'none';
+                    });
+
+                    div.querySelector('.btn-bulk-connect').addEventListener('click', (e) => {
+                        e.stopPropagation();
+                        circle.people.forEach(s => {
+                            const pCard = peopleList.querySelector('[data-person-id="' + s.person.id + '"]');
+                            if (pCard && !pCard.classList.contains('is-added')) {
+                                const typeVal = pCard.querySelector('.type-input').getAttribute('data-value') || 'friend';
+                                const strengthVal = parseInt(pCard.querySelector('.strength-input').value, 10) || 3;
+                                addConnectionEntry(s.person.id, typeVal, strengthVal);
+                                pCard.classList.add('is-added');
+                                pCard.style.opacity = '0.5';
+                                const editPanel = pCard.querySelector('.suggested-card-edit');
+                                if (editPanel) editPanel.style.display = 'none';
+                            }
+                        });
+                        window._addedSomeoneInRecs = true;
+                        e.target.innerText = '[ ADDED ALL ]';
+                        e.target.disabled = true;
+                    });
+                    
+                    circle.people.forEach(s => {
+                        const p = s.person;
+                        const pDiv = document.createElement('div');
+                        pDiv.className = 'suggested-card';
+                        pDiv.setAttribute('data-person-id', p.id);
+                        
+                        pDiv.innerHTML = `
+                            <div class="suggested-card-main info-row-v2" style="margin-bottom: 2px;">
+                                <div class="suggested-name" style="font-size: 13px; font-weight: 400; color: #111;">${p.name.replace(/ ([^ ]*)$/, '&nbsp;$1')}</div>
+                                <div class="suggested-meta info-row-label" style="display: flex; align-items: baseline; gap: 8px; color: #666;">
+                                    <span class="meta-label" style="white-space: nowrap; font-size: 10px; line-height: 1;">Friend &middot; 3</span>
+                                    <button type="button" class="btn-customize-person" style="background: transparent; border: none; cursor: pointer; color: #111; font-weight: 500; font-size: 10px; opacity: 0.6; padding: 0; white-space: nowrap;">[ EDIT ]</button>
+                                    <button type="button" class="btn-connect-person btn-sleek" style="padding: 0 4px; font-size: 9px; border: none !important; outline: none !important;">[ CONNECT ]</button>
+                                </div>
+                            </div>
+                            <div class="suggested-card-edit" style="display: none; padding: 16px; background: #F5F5F5; border-top: 1px solid #EAEAEA; position: relative; width: 100%; box-sizing: border-box;">
+                                <button type="button" class="btn-close-edit" style="position: absolute; top: 50%; transform: translateY(-50%); right: 0; background: transparent; border: none; cursor: pointer; color: #999; font-size: 18px; font-weight: 300; line-height: 1; padding: 4px; z-index: 10;">&#x2303;</button>
+                                <div class="edit-field-group" style="padding-right: 40px;">
+                                    <div>
+                                        <label class="edit-label">Connection Type</label>
+                                        <div class="custom-select-wrapper" style="position: relative;">
+                                            <div class="custom-select-display type-input" data-value="friend" style="border: 1px solid rgba(0,0,0,0.1); padding: 12px 16px; border-radius: 4px; font-size: 14px; cursor: pointer; display: flex; justify-content: space-between; align-items: center; background: #fff;">
+                                                <span class="custom-select-text">Friend</span>
+                                                <span style="font-size: 10px; opacity: 0.5;">▼</span>
+                                            </div>
+                                            <div class="custom-select-dropdown autocomplete-dropdown" style="display: none; position: absolute; z-index: 9999; top: 100%; left: 0; background: #ffffff; border: 1px solid rgba(0,0,0,0.1); border-radius: 6px; overflow: hidden; box-shadow: 0 4px 15px rgba(0,0,0,0.1); width: 100%; padding-bottom: 8px;">
+                                                <div class="autocomplete-item custom-select-item" data-value="close_family" data-label="Close Family" style="color: #111; padding: 12px 16px; font-size: 14px; cursor: pointer; border-bottom: 1px solid rgba(0,0,0,0.05);">Close Family</div>
+                                                <div class="autocomplete-item custom-select-item" data-value="family" data-label="Family" style="color: #111; padding: 12px 16px; font-size: 14px; cursor: pointer; border-bottom: 1px solid rgba(0,0,0,0.05);">Family</div>
+                                                <div class="autocomplete-item custom-select-item" data-value="friend" data-label="Friend" style="color: #111; padding: 12px 16px; font-size: 14px; cursor: pointer; border-bottom: 1px solid rgba(0,0,0,0.05);">Friend</div>
+                                                <div class="autocomplete-item custom-select-item" data-value="acquaintance" data-label="Acquaintance" style="color: #111; padding: 12px 16px; font-size: 14px; cursor: pointer; border-bottom: 1px solid rgba(0,0,0,0.05);">Acquaintance</div>
+                                                <div class="autocomplete-item custom-select-item" data-value="professional" data-label="Professional" style="color: #111; padding: 12px 16px; font-size: 14px; cursor: pointer;">Professional</div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <label class="edit-label">Strength (1-5)</label>
+                                        <div class="edit-slider-wrap">
+                                            <input type="range" class="edit-slider strength-input" min="1" max="5" value="3">
+                                            <span class="edit-slider-val strength-display">3</span>
+                                        </div>
+                                    </div>
+                                </div>
+
+                            </div>
+                        `;
+                        
+                        const editPanel = pDiv.querySelector('.suggested-card-edit');
+                        const statusDisplay = pDiv.querySelector('.suggested-status');
+                        const strengthSlider = pDiv.querySelector('.strength-input');
+                        const strengthDisplay = pDiv.querySelector('.strength-display');
+                        const typeInput = pDiv.querySelector('.type-input');
+                        
+                        const metaLabel = pDiv.querySelector('.meta-label');
+                        const customDisplay = pDiv.querySelector('.custom-select-display');
+                        const customDropdown = pDiv.querySelector('.custom-select-dropdown');
+                        const customItems = pDiv.querySelectorAll('.custom-select-item');
+                        
+                        const updateMeta = () => {
+                            const typeLabel = customDisplay.querySelector('.custom-select-text').innerText;
+                            const strength = strengthSlider.value;
+                            if (metaLabel) metaLabel.innerHTML = `${typeLabel} &middot; ${strength}`;
+                        };
+
+                        strengthSlider.addEventListener('input', (e) => {
+                            strengthDisplay.innerText = e.target.value;
+                            updateMeta();
+                        });
+
+                        if (customDisplay && customDropdown) {
+                            customDisplay.addEventListener('click', (e) => {
+                                e.stopPropagation();
+                                const isOpening = customDropdown.style.display === 'none';
+                                customDropdown.style.display = isOpening ? 'block' : 'none';
+                                div.style.position = 'relative';
+                                div.style.zIndex = isOpening ? '99999' : '';
+                            });
+                            
+                            customItems.forEach(item => {
+                                item.addEventListener('click', (e) => {
+                                    e.stopPropagation();
+                                    const val = item.getAttribute('data-value');
+                                    const label = item.getAttribute('data-label');
+                                    customDisplay.setAttribute('data-value', val);
+                                    customDisplay.querySelector('.custom-select-text').innerText = label;
+                                    customDropdown.style.display = 'none';
+                                    div.style.zIndex = '';
+                                    updateMeta();
+                                });
+                            });
+                            
+                            document.addEventListener('click', (e) => {
+                                if (!customDisplay.contains(e.target) && !customDropdown.contains(e.target)) {
+                                    customDropdown.style.display = 'none';
+                                    div.style.zIndex = '';
+                                }
+                            });
+                        }
+                        
+                        const editBtn = pDiv.querySelector('.btn-customize-person');
+                        if (editBtn) {
+                            editBtn.addEventListener('click', (e) => {
+                                e.stopPropagation();
+                                editPanel.style.display = 'block';
+                                editBtn.style.display = 'none';
+                            });
+                        }
+                        
+                        const closeEditBtn = pDiv.querySelector('.btn-close-edit');
+                        if (closeEditBtn) {
+                            closeEditBtn.addEventListener('click', (e) => {
+                                e.stopPropagation();
+                                editPanel.style.display = 'none';
+                                if (editBtn) editBtn.style.display = 'flex';
+                            });
+                        }
+                        
+                        const connectBtn = pDiv.querySelector('.btn-connect-person');
+                        if (connectBtn) {
+                            connectBtn.addEventListener('click', (e) => {
+                                e.stopPropagation();
+                                const typeVal = customDisplay.getAttribute('data-value') || 'friend';
+                                const strengthVal = parseInt(strengthSlider.value, 10) || 3;
+                                
+                                addConnectionEntry(p.id, typeVal, strengthVal);
+                                window._addedSomeoneInRecs = true;
+                                
+                                pDiv.classList.add('is-added');
+                                pDiv.style.opacity = '0.5';
+                                pDiv.style.borderColor = 'transparent';
+                                editPanel.style.display = 'none';
+                                connectBtn.innerText = '[ ADDED ]';
+                                connectBtn.disabled = true;
+                                connectBtn.style.opacity = '0.5';
+                            });
+                        }
+                        
+
+                        
+
+                        
+                        peopleList.appendChild(pDiv);
+                    });
+                    
+                    recList.appendChild(div);
+                } else {
+                    const p = rec.data.person;
+                    div.className = 'suggested-circle-card';
+                    
+                    div.innerHTML = `
+                        <div class="circle-header-wrap" style="position: relative; padding: 25px; padding-bottom: 25px; cursor: default; display: flex; flex-direction: column; min-height: 120px;">
+                            <div style="position: absolute; top: 12px; right: 12px;">
+                                <button type="button" class="btn-bulk-skip" style="background:transparent; border:none; color:#000; font-size:14px; cursor:pointer; padding:4px; line-height:1; font-weight:300; opacity:0.25; outline:none;">&times;</button>
+                            </div>
+                            <div class="circle-title" style="font-size: 20px; font-weight: 500; letter-spacing: 0px; color: #000; line-height: 1.2; padding-right: 30px; margin-bottom: 8px;">${p.name.replace(/ ([^ ]*)$/, '&nbsp;$1')}</div>
+                            <div class="circle-tags" style="display: flex; flex-wrap: wrap; gap: 4px; margin-bottom: 16px;">
+                                ${(() => {
+                                    if (!rec.data.shared || rec.data.shared.length === 0) return `<span class="tag-pill" style="color:#666; border-color:rgba(0,0,0,0.1); background:transparent;">#Connection</span>`;
+                                    return rec.data.shared.map(t => `<span class="tag-pill" style="color:#666; border-color:rgba(0,0,0,0.1); background:transparent;">#${t.split(':')[1] ? t.split(':')[1].split(' ').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ') : t}</span>`).join('');
+                                })()}
+                            </div>
+                            <div style="display: flex; justify-content: space-between; align-items: flex-end; margin-top: auto;">
+                                <div class="circle-meta" style="display: flex; align-items: baseline; gap: 8px; font-size: 10px; text-transform: uppercase; letter-spacing: 1.5px; color: #666; font-weight: 500; height: 16px; white-space: nowrap;">
+                                    <span class="meta-label" style="white-space: nowrap; font-size: 10px; line-height: 1;">Friend &middot; Strength 3</span>
+                                    <button type="button" class="btn-customize-person" style="background: transparent; border: none; cursor: pointer; color: #111; font-weight: 500; font-size: 10px; opacity: 0.6; padding: 0; white-space: nowrap;">[ EDIT ]</button>
+                                </div>
+                                <div style="display: flex; gap: 10px; align-items: center; height: 16px;">
+                                    <button type="button" class="btn-sleek btn-connect-sleek" data-id="${p.id}" style="margin: 0; white-space: nowrap; border: none !important; outline: none !important;">[ CONNECT ]</button>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="circle-content" style="display: none; padding: 0 25px 25px 25px;">
+                            <div class="suggested-card-edit" style="display: block; padding-top: 16px; border-top: 1px solid rgba(0,0,0,0.05); position: relative; width: 100%; box-sizing: border-box;">
+                                <button type="button" class="btn-close-edit" style="position: absolute; top: 50%; transform: translateY(-50%); right: 0; background: transparent; border: none; cursor: pointer; color: #999; font-size: 18px; font-weight: 300; line-height: 1; padding: 4px; z-index: 10;">&#x2303;</button>
+                                <div class="edit-field-group" style="padding-right: 40px;">
+                                    <div>
+                                        <label class="edit-label">Connection Type</label>
+                                        <div class="custom-select-wrapper" style="position: relative;">
+                                            <div class="custom-select-display type-input" data-value="friend" style="border: 1px solid rgba(0,0,0,0.1); padding: 12px 16px; border-radius: 4px; font-size: 14px; cursor: pointer; display: flex; justify-content: space-between; align-items: center; background: #fff;">
+                                                <span class="custom-select-text">Friend</span>
+                                                <span style="font-size: 10px; opacity: 0.5;">▼</span>
+                                            </div>
+                                            <div class="custom-select-dropdown autocomplete-dropdown" style="display: none; position: absolute; z-index: 9999; top: 100%; left: 0; background: #ffffff; border: 1px solid rgba(0,0,0,0.1); border-radius: 6px; overflow: hidden; box-shadow: 0 4px 15px rgba(0,0,0,0.1); width: 100%; padding-bottom: 8px;">
+                                                <div class="autocomplete-item custom-select-item" data-value="close_family" data-label="Close Family" style="color: #111; padding: 12px 16px; font-size: 14px; cursor: pointer; border-bottom: 1px solid rgba(0,0,0,0.05);">Close Family</div>
+                                                <div class="autocomplete-item custom-select-item" data-value="family" data-label="Family" style="color: #111; padding: 12px 16px; font-size: 14px; cursor: pointer; border-bottom: 1px solid rgba(0,0,0,0.05);">Family</div>
+                                                <div class="autocomplete-item custom-select-item" data-value="friend" data-label="Friend" style="color: #111; padding: 12px 16px; font-size: 14px; cursor: pointer; border-bottom: 1px solid rgba(0,0,0,0.05);">Friend</div>
+                                                <div class="autocomplete-item custom-select-item" data-value="acquaintance" data-label="Acquaintance" style="color: #111; padding: 12px 16px; font-size: 14px; cursor: pointer; border-bottom: 1px solid rgba(0,0,0,0.05);">Acquaintance</div>
+                                                <div class="autocomplete-item custom-select-item" data-value="professional" data-label="Professional" style="color: #111; padding: 12px 16px; font-size: 14px; cursor: pointer;">Professional</div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <label class="edit-label">Strength (1-5)</label>
+                                        <div class="edit-slider-wrap">
+                                            <input type="range" class="edit-slider strength-input" min="1" max="5" value="3">
+                                            <span class="edit-slider-val strength-display">3</span>
+                                        </div>
+                                    </div>
+                                </div>
+
+                            </div>
+                        </div>
+                    `;
+                    recList.appendChild(div);
+                    
+                    const editPanel = div.querySelector('.suggested-card-edit');
+                    const strengthSlider = div.querySelector('.strength-input');
+                    const strengthDisplay = div.querySelector('.strength-display');
+                    const typeInput = div.querySelector('.type-input');
+                    
+                    const metaLabel = div.querySelector('.meta-label');
+                    const customDisplay = div.querySelector('.custom-select-display');
+                    const customDropdown = div.querySelector('.custom-select-dropdown');
+                    const customItems = div.querySelectorAll('.custom-select-item');
+                    
+                    const updateMeta = () => {
+                        const typeLabel = customDisplay.querySelector('.custom-select-text').innerText;
+                        const strength = strengthSlider.value;
+                        if (metaLabel) metaLabel.innerHTML = `${typeLabel} &middot; Strength ${strength}`;
+                    };
+
+                    strengthSlider.addEventListener('input', (e) => {
+                        strengthDisplay.innerText = e.target.value;
+                        updateMeta();
+                    });
+
+                    if (customDisplay && customDropdown) {
+                        customDisplay.addEventListener('click', (e) => {
+                            e.stopPropagation();
+                            const isOpening = customDropdown.style.display === 'none';
+                            customDropdown.style.display = isOpening ? 'block' : 'none';
+                            div.style.position = 'relative';
+                            div.style.zIndex = isOpening ? '99999' : '';
+                        });
+                        
+                        customItems.forEach(item => {
+                            item.addEventListener('click', (e) => {
+                                e.stopPropagation();
+                                const val = item.getAttribute('data-value');
+                                const label = item.getAttribute('data-label');
+                                customDisplay.setAttribute('data-value', val);
+                                customDisplay.querySelector('.custom-select-text').innerText = label;
+                                customDropdown.style.display = 'none';
+                                div.style.zIndex = '';
+                                updateMeta();
+                            });
+                        });
+                        
+                        document.addEventListener('click', (e) => {
+                            if (!customDisplay.contains(e.target) && !customDropdown.contains(e.target)) {
+                                customDropdown.style.display = 'none';
+                                div.style.zIndex = '';
+                            }
+                        });
+                    }
+                    
+                    div.querySelector('.btn-bulk-skip').addEventListener('click', () => {
+                        window._dismissedRecs = window._dismissedRecs || new Set();
+                        window._dismissedRecs.add(p.name);
+                        removeMainCard();
+                    });
+                    
+                    div.querySelector('.btn-connect-sleek').addEventListener('click', (e) => {
+                        const typeVal = div.querySelector('.type-input').getAttribute('data-value') || 'friend';
+                        const strengthVal = parseInt(div.querySelector('.strength-input').value, 10) || 3;
+                        addConnectionEntry(p.id, typeVal, strengthVal);
+                        window._addedSomeoneInRecs = true;
+                        removeMainCard();
+                    });
+                    
+                    const contentPanel = div.querySelector('.circle-content');
+                    const headerWrap = div.querySelector('.circle-header-wrap');
+                    const indEditBtn = div.querySelector('.btn-customize-person');
+                    indEditBtn.addEventListener('click', (e) => {
+                        e.stopPropagation();
+                        contentPanel.style.display = 'block';
+                        headerWrap.style.paddingBottom = '12px';
+                        indEditBtn.style.display = 'none';
+                    });
+                    
+                    const indCloseEditBtn = div.querySelector('.btn-close-edit');
+                    if (indCloseEditBtn) {
+                        indCloseEditBtn.addEventListener('click', (e) => {
+                            e.stopPropagation();
+                            contentPanel.style.display = 'none';
+                            headerWrap.style.paddingBottom = '25px';
+                            indEditBtn.style.display = 'flex';
+                        });
+                    }
+                    
+
+                    
+
+                }
             };
 
-            // Initially render up to 5 cards
             for (let i = 0; i < 5; i++) {
                 renderNextCard();
             }
