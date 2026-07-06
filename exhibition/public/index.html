@@ -5135,7 +5135,7 @@
             };
             
             if (progressContainer) {
-                if (currentStr === '9' || currentStr === '10' || currentStr === 'summary') {
+                if (currentStr === '2' || currentStr === '3' || currentStr === '9' || currentStr === '10' || currentStr === 'summary') {
                     progressContainer.style.display = 'none';
                 } else {
                     progressContainer.style.display = 'flex';
@@ -5166,11 +5166,30 @@
         window.goToWizardStep = goToWizardStep;
         
         function processStep0() {
-            const val = document.getElementById('f-name-initial').value;
+            const val = document.getElementById('f-name-initial').value.trim();
             if (val) {
                 document.getElementById('f-name').value = val;
+                
+                goToWizardStep(2); // Scanning animation
+                
+                setTimeout(() => {
+                    const lowerVal = val.toLowerCase();
+                    const matchIndex = people.findIndex(p => p.name.toLowerCase() === lowerVal);
+                    
+                    if (matchIndex !== -1) {
+                        const match = people[matchIndex];
+                        document.getElementById('match-name').textContent = match.name;
+                        document.getElementById('match-role').textContent = match.role || 'Unknown Role';
+                        document.getElementById('match-city').textContent = match.city || 'Unknown City';
+                        document.getElementById('btn-match-yes').dataset.matchIndex = matchIndex;
+                        goToWizardStep(3);
+                    } else {
+                        goToWizardStep(4);
+                    }
+                }, 1200);
+            } else {
+                goToWizardStep(4);
             }
-            goToWizardStep(4);
         }
 
         window.submitAddPerson = function() {
@@ -5261,7 +5280,7 @@
         document.getElementById('btn-match-no').addEventListener('click', () => {
             document.getElementById('form-mode').value = 'add';
             document.getElementById('form-person-id').value = '';
-            goToWizardStep('4a');
+            goToWizardStep(4);
         });
         
         window.toggleAdvancedDetails = function(btn) {
@@ -5863,6 +5882,27 @@
                     }
                 });
                 counts = mergedCounts;
+
+                // --- TEXT AUTOFILL LOGIC ---
+                if (!isDeleting && searchValForMatch.length >= 2) {
+                    const sortedKeys = Object.keys(counts).sort((a, b) => counts[b] - counts[a]);
+                    const bestMatch = sortedKeys.find(k => k.toLowerCase().startsWith(searchValForMatch.toLowerCase()));
+                    
+                    if (bestMatch) {
+                        let remainder = bestMatch.substring(searchValForMatch.length);
+                        
+                        // Truncate remainder at the next space to only autofill one word at a time
+                        const nextSpaceIndex = remainder.indexOf(' ');
+                        if (nextSpaceIndex !== -1) {
+                            remainder = remainder.substring(0, nextSpaceIndex);
+                        }
+                        
+                        if (remainder.length > 0) {
+                            input.value = val + remainder;
+                            input.setSelectionRange(val.length, input.value.length);
+                        }
+                    }
+                }
 
                 // Dropdown logic
                 const rawVal = input.value.substring(0, input.selectionStart || input.value.length).trim();
@@ -6549,15 +6589,11 @@
                 
                 const handleNextLogic = () => {
                     if (currentRecIndex >= pendingRecs.length && visibleCount === 0) {
-                        if (window._addedSomeoneInRecs) {
-                            goToWizardStep(window._currentConnStep || 'conn-1');
-                        } else {
-                            const currentConn = window._currentConnStep || 'conn-1';
-                            document.querySelectorAll('.wizard-step.active').forEach(el => el.classList.remove('active'));
-                            const nextStepEl = document.getElementById('wizard-step-' + currentConn);
-                            if (nextStepEl) nextStepEl.classList.add('active');
-                            document.getElementById('btn-wizard-global-next').click();
-                        }
+                        const currentConn = window._currentConnStep || 'conn-1';
+                        document.querySelectorAll('.wizard-step.active').forEach(el => el.classList.remove('active'));
+                        const nextStepEl = document.getElementById('wizard-step-' + currentConn);
+                        if (nextStepEl) nextStepEl.classList.add('active');
+                        document.getElementById('btn-wizard-global-next').click();
                     } else {
                         renderNextCard();
                     }
@@ -7743,7 +7779,7 @@ targetInput.addEventListener('input', () => {
                             showConfirmButton: false
                         });
                         document.getElementById('edit-person-overlay').classList.remove('visible');
-                        await initGraph();
+                        await init();
                     } else {
                         throw new Error('Failed to delete');
                     }
