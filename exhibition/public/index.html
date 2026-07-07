@@ -3450,7 +3450,7 @@
             isTouringPath = true;
             isCameraAnimating = true;
             messiColored = false;
-            pathRevealState = 1;
+            pathRevealState = 0.01;
             
             // Clean up old visuals
             const colors = globalGeometry.attributes.color.array;
@@ -3514,16 +3514,7 @@
             controls.minPolarAngle = 0;
             controls.autoRotate = false;
 
-            // Move camera back along Z axis so the whole chain fits in view
-            camTargetLookAt.set(0, 0, 0);
-            const pathWidth = (currentPath.length - 1) * 500;
-            camTargetPos.set(0, 0, Math.max(1200, pathWidth * 1.2));
-            isCameraAnimating = true;
-            
-            // Let the points fly to their new positions
-            setTimeout(() => {
-                isCameraAnimating = false;
-            }, 3000);
+            // The touring logic in animate() will take over the camera flight!
         }
 
         function renderPathChain(path) {
@@ -4243,6 +4234,32 @@
             }
             scene.updateMatrixWorld();
 
+            if (layoutMode === 'path' && currentPath.length > 0 && isTouringPath) {
+                pathRevealState += 0.015; // Animation speed of the tour
+                const maxState = currentPath.length - 1;
+                
+                if (pathRevealState >= maxState + 0.5) { 
+                    // Finish touring, zoom out!
+                    isTouringPath = false;
+                    const pathWidth = maxState * 500;
+                    const aspect = window.innerWidth / window.innerHeight;
+                    const multiplier = aspect < 1 ? 2.5 : 1.4;
+                    camTargetPos.set(0, 0, Math.max(1200, pathWidth * multiplier));
+                    camTargetLookAt.set(0, 0, 0);
+                    isCameraAnimating = true;
+                    // Auto-unlock camera after zoom out finishes
+                    setTimeout(() => { isCameraAnimating = false; controls.enabled = true; }, 3000);
+                } else {
+                    const currentNodeIdx = Math.min(maxState, Math.floor(pathRevealState));
+                    const offsetX = -(maxState * 500) / 2;
+                    const nodeX = offsetX + currentNodeIdx * 500;
+                    
+                    camTargetLookAt.set(nodeX, 0, 0);
+                    camTargetPos.set(nodeX, 0, 800); // Fly close
+                    isCameraAnimating = true;
+                }
+            }
+
             let lerpSpeed = 0.007; // Extraordinarily slow camera pan
             if (isCameraAnimating) {
                 camera.position.lerp(camTargetPos, lerpSpeed);
@@ -4705,6 +4722,7 @@
                 const screenY = (-(labelScreenPos.y) * 0.5 + 0.5) * window.innerHeight;
                 const dist = Math.hypot(screenX - event.clientX, screenY - event.clientY);
                 if (dist < 60) {
+                    event.stopPropagation();
                     selectNode(i, true);
                     break;
                 }
