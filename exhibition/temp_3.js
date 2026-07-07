@@ -1,2429 +1,4 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Feed the Beast</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
-    <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        h1, h2, h3, p, span, div { text-wrap: pretty; }
-        body { width: 100vw; height: 100vh; overflow: hidden; background: #0a0a0a; font-family: 'Helvetica', Arial, sans-serif; transition: filter 0.5s; }
-        body.light-mode { filter: invert(1) hue-rotate(180deg); }
-        canvas { display: block; }
-
-        .node-label {
-            color: rgba(245, 245, 245, 0.95);
-            font-size: 9.5px;
-            pointer-events: none; /* Revert to none so hover only triggers on the circle */
-            cursor: pointer;
-            text-align: center;
-            width: 120px;
-            height: 60px;
-            display: flex;
-            flex-direction: column;
-            justify-content: flex-end;
-            padding-bottom: 5px;
-            text-shadow: 0 0 4px rgba(0,0,0,1);
-            letter-spacing: 0.5px;
-            font-weight: 300;
-            transition: color 0.3s, transform 0.2s, font-weight 0.3s;
-            user-select: none;
-            transform: translateY(60px); /* Position label strictly underneath node */
-            position: relative;
-        }
-
-        .node-label:hover {
-            color: rgba(245, 245, 245, 1);
-            text-shadow: 0 0 8px rgba(245,245,245,0.4);
-        }
-        
-        .btn-feed-more {
-            background: transparent;
-            border: 1px solid transparent;
-            border-radius: 10px;
-            color: #000;
-            opacity: 0.8;
-            cursor: pointer;
-            font-size: 12px;
-            font-family: inherit;
-            letter-spacing: 1.5px;
-            text-transform: uppercase;
-            text-align: center;
-            padding: 0 15px;
-            height: 32px;
-            line-height: 30px;
-            transition: all 0.2s ease;
-            outline: none;
-            font-weight: 400;
-            text-decoration: none;
-            box-sizing: border-box;
-        }
-        .btn-feed-more:hover {
-            opacity: 1;
-            background: #000;
-            color: #fff !important;
-            border-color: #000;
-        }
-        
-        #top-bar {
-            position: absolute;
-            top: 20px;
-            left: 20px;
-            z-index: 100;
-            display: flex;
-            gap: 12px;
-            align-items: flex-start;
-        }
-
-        .panel {
-            background: transparent;
-            border: none;
-            color: #F5F5F5;
-            width: max-content;
-            overflow: hidden;
-            flex-shrink: 0;
-            border-radius: 10px;
-            transition: background 0.3s, backdrop-filter 0.3s, width 0.3s, border 0.3s;
-        }
-        .panel:not(.collapsed) {
-            width: 260px;
-            background: rgba(0, 0, 0, 0.25);
-            backdrop-filter: blur(25px);
-            -webkit-backdrop-filter: blur(25px);
-            border: 1px solid rgba(245,245,245,0.2);
-            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
-        }
-
-        .panel-header {
-            padding: 0;
-            font-size: 10px;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            color: rgba(245,245,245,0.8);
-            cursor: pointer;
-            display: flex;
-            justify-content: flex-start;
-            align-items: center;
-            background: transparent;
-            white-space: nowrap;
-        }
-
-        .panel-body { padding: 15px; border-top: 1px solid rgba(245,245,245,0.2); margin-top: 5px; }
-        .panel.collapsed .panel-body { display: none; }
-        .panel.collapsed .panel-header { border-bottom: none; }
-        .panel-icon { font-size: 12px; transition: transform 0.3s; }
-        .panel:not(.collapsed) { }
-        .panel:not(.collapsed) .panel-icon { transform: rotate(45deg); }
-
-        #search-input:focus { 
-            opacity: 1; 
-            background: white;
-            color: black !important;
-            border-color: #F5F5F5;
-        }
-        #search-input::placeholder {
-            color: inherit;
-            opacity: 1;
-        }
-        .search-dropdown-item {
-            padding: 10px 16px;
-            cursor: pointer;
-            border-bottom: 1px solid rgba(245,245,245,0.05);
-            transition: background 0.2s;
-        }
-        .search-dropdown-item:last-child {
-            border-bottom: none;
-        }
-        .search-dropdown-item:hover, .search-dropdown-item.search-item-active {
-            background: rgba(245,245,245,0.1);
-        }
-        .search-item-name {
-            font-size: 13px;
-            font-weight: 500;
-            color: #F5F5F5;
-            margin-bottom: 4px;
-        }
-        .search-item-context {
-            font-size: 10px;
-            color: rgba(245,245,245,0.6);
-            line-height: 1.3;
-        }
-
-        .controls-list {
-            font-size: 10px;
-            line-height: 1.6;
-            color: rgba(245,245,245,0.8);
-            font-family: monospace;
-        }
-        .controls-list div {
-            margin-bottom: 8px;
-            padding-bottom: 6px;
-            border-bottom: 1px solid rgba(245,245,245,0.2);
-        }
-        .controls-list .label {
-            color: rgba(245,245,245,0.6);
-            font-size: 9px;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            margin-bottom: 4px;
-        }
-        .controls-list .key {
-            color: rgba(100,200,255,1);
-            font-weight: bold;
-        }
-
-        input[type="text"].conn-target, select, button {
-            box-sizing: border-box;
-            width: 100%;
-            padding: 8px;
-            margin-bottom: 8px;
-            background: rgba(245,245,245,0.05);
-            border: 1px solid rgba(245,245,245,0.2);
-            color: #F5F5F5;
-            border-radius: 10px;
-            outline: none;
-            font-size: 11px;
-            font-family: inherit;
-        }
-        select option { background: #000; color: #F5F5F5; }
-        button {
-            background: transparent;
-            cursor: pointer;
-            font-weight: 500;
-            transition: 0.2s;
-            box-shadow: none;
-            text-transform: uppercase;
-            font-size: 10px;
-            letter-spacing: 0.5px;
-        }
-        button:hover { background: white; color: black; }
-        #btn-reset { margin-bottom: 0; }
-
-        #info-panel-container {
-            position: absolute;
-            top: 20px;
-            right: 20px;
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-            pointer-events: none;
-            z-index: 100;
-            width: 450px;
-            opacity: 0;
-            transform: translateX(10px);
-            transition: all 0.3s ease;
-        }
-        #info-panel-container.visible {
-            opacity: 1;
-            transform: translateX(0);
-        }
-
-        #info-card {
-            background: #ffffff;
-            border: 1px solid rgba(0,0,0,0.05);
-            padding: 25px;
-            border-radius: 16px;
-            color: #000000;
-            width: 100%;
-            pointer-events: auto;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
-        }
-        
-        body.light-mode #info-card,
-        body.light-mode #conn-secondary-card,
-        body.light-mode #edit-person-modal,
-        body.light-mode .suggested-circle-card {
-            filter: invert(1) hue-rotate(180deg);
-        }
-        #info-name { font-size: 28px; margin-bottom: 4px; font-weight: 500; letter-spacing: 0px; }
-        .info-row-v2 {
-            display: flex;
-            flex-direction: row;
-            padding: 14px 20px;
-            border-radius: 12px;
-            align-items: center;
-            justify-content: space-between;
-            box-sizing: border-box;
-            background: #fafafa;
-            border: 1px solid rgba(0,0,0,0.06);
-            margin-bottom: 8px;
-            color: #000;
-        }
-        .info-row-label {
-            font-size: 10px;
-            text-transform: uppercase;
-            letter-spacing: 1.5px;
-            color: #666;
-            font-weight: 500;
-        }
-        .info-row-value {
-            font-size: 13px;
-            font-weight: 400;
-            text-align: right;
-            max-width: 65%;
-            color: #111;
-        }
-        .info-action-btn {
-            background: transparent;
-            border: 1px solid transparent;
-            border-radius: 10px;
-            color: #E6E6E6;
-            opacity: 1;
-            cursor: pointer;
-            font-size: 12px;
-            letter-spacing: 1.5px;
-            text-transform: uppercase;
-            text-align: center;
-            padding: 0 10px;
-            margin-bottom: 8px;
-            width: auto;
-            transition: all 0.2s ease;
-            outline: none;
-            font-weight: 300;
-            box-sizing: border-box;
-            height: 32px;
-            line-height: 30px;
-        }
-        .info-action-btn:hover { 
-            opacity: 1;
-            background: #111 !important;
-            color: #F5F5F5 !important;
-            border: 1px solid transparent !important;
-        }
-        .circle-action-btn {
-            background: transparent;
-            border: 1px solid transparent;
-            border-radius: 10px;
-            color: #111;
-            opacity: 1;
-            cursor: pointer;
-            font-size: 12px;
-            letter-spacing: 1.5px;
-            text-transform: uppercase;
-            text-align: center;
-            padding: 0 10px;
-            margin: 0;
-            width: auto !important;
-            min-width: auto;
-            transition: all 0.2s ease;
-            outline: none;
-            font-weight: 300;
-            box-sizing: border-box;
-            height: 32px;
-            line-height: 30px;
-        }
-        .circle-action-btn:hover {
-            opacity: 1;
-            background: #111;
-            color: white !important;
-            border: 1px solid #111;
-        }
-        .btn-sleek {
-            background: transparent;
-            border: none !important;
-            box-shadow: none !important;
-            outline: none !important;
-            border-radius: 4px;
-            color: #111111;
-            cursor: pointer;
-            font-size: 10px;
-            letter-spacing: 1.5px;
-            text-transform: uppercase;
-            padding: 4px 10px;
-            transition: all 0.2s ease;
-            font-weight: 300;
-        }
-        .btn-sleek:hover {
-            background: #111111;
-            color: #ffffff !important;
-        }
-        .tag-pill {
-            display: inline-block;
-            padding: 4px 10px;
-            background: rgba(245,245,245,0.05);
-            border: 1px solid rgba(245,245,245,0.2);
-            border-radius: 10px;
-            font-size: 9px;
-            letter-spacing: 0.5px;
-            color: rgba(245,245,245,0.7);
-        }
-        #info-badge {
-            display: inline-block;
-            padding: 3px 8px;
-            background: rgba(245,245,245,0.1);
-            border: 1px solid rgba(245,245,245,0.2);
-            border-radius: 10px;
-            font-size: 10px;
-            font-weight: 500;
-            margin-bottom: 15px;
-            color: rgba(245,245,245,0.8);
-            letter-spacing: 0.5px;
-            text-transform: uppercase;
-        }
-
-        #btn-path-dest.active {
-            color: #F5F5F5;
-            animation: pulse-bw 1.5s infinite;
-        }
-
-        .path-chain {
-            margin-top: 15px;
-            font-size: 11px;
-            color: rgba(245,245,245,0.6);
-            display: flex;
-            flex-wrap: wrap;
-            gap: 4px;
-            align-items: center;
-            line-height: 1.4;
-        }
-        .path-node {
-            cursor: pointer;
-            color: #333333;
-            padding: 2px 4px;
-            border-radius: 3px;
-            background: rgba(0,0,0,0.05);
-            transition: 0.2s;
-            font-weight: 500;
-        }
-        .path-node:hover { background: rgba(0,0,0,0.1); color: black; }
-        .path-arrow { color: rgba(0,0,0,0.3); font-size: 9px; }
-
-        #loading {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            color: rgba(245,245,245,0.5);
-            font-size: 12px;
-            letter-spacing: 2px;
-            text-transform: uppercase;
-        }
-
-        @keyframes pulse-bw {
-            0% { box-shadow: 0 0 0 0 rgba(245,245,245,0.3); }
-            70% { box-shadow: 0 0 0 6px rgba(245,245,245,0); }
-            100% { box-shadow: 0 0 0 0 rgba(245,245,245,0); }
-        }
-
-
-        
-        /* Discover Connections Button */
-        #btn-discover-connections {
-            position: absolute;
-            bottom: 80px;
-            left: 30px;
-            background: rgba(0, 0, 0, 0.85);
-            backdrop-filter: blur(8px);
-            border: 1px solid rgba(245,245,245,0.2);
-            color: #F5F5F5;
-            padding: 12px 24px;
-            border-radius: 10px;
-            font-size: 11px;
-            letter-spacing: 1px;
-            cursor: pointer;
-            z-index: 100;
-            display: flex;
-            align-items: center;
-            justify-content: flex-start;
-            gap: 12px;
-            transition: all 0.3s;
-            width: 250px;
-        }
-        #btn-discover-connections:hover { background: white; color: black; }
-
-
-        /* Modal Styles */
-        .modal {
-            position: fixed;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            background: rgba(0, 0, 0, 0.25);
-            backdrop-filter: blur(25px);
-            -webkit-backdrop-filter: blur(25px);
-            border: 1px solid rgba(245,245,245,0.2);
-            border-radius: 10px;
-            box-shadow: 0 10px 40px rgba(0,0,0,0.5);
-            padding: 0;
-            width: 550px;
-            max-width: 90%;
-            max-height: 85vh;
-            color: #F5F5F5;
-            z-index: 1000;
-        }
-
-        #add-modal {
-            width: 900px;
-            max-width: 95vw;
-            height: 650px;
-        }
-
-        #add-modal, #about-modal {
-            display: flex;
-            flex-direction: column;
-            overflow: hidden;
-            opacity: 0;
-            pointer-events: none;
-            transform: translate(-50%, -50%) scale(0.95);
-            transition: all 0.3s ease;
-        }
-        
-        #about-modal {
-            width: 100vw;
-            height: 100vh;
-            max-width: 100vw;
-            max-height: 100vh;
-            padding: 0;
-            border-radius: 0;
-            display: flex;
-            align-items: flex-start;
-            justify-content: center;
-            border: none;
-        }
-
-        #add-modal.visible, #about-modal.visible {
-            opacity: 1;
-            pointer-events: auto;
-            transform: translate(-50%, -50%) scale(1);
-        }
-        #add-modal.tall-modal {
-            height: 750px;
-        }
-        #add-modal.narrow-modal {
-            width: 550px;
-        }
-        .modal-header { font-size: 18px; padding: 20px; font-weight: 300; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(245,245,245,0.2); }
-        .modal-close { cursor: pointer; opacity: 0.6; transition: 0.2s; font-size: 20px; }
-        .modal-close:hover { opacity: 1; }
-        .form-group { margin-bottom: 15px; }
-        .form-group label { display: block; font-size: 10px; color: rgba(245,245,245,0.6); margin-bottom: 5px; text-transform: uppercase; letter-spacing: 0.5px; }
-        .form-group input, .form-group textarea, .form-group select {
-            width: 100%;
-            background: rgba(245,245,245,0.05);
-            border: 1px solid rgba(245,245,245,0.2);
-            padding: 10px;
-            color: #F5F5F5;
-            border-radius: 10px;
-            font-family: inherit;
-            font-size: 12px;
-            outline: none;
-            box-sizing: border-box;
-        }
-        .form-group input, .form-group select {
-            height: 38px;
-        }
-        .form-group input:focus, .form-group textarea:focus, .form-group select:focus { border-color: rgba(245,245,245,0.5); }
-
-        select {
-            appearance: none;
-            -webkit-appearance: none;
-            background-image: url('data:image/svg+xml;utf8,<svg fill="%23F5F5F5" height="24" viewBox="0 0 24 24" width="24" xmlns="http://www.w3.org/2000/svg"><path d="M7 10l5 5 5-5z"/></svg>');
-            background-repeat: no-repeat;
-            background-position: right 8px center;
-            background-size: 16px;
-            padding-right: 30px !important;
-        }
-        
-        .connection-entry {
-            background: rgba(245,245,245,0.03);
-            border: 1px solid rgba(245,245,245,0.2);
-            padding: 6px;
-            border-radius: 10px;
-            margin-bottom: 6px;
-            display: flex;
-            align-items: center;
-            gap: 6px;
-        }
-        .btn-remove-conn {
-            background: transparent; border: none; color: #ff5555; cursor: pointer; padding: 2px 5px; width: auto; font-size: 14px; margin-left: auto; box-shadow: none;
-        }
-        .btn-remove-conn:hover { background: rgba(255,50,50,0.1); color: #ff5555; }
-        .btn-add-more-conn {
-            background: rgba(245,245,245,0.1); border: 1px dashed rgba(245,245,245,0.3); padding: 8px; font-size: 10px; margin-bottom: 10px; color: #F5F5F5; width: 100%;
-        }
-        .btn-add-more-conn:hover { background: rgba(245,245,245,0.2); color: #F5F5F5; }
-        .btn-submit { background: white; color: black; border: none; font-weight: bold; font-size: 12px; padding: 12px; width: 100%; border-radius: 10px;}
-        .btn-submit:hover { background: #ddd; }
-        .modal-overlay {
-            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.4);
-            z-index: 999; opacity: 0; pointer-events: none; transition: 0.3s;
-        }
-        .modal-overlay.visible { opacity: 1; pointer-events: auto; }
-
-        .wizard-step {
-            display: none;
-            opacity: 0;
-            transition: opacity 0.3s ease;
-        }
-        .wizard-step.active {
-            display: block;
-            opacity: 1;
-        }
-        .scan-spinner {
-            width: 40px;
-            height: 40px;
-            border: 2px solid rgba(245,245,245,0.1);
-            border-top-color: #F5F5F5;
-            border-radius: 50%;
-            animation: spin 1s linear infinite;
-            margin: 0 auto;
-        }
-        @keyframes spin {
-            to { transform: rotate(360deg); }
-        }
-
-        .progress-step {
-            width: 28px; height: 28px; border-radius: 50%;
-            border: 2px solid rgba(245,245,245,0.2);
-            display: flex; justify-content: center; align-items: center;
-            font-size: 12px; color: rgba(245,245,245,0.4);
-            transition: 0.3s;
-            background: transparent;
-        }
-        .progress-step.active {
-            border-color: #F5F5F5; color: black; background: white;
-            font-weight: bold;
-        }
-        .progress-step.completed {
-            border-color: #F5F5F5; color: black; background: white;
-            font-weight: bold;
-        }
-        .progress-line {
-            width: 40px; height: 2px; background: rgba(245,245,245,0.2);
-            transition: 0.3s;
-        }
-        .progress-line.active { background: white; }
-
-        .footer-buttons {
-            display: flex; gap: 15px; margin-top: auto; padding-top: 30px;
-        }
-        .btn-apple-primary {
-            flex: 1; height: 48px; border-radius: 12px; font-size: 14px; font-weight: 600;
-            background: #F5F5F5; color: #111; border: none; cursor: pointer; transition: 0.2s;
-            text-transform: none;
-        }
-        .btn-apple-primary:hover { opacity: 0.8; }
-        .btn-apple-secondary {
-            flex: 1; height: 48px; border-radius: 12px; font-size: 14px; font-weight: 600;
-            background: rgba(245,245,245,0.1); color: #F5F5F5; border: none; cursor: pointer; transition: 0.2s;
-            text-transform: none;
-        }
-        .btn-apple-secondary:hover { background: rgba(245,245,245,0.2); }
-        
-        /* Typography Hierarchy */
-        .wizard-step h2 {
-            font-weight: 300; margin-bottom: 30px; font-size: 28px; line-height: 1.2;
-        }
-        .step-explanation {
-            font-size: 14px; color: rgba(245,245,245,0.6); margin-bottom: 30px; line-height: 1.4; font-weight: 300;
-        }
-
-        /* Toggle Switch */
-        .type-toggle {
-            display: inline-flex;
-            background: #111;
-            border: 1px solid rgba(0,0,0,0.1);
-            border-radius: 30px;
-            padding: 4px;
-            position: relative;
-            margin-bottom: 40px;
-        }
-        .type-toggle-btn {
-            padding: 0 16px;
-            height: 32px;
-            line-height: normal;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            padding-top: 5px;
-            border-radius: 26px;
-            border: none;
-            background: transparent;
-            color: rgba(245,245,245,0.6);
-            font-size: 13px;
-            font-weight: 300;
-            cursor: pointer;
-            transition: 0.3s;
-            position: relative;
-            z-index: 2;
-            white-space: nowrap;
-            letter-spacing: 0.5px;
-            text-transform: none;
-        }
-        .type-toggle-btn:hover {
-            background: transparent !important;
-            color: rgba(245,245,245,0.6) !important;
-        }
-        .type-toggle-btn.active:hover {
-            color: #111 !important;
-        }
-        .type-toggle-btn.active {
-            color: #111 !important;
-        }
-        .type-toggle-slider {
-            position: absolute;
-            top: 4px;
-            left: 4px;
-            height: calc(100% - 8px);
-            background: #f5f5f5;
-            border-radius: 26px;
-            transition: 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
-            z-index: 1;
-        }
-
-        /* Custom Checkbox */
-        .white-checkbox {
-            appearance: none;
-            -webkit-appearance: none;
-            background-color: transparent;
-            border: 1px solid rgba(255, 255, 255, 0.5);
-            border-radius: 3px;
-            width: 16px;
-            height: 16px;
-            display: inline-block;
-            position: relative;
-            cursor: pointer;
-            flex-shrink: 0;
-            margin: 0;
-        }
-        .white-checkbox:checked {
-            background-color: #fff;
-            border-color: #fff;
-        }
-        .white-checkbox:checked::after {
-            content: '';
-            position: absolute;
-            top: 2px;
-            left: 5px;
-            width: 4px;
-            height: 8px;
-            border: solid #111;
-            border-width: 0 2px 2px 0;
-            transform: rotate(45deg);
-        }
-
-        /* Custom Radio Button */
-        .custom-radio {
-            appearance: none;
-            -webkit-appearance: none;
-            background-color: transparent;
-            border: 1px solid rgba(255, 255, 255, 0.5);
-            border-radius: 50%;
-            width: 16px;
-            height: 16px;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            position: relative;
-            cursor: pointer;
-            margin: 0;
-            transition: all 0.2s;
-        }
-        .custom-radio::after {
-            content: '';
-            width: 8px;
-            height: 8px;
-            border-radius: 50%;
-            background-color: transparent;
-            transition: background-color 0.2s;
-        }
-        .custom-radio.active {
-            border-color: #fff;
-        }
-        .custom-radio.active::after {
-            background-color: #fff;
-        }
-
-        .tooltip-icon {
-            display: inline-flex; justify-content: center; align-items: center;
-            width: 14px; height: 14px; border-radius: 50%; background: rgba(245,245,245,0.2);
-            font-size: 10px; color: #F5F5F5; cursor: help; position: relative;
-        }
-        .tooltip-text {
-            visibility: hidden; width: 220px; background: rgba(0,0,0,0.9);
-            color: #F5F5F5; text-align: center; border-radius: 10px; padding: 10px;
-            position: absolute; z-index: 10; bottom: 150%; left: 50%;
-            transform: translateX(-50%); opacity: 0; transition: opacity 0.3s;
-            font-size: 11px; font-weight: normal; border: 1px solid rgba(245,245,245,0.2);
-            pointer-events: none; box-shadow: 0 4px 15px rgba(0,0,0,0.5);
-        }
-        .tooltip-icon:hover .tooltip-text {
-            visibility: visible; opacity: 1;
-        }
-
-        /* Action buttons in info card */
-        .info-actions { display: flex; gap: 8px; margin-top: 15px; }
-        .info-actions button { flex: 1; padding: 8px 0; margin-bottom: 0; }
-
-        .strength-slider {
-            -webkit-appearance: none;
-            width: 100%;
-            height: 1px;
-            background: rgba(255,255,255,0.2);
-            outline: none;
-            border-radius: 1px;
-        }
-        .strength-slider::-webkit-slider-thumb {
-            -webkit-appearance: none;
-            appearance: none;
-            width: 12px;
-            height: 12px;
-            border-radius: 50%;
-            background: #F5F5F5;
-            cursor: pointer;
-        }
-    
-        #feed-more-popup-v2 {
-            position: absolute; left: 80px; top: -10px; width: max-content; 
-            padding: 30px 35px; 
-            background: rgba(255, 255, 255, 0.95) !important; 
-            backdrop-filter: blur(15px) !important; 
-            -webkit-backdrop-filter: blur(15px) !important; 
-            border-radius: 12px; pointer-events: auto; text-align: center; 
-            box-shadow: 0 10px 40px rgba(0,0,0,0.6); z-index: 100; 
-            color: #0a0a0a !important;
-        }
-
-        .summary-card-v2 {
-            width: 100%;
-            max-width: 400px;
-            display: flex;
-            flex-direction: column;
-            gap: 12px;
-            color: #000;
-            margin: 0 auto;
-        }
-        body.light-mode .summary-card-v2 {
-            color: #f5f5f5;
-        }
-        .summary-row-v2 {
-            display: flex;
-            flex-direction: row;
-            padding: 14px 24px;
-            border-radius: 12px;
-            align-items: center;
-            justify-content: space-between;
-            transition: all 0.3s ease;
-            box-sizing: border-box;
-        }
-        .summary-row-v2.filled-row {
-            background: #000;
-            color: #fff;
-            border: 1px solid rgba(0,0,0,0.1);
-            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
-        }
-        .summary-row-v2.empty-row {
-            background: transparent;
-            color: rgba(245,245,245,0.4);
-            border: 1px dashed rgba(245,245,245,0.15);
-        }
-        .summary-row-label {
-            font-size: 10px;
-            text-transform: uppercase;
-            letter-spacing: 2px;
-            opacity: 0.6;
-        }
-        .summary-row-value {
-            font-size: 16px;
-            font-weight: 300;
-            text-align: right;
-            max-width: 65%;
-        }
-
-        .network-toast {
-            position: fixed;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            background: rgba(255, 255, 255, 0.95) !important;
-            color: #0a0a0a !important;
-            padding: 35px 50px;
-            border-radius: 12px;
-            font-family: inherit;
-            font-size: 28px;
-            text-align: center;
-            z-index: 999999;
-            backdrop-filter: blur(20px) !important;
-            -webkit-backdrop-filter: blur(20px) !important;
-            opacity: 0;
-            transition: opacity 0.8s ease-in-out;
-            font-weight: 300;
-            pointer-events: none;
-            border: 1px solid rgba(0, 0, 0, 0.1);
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
-            letter-spacing: 1px;
-        }
-        body.light-mode .network-toast {
-            filter: invert(1) !important;
-        }
-    </style>
-</head>
-
-<body class="light-mode">
-    <div id="loading">טוען...</div>
-
-    <div id="top-bar" style="flex-direction: column; gap: 16px;">
-        <div style="display: flex; gap: 10px; align-items: flex-start;">
-            <div id="path-panel" class="panel collapsed">
-                <div class="panel-header" id="path-header">
-                    <button class="info-action-btn" style="margin: 0;">[ TRACE VEIN ]</button>
-                </div>
-                <div class="panel-body">
-                    <div style="display: flex; align-items: center; margin-bottom: 8px; color: rgba(245,245,245,0.7); font-size: 12px; letter-spacing: 1px;">
-                        [<input type="text" id="start-node" list="people-list" placeholder="ORIGIN NODE" autocomplete="off" style="background: transparent; border: none; color: #F5F5F5; width: 100%; outline: none; font-size: 11px; font-family: inherit; text-align: center; text-transform: uppercase; letter-spacing: 1px; padding: 5px;">]
-                    </div>
-                    <div style="display: flex; align-items: center; margin-bottom: 15px; color: rgba(245,245,245,0.7); font-size: 12px; letter-spacing: 1px;">
-                        [<input type="text" id="end-node" list="people-list" placeholder="TARGET NODE" autocomplete="off" style="background: transparent; border: none; color: #F5F5F5; width: 100%; outline: none; font-size: 11px; font-family: inherit; text-align: center; text-transform: uppercase; letter-spacing: 1px; padding: 5px;">]
-                    </div>
-                    <button id="btn-find">Trace Path</button>
-                    <button id="btn-reset">Reset View</button>
-                </div>
-            </div>
-
-            <div id="search-wrapper" style="position: relative; display: flex; align-items: center; margin: 0; width: auto;">
-                <input type="text" id="search-input" class="info-action-btn" placeholder="[ FIND ANYTHING ]" autocomplete="off" style="margin: 0; width: 170px; cursor: text; border-radius: 10px; text-transform: capitalize;">
-                <div id="search-dropdown" style="display: none; position: absolute; top: 100%; left: 0; min-width: 280px; background: rgba(0,0,0,0.3); backdrop-filter: blur(25px); border: 1px solid rgba(245,245,245,0.2); border-radius: 10px; z-index: 1000; margin-top: 8px; max-height: 400px; overflow-y: auto; overflow-x: hidden; padding: 8px 0; box-shadow: 0 4px 20px rgba(0,0,0,0.5);">
-                </div>
-            </div>
-
-            <button id="btn-pause" class="info-action-btn" style="margin: 0;">[ FREEZE ]</button>
-        </div>
-    </div>
-    
-    <button id="btn-add-connection" class="info-action-btn" style="position: absolute; top: 20px; left: 50%; transform: translateX(-50%); margin: 0; z-index: 100;">[ FEED THE BEAST ]</button>
-
-    <div id="info-panel-container">
-        <div id="info-card">
-            <!-- Header: Name and Menu -->
-            <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px;">
-                <h2 id="info-name" style="margin: 0;">Name</h2>
-                <div style="display: flex; align-items: center; gap: 15px; margin-top: 6px;">
-                    <div id="info-menu-container" style="position: relative;">
-                        <button id="btn-info-menu" style="background:transparent; border:none; color:#000; font-size:22px; cursor:pointer; padding:0; line-height:0.8; opacity:0.6; letter-spacing:2px; outline:none;">...</button>
-                        <div id="info-menu-dropdown" style="display: none; position: absolute; right: 0; top: 20px; background: #fff; border: 1px solid rgba(0,0,0,0.1); padding: 4px 0; border-radius: 10px; z-index: 100; min-width: 120px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); overflow: hidden;">
-                            <button id="btn-edit-node" class="info-action-btn" style="display: block; width:100%; height: auto; line-height: normal; margin: 0; padding: 10px 0; text-align: center; white-space: nowrap; color: #000; border: none; background: transparent; transition: background 0.2s;">[ EDIT ]</button>
-                            <button id="btn-report-node" class="info-action-btn" style="display: block; width:100%; height: auto; line-height: normal; margin: 0; padding: 10px 0; text-align: center; white-space: nowrap; color: #000; border: none; background: transparent; transition: background 0.2s;">[ REPORT ]</button>
-                        </div>
-                    </div>
-                    <button id="btn-close-card" style="background:transparent; border:none; color:#000; font-size:24px; cursor:pointer; padding:0; line-height:0.8; font-weight:100; opacity:0.6; outline:none;">&times;</button>
-                </div>
-            </div>
-            
-            <!-- Role -->
-            <div id="info-role" style="font-size: 13px; color: #666; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 12px; font-weight: 500;"></div>
-
-            <!-- Meta Data -->
-            <div style="display: flex; gap: 15px; margin-bottom: 12px; font-size: 13px; color: #444; letter-spacing: 0.5px; font-weight: 400;">
-                <span id="info-age"></span>
-                <span id="info-city"></span>
-            </div>
-
-            <!-- About -->
-            <div id="info-description" style="font-size: 13px; color: #333; line-height: 1.5; margin-bottom: 25px; font-weight: 400;"></div>
-            
-            <!-- Chapters -->
-            <div id="info-chapters" style="margin-bottom: 25px;"></div>
-            
-            <!-- Primary Actions -->
-            <div style="display: flex; flex-direction: row; justify-content: center; gap: 15px; margin-bottom: 25px;">
-                <button id="btn-path-dest" class="info-action-btn" style="margin: 0; color: #000; white-space: nowrap;">[ LOCATE CONNECTION ]</button>
-                <button id="btn-add-from-here" class="info-action-btn" style="margin: 0; color: #000; white-space: nowrap;">[ ADD CONNECTION ]</button>
-            </div>
-            
-            <!-- Connections -->
-            <details id="info-connections-container" style="border-top: 1px solid rgba(0,0,0,0.06); padding-top: 15px;">
-                <summary style="font-size: 12px; font-weight: 500; margin-bottom: 12px; color: #666; letter-spacing: 1.5px; text-transform: uppercase; cursor: pointer; outline: none; list-style: none;">
-                    Connected To <span style="font-size: 8px; margin-left: 5px;">▼</span>
-                </summary>
-                <div id="info-connections-list" style="max-height: 160px; overflow-y: auto;"></div>
-            </details>
-
-            <div id="info-path" style="margin-top: 15px; font-size: 14px; color: #111111; font-weight: 500;"></div>
-            
-            <div id="info-suggestions" style="margin-top: 20px; border-top: 1px solid rgba(0,0,0,0.06); padding-top: 15px; display: none;">
-                <div style="font-size: 12px; font-weight: 500; margin-bottom: 12px; color: #666; letter-spacing: 1.5px; text-transform: uppercase;">Suggested</div>
-                <div id="info-suggestions-list"></div>
-            </div>
-        
-        <div id="info-secondary-card" style="position: relative; display: none; border-top: 1px dashed rgba(0,0,0,0.1); padding-top: 15px; margin-top: 15px;">
-            <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 5px;">
-                <div style="padding-right: 20px;">
-                    <h3 id="sec-info-name" style="margin: 0; font-size: 14px; font-weight: bold; color: #000;"></h3>
-                    <div id="sec-info-role" style="font-size: 10px; color: #666;"></div>
-                </div>
-                <button id="btn-close-sec" style="position: absolute; top: 15px; right: 0px; background: transparent; color: #aaa; border: none; font-size: 16px; cursor: pointer; padding: 0; line-height: 1; min-width: auto; height: auto; width: auto;">&times;</button>
-            </div>
-            <div id="sec-info-details" style="font-size: 10px; color: #666; margin-bottom: 10px;"></div>
-            <div style="display: flex; gap: 5px;">
-                <button id="btn-sec-ignore" style="flex: 1; background: transparent; color: #666; border: 1px solid rgba(0,0,0,0.1); border-radius: 10px; padding: 6px; font-size: 10px; cursor: pointer;">Not Related</button>
-                <button id="btn-sec-connect" style="flex: 1; background: #000; color: #fff; border: none; border-radius: 10px; padding: 6px; font-weight: bold; font-size: 10px; cursor: pointer;">Connect</button>
-            </div>
-        </div>
-        </div>
-    </div>
-    
-    <div id="conn-secondary-card" style="position: relative; display: none; background: #ffffff;
-            border: 1px solid rgba(0,0,0,0.05); padding: 20px; border-radius: 16px; pointer-events: auto; color: #000; box-shadow: 0 4px 20px rgba(0,0,0,0.1);">
-        <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 5px;">
-            <div style="padding-right: 20px;">
-                <h3 id="conn-sec-name" style="margin: 0; font-size: 14px; font-weight: bold;"></h3>
-                <div id="conn-sec-role" style="font-size: 11px; color: #aaa;"></div>
-            </div>
-            <button id="btn-close-conn-sec" style="position: absolute; top: 10px; right: 10px; background: transparent; color: #aaa; border: none; font-size: 16px; cursor: pointer; padding: 0; line-height: 1; min-width: auto; height: auto; width: auto;">&times;</button>
-        </div>
-        <div id="conn-sec-details" style="font-size: 11px; color: #666; margin-bottom: 10px;"></div>
-        <button id="btn-conn-sec-view" style="width: 100%; background: #000; color: #fff; border: none; border-radius: 10px; padding: 8px; font-weight: bold; font-size: 11px; cursor: pointer;">View Profile</button>
-    </div>
-
-    <!-- New UI Elements -->
-    
-    <button id="btn-discover-connections" style="display: none;">
-        <span style="font-size: 14px; font-weight: lighter; width: 14px; display: inline-block;"></span> DISCOVER CONNECTIONS
-    </button>
-
-    <div style="position: absolute; bottom: 30px; left: 30px; display: flex; align-items: center; z-index: 100;">
-        <button id="btn-sound" class="info-action-btn" style="margin: 0;" title="Toggle Sound">[ listen ]</button>
-    </div>
-
-    <div style="position: absolute; bottom: 30px; right: 30px; display: flex; align-items: center; gap: 15px; z-index: 100;">
-        <button id="btn-info" class="info-action-btn" onclick="document.getElementById('about-modal').classList.add('visible'); document.getElementById('modal-overlay').classList.add('visible');" style="margin: 0;">[ ABOUT THE BEAST ]</button>
-        <button id="btn-theme" class="info-action-btn" style="margin: 0;" title="Toggle Day/Night Mode">[ night ]</button>
-    </div>
-
-    <audio id="bg-audio" loop autoplay>
-        <source src="background.mp3" type="audio/mpeg">
-    </audio>
-
-    <div id="modal-overlay" class="modal-overlay"></div>
-
-    <style>
-        #btn-edit-node:hover { background: #000 !important; color: #fff !important; }
-        #btn-report-node:hover { background: #000 !important; color: #fff !important; }
-        
-        #btn-edit-save {
-            color: #000 !important;
-            border: none !important;
-        }
-        #btn-edit-save:hover {
-            background: #000 !important;
-            color: #fff !important;
-        }
-        .glass-popup-white .swal2-actions {
-            margin: 35px 0 0 0 !important;
-            padding: 0 !important;
-            display: flex !important;
-            flex-direction: row !important;
-            flex-wrap: nowrap !important;
-            align-items: center !important;
-            justify-content: space-between !important;
-            width: 100% !important;
-            align-self: stretch !important;
-            box-sizing: border-box !important;
-        }
-        
-        .glass-popup-white .swal2-html-container {
-            overflow: visible !important;
-            width: 100% !important;
-            box-sizing: border-box !important;
-            margin: 0 !important;
-            padding: 0 !important;
-        }
-        
-        .swal-report-btn {
-            display: inline-block;
-            background: transparent;
-            border: 1px solid transparent;
-            border-radius: 10px;
-            color: #000;
-            opacity: 1;
-            cursor: pointer;
-            font-size: 12px;
-            letter-spacing: 1.5px;
-            text-transform: uppercase;
-            text-align: center;
-            padding: 0 10px;
-            margin: 0;
-            width: auto;
-            transition: all 0.2s ease;
-            height: 32px;
-            line-height: 30px;
-            box-sizing: border-box;
-        }
-        .swal-report-btn:hover {
-            background: #000;
-            color: #fff;
-            border-color: #000;
-        }
-    </style>
-    <!-- Dedicated Edit Person Modal -->
-    <div id="edit-person-overlay" class="modal-overlay" style="z-index: 2000;">
-        <div id="edit-person-modal" style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 500px; height: 65vh; background: #ffffff; color: #000000; border: 1px solid rgba(0,0,0,0.05); border-radius: 16px; padding: 25px 35px; display: flex; flex-direction: column; box-shadow: 0 4px 30px rgba(0,0,0,0.15); overflow: hidden;">
-            <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 25px;">
-                <input type="text" id="edit-f-name" style="text-transform: capitalize; font-size: 32px; font-weight: 500; letter-spacing: -0.5px; background: transparent; border: none; border-bottom: 1px solid rgba(0,0,0,0.1); outline: none; width: 85%; color: #000; font-family: inherit; padding-bottom: 4px;" placeholder="Full Name">
-                <span class="close-btn" onclick="document.getElementById('edit-person-overlay').classList.remove('visible');" style="font-size: 28px; cursor: pointer; opacity: 0.4; line-height: 1; transition: 0.2s;">&times;</span>
-            </div>
-            
-            <!-- Tabs -->
-            <div style="display: flex; border-bottom: 1px solid rgba(0,0,0,0.08); margin-bottom: 15px; flex-shrink: 0;">
-                <div id="tab-edit-details" onclick="switchEditTab('details')" style="flex: 1; text-align: center; padding-bottom: 12px; cursor: pointer; font-size: 13px; font-weight: 600; text-transform: uppercase; letter-spacing: 1.5px; border-bottom: 2px solid #000; color: #000; transition: 0.2s;">Edit Details</div>
-                <div id="tab-edit-connections" onclick="switchEditTab('connections')" style="flex: 1; text-align: center; padding-bottom: 12px; cursor: pointer; font-size: 13px; font-weight: 600; text-transform: uppercase; letter-spacing: 1.5px; border-bottom: 2px solid transparent; color: #999; transition: 0.2s;">Connections</div>
-            </div>
-            
-            <!-- Details Tab -->
-            <div id="edit-person-form" style="flex: 1; display: flex; flex-direction: column; overflow: hidden;">
-                <div style="flex: 1; overflow-y: auto; overflow-x: hidden; padding-right: 5px; display: flex; flex-direction: column; gap: 8px;">
-                
-                <style>
-                    .edit-row-v2 {
-                        display: flex;
-                        flex-direction: row;
-                        align-items: center;
-                        padding: 10px 16px;
-                        border-radius: 10px;
-                        background: #fdfdfd;
-                        border: 1px solid rgba(0,0,0,0.06);
-                        margin-bottom: 6px;
-                        transition: background 0.2s, box-shadow 0.2s;
-                    }
-                    .edit-row-v2:focus-within {
-                        background: #ffffff;
-                        box-shadow: 0 2px 10px rgba(0,0,0,0.05);
-                    }
-                    .edit-row-label {
-                        font-size: 10px;
-                        color: #888;
-                        text-transform: uppercase;
-                        letter-spacing: 1.5px;
-                        margin-bottom: 0;
-                        margin-right: 15px;
-                        flex-shrink: 0;
-                        min-width: 80px;
-                    }
-                    .edit-row-input {
-                        font-size: 15px;
-                        color: #111;
-                        font-weight: 400;
-                        background: transparent;
-                        border: none;
-                        outline: none;
-                        width: 100%;
-                        font-family: inherit;
-                        padding: 0;
-                        text-align: left;
-                        text-transform: capitalize;
-                    }
-                    
-                    /* Tags Wrapper overrides for Edit Modal */
-                    #edit-person-form .tags-wrapper {
-                        display: flex;
-                        flex-wrap: wrap;
-                        gap: 6px;
-                        align-items: center;
-                        justify-content: flex-start;
-                        border-bottom: none;
-                        padding-bottom: 0;
-                        min-height: auto;
-                        flex: 1;
-                    }
-                    #edit-person-form .tags-wrapper .edit-row-input {
-                        flex: 1 1 10px;
-                        min-width: 0;
-                        width: 0;
-                        text-align: left;
-                    }
-                    
-                    #edit-person-form .edit-row-input::placeholder {
-                        color: rgba(0,0,0,0.2) !important;
-                    }
-                    
-                    #edit-person-form .tags-wrapper:has(.tag-item) .edit-row-input::placeholder {
-                        color: transparent !important;
-                    }
-
-                    /* Make tags look white and sleek in the edit modal */
-                    #edit-person-form .tag-item {
-                        background: #ffffff !important;
-                        color: #000000 !important;
-                        border: 1px solid rgba(0,0,0,0.15) !important;
-                        font-weight: 400 !important;
-                        box-shadow: 0 1px 3px rgba(0,0,0,0.02);
-                        padding: 4px 10px !important;
-                        font-size: 15px !important;
-                    }
-                    #edit-person-form .tag-item span:last-child {
-                        color: rgba(0,0,0,0.4) !important;
-                        margin-left: 6px;
-                    }
-                    #edit-person-form .tag-item span:last-child:hover {
-                        color: rgba(0,0,0,0.8) !important;
-                    }
-                    
-                    /* Hide input placeholder when tags are present */
-                    .tags-wrapper:has(.tag-item) .edit-row-input::placeholder {
-                        color: transparent;
-                    }
-                </style>
-
-                <!-- Birth Year & Country -->
-                <div style="display: flex; gap: 12px; margin-bottom: 0px;">
-                    <div class="edit-row-v2" style="flex: 1;">
-                        <label class="edit-row-label">BIRTH YEAR</label>
-                        <input type="number" id="edit-f-birth-year" class="edit-row-input" placeholder="YYYY">
-                    </div>
-                    <div class="edit-row-v2" style="flex: 1;">
-                        <label class="edit-row-label">COUNTRY</label>
-                        <input type="text" id="edit-f-country" class="edit-row-input" placeholder="Israel">
-                    </div>
-                </div>
-
-                <!-- Current City -->
-                <div class="edit-row-v2 autocomplete-wrapper">
-                    <label class="edit-row-label">CITY</label>
-                    <label class="tags-wrapper" id="tw-edit-f-city" for="edit-f-city" style="display:flex; cursor:text;">
-                        <input type="text" id="edit-f-city" class="edit-row-input" style="border:none;" placeholder="Current City">
-                    </label>
-                        <div class="autocomplete-dropdown" id="dropdown-edit-f-city"></div>
-                    <div class="dynamic-stats" id="stats-edit-f-city"></div>
-                </div>
-
-                <!-- Originally From -->
-                <div class="edit-row-v2 autocomplete-wrapper">
-                    <label class="edit-row-label">HOMETOWN</label>
-                    <label class="tags-wrapper" id="tw-edit-f-origin-city" for="edit-f-origin-city" style="display:flex; cursor:text;">
-                        <input type="text" id="edit-f-origin-city" class="edit-row-input" style="border:none;" placeholder="Originally From">
-                    </label>
-                        <div class="autocomplete-dropdown" id="dropdown-edit-f-origin-city"></div>
-                    <div class="dynamic-stats" id="stats-edit-f-origin-city"></div>
-                </div>
-
-                <!-- Current Role -->
-                <div class="edit-row-v2 autocomplete-wrapper">
-                    <label class="edit-row-label">ROLE</label>
-                    <label class="tags-wrapper" id="tw-edit-f-role" for="edit-f-role" style="display:flex; cursor:text;">
-                        <input type="text" id="edit-f-role" class="edit-row-input" style="border:none;" placeholder="Role / Job">
-                    </label>
-                        <div class="autocomplete-dropdown" id="dropdown-edit-f-role"></div>
-                    <div class="dynamic-stats" id="stats-edit-f-role"></div>
-                </div>
-
-                <!-- Current Workplace -->
-                <div class="edit-row-v2 autocomplete-wrapper">
-                    <label class="edit-row-label">WORKPLACE</label>
-                    <label class="tags-wrapper" id="tw-edit-f-workplace" for="edit-f-workplace" style="display:flex; cursor:text;">
-                        <input type="text" id="edit-f-workplace" class="edit-row-input" style="border:none;" placeholder="Workplace">
-                    </label>
-                        <div class="autocomplete-dropdown" id="dropdown-edit-f-workplace"></div>
-                    <div class="dynamic-stats" id="stats-edit-f-workplace"></div>
-                </div>
-
-                <!-- High School -->
-                <div class="edit-row-v2 autocomplete-wrapper">
-                    <label class="edit-row-label">HIGH SCHOOL</label>
-                    <label class="tags-wrapper" id="tw-edit-f-highschool" for="edit-f-highschool" style="display:flex; cursor:text;">
-                        <input type="text" id="edit-f-highschool" class="edit-row-input" style="border:none;" placeholder="School">
-                    </label>
-                        <div class="autocomplete-dropdown" id="dropdown-edit-f-highschool"></div>
-                    <div class="dynamic-stats" id="stats-edit-f-highschool"></div>
-                </div>
-
-                <!-- University -->
-                <div class="edit-row-v2 autocomplete-wrapper">
-                    <label class="edit-row-label">UNIVERSITY</label>
-                    <label class="tags-wrapper" id="tw-edit-f-university" for="edit-f-university" style="display:flex; cursor:text;">
-                        <input type="text" id="edit-f-university" class="edit-row-input" style="border:none;" placeholder="University">
-                    </label>
-                        <div class="autocomplete-dropdown" id="dropdown-edit-f-university"></div>
-                    <div class="dynamic-stats" id="stats-edit-f-university"></div>
-                </div>
-
-                <!-- Degree -->
-                <div class="edit-row-v2 autocomplete-wrapper">
-                    <label class="edit-row-label">DEGREE</label>
-                    <label class="tags-wrapper" id="tw-edit-f-degree" for="edit-f-degree" style="display:flex; cursor:text;">
-                        <input type="text" id="edit-f-degree" class="edit-row-input" style="border:none;" placeholder="Major">
-                    </label>
-                        <div class="autocomplete-dropdown" id="dropdown-edit-f-degree"></div>
-                    <div class="dynamic-stats" id="stats-edit-f-degree"></div>
-                </div>
-
-                <!-- Army Role -->
-                <div class="edit-row-v2 autocomplete-wrapper">
-                    <label class="edit-row-label">ARMY ROLE</label>
-                    <label class="tags-wrapper" id="tw-edit-f-army-role" for="edit-f-army-role" style="display:flex; cursor:text;">
-                        <input type="text" id="edit-f-army-role" class="edit-row-input" style="border:none;" placeholder="Role">
-                    </label>
-                        <div class="autocomplete-dropdown" id="dropdown-edit-f-army-role"></div>
-                    <div class="dynamic-stats" id="stats-edit-f-army-role"></div>
-                </div>
-
-                <!-- Army Base -->
-                <div class="edit-row-v2 autocomplete-wrapper">
-                    <label class="edit-row-label">ARMY BASE</label>
-                    <label class="tags-wrapper" id="tw-edit-f-army-base" for="edit-f-army-base" style="display:flex; cursor:text;">
-                        <input type="text" id="edit-f-army-base" class="edit-row-input" style="border:none;" placeholder="Base">
-                    </label>
-                        <div class="autocomplete-dropdown" id="dropdown-edit-f-army-base"></div>
-                    <div class="dynamic-stats" id="stats-edit-f-army-base"></div>
-                </div>
-
-                <!-- Advanced Details Toggle -->
-                <div id="toggle-advanced-container" style="text-align:center; padding: 10px 0;">
-                    <span id="btn-toggle-advanced-details" style="font-size: 11px; text-transform: uppercase; cursor: pointer; color: #888; letter-spacing: 1.5px; font-weight: 500;" onclick="toggleAdvancedDetails(this)">[ + MORE DETAILS ]</span>
-                </div>
-
-                <!-- Advanced Details Container -->
-                <div id="advanced-details-container" style="display:none; flex-direction: column; gap: 8px;">
-                    <!-- Previous Works -->
-                    <div class="edit-row-v2 autocomplete-wrapper">
-                        <label class="edit-row-label">PREVIOUS WORKS</label>
-                        <label class="tags-wrapper" id="tw-edit-f-prev-work" for="edit-f-prev-work" style="display:flex; cursor:text;">
-                            <input type="text" id="edit-f-prev-work" class="edit-row-input" style="border:none;" placeholder="Companies">
-                        </label>
-                        <div class="autocomplete-dropdown" id="dropdown-edit-f-prev-work"></div>
-                        <div class="dynamic-stats" id="stats-edit-f-prev-work"></div>
-                    </div>
-
-                    <!-- Other Chapters (Dynamic) -->
-                    <div id="dynamic-other-chapters-wrapper" style="display: flex; flex-direction: column; gap: 8px;">
-                        <!-- Rows will be injected here via JS -->
-                    </div>
-                    
-                    <div style="text-align: center; margin-top: 35px; padding-bottom: 10px;">
-                        <button type="button" onclick="deleteEditedPerson()" style="background: transparent; border: none; color: #ff4444; font-size: 10px; font-weight: 500; letter-spacing: 1.5px; cursor: pointer; text-transform: uppercase; opacity: 0.5; transition: 0.2s;" onmouseover="this.style.opacity='1'" onmouseout="this.style.opacity='0.5'">[ DELETE PERSON ]</button>
-                    </div>
-                </div>
-                
-                </div> <!-- End of scroll area -->
-                <input type="hidden" id="edit-f-desc" value="">
-                <input type="hidden" id="edit-f-tags" value="">
-                <input type="hidden" id="edit-form-person-id" value="">
-                
-                
-            </div>
-            
-            <!-- Connections Tab -->
-            <div id="edit-connections-tab-content" style="display: none; flex: 1; flex-direction: column; overflow: hidden;">
-                <p style="font-size: 13px; color: #666; margin-top: 0; margin-bottom: 15px; line-height: 1.4;">Manage connections for this person. These relationships build the graph.</p>
-                <style>
-                    #edit-modal-connections-wrapper #connections-section {
-                        padding-right: 0 !important;
-                    }
-                    #edit-modal-connections-wrapper .btn-add-more-conn {
-                        color: #111 !important;
-                        border: 1px dashed rgba(0,0,0,0.3) !important;
-                    }
-                    #edit-modal-connections-wrapper .btn-add-more-conn:hover {
-                        background: rgba(0,0,0,0.03) !important;
-                    }
-                </style>
-                <div id="edit-modal-connections-wrapper" style="flex: 1; overflow-y: auto; overflow-x: hidden; position: relative;">
-                    <button type="button" class="btn-add-more-conn" id="btn-edit-add-conn" style="width:100%; border:1px dashed rgba(0,0,0,0.3); background:transparent; color:#111; font-size: 11px; font-weight: 500; letter-spacing: 1px; padding:15px; border-radius:8px; cursor:pointer; text-transform: uppercase; transition: 0.2s; margin-bottom: 15px;">+ Add connection</button>
-                    <div id="edit-connections-list"></div>
-                </div>
-            </div>
-            
-            <button onclick="saveEditedPerson()" id="btn-edit-save" class="info-action-btn" style="margin: 15px 0 20px 0; align-self: center; flex-shrink: 0;">[ SAVE CHANGES ]</button>
-            
-            <script>
-                function switchEditTab(tabName) {
-                    const detailsTab = document.getElementById('tab-edit-details');
-                    const connsTab = document.getElementById('tab-edit-connections');
-                    const detailsContent = document.getElementById('edit-person-form');
-                    const connsContent = document.getElementById('edit-connections-tab-content');
-                    
-                    if (tabName === 'details') {
-                        detailsTab.style.borderColor = '#000';
-                        detailsTab.style.color = '#000';
-                        connsTab.style.borderColor = 'transparent';
-                        connsTab.style.color = '#999';
-                        
-                        detailsContent.style.display = 'flex';
-                        connsContent.style.display = 'none';
-                    } else {
-                        connsTab.style.borderColor = '#000';
-                        connsTab.style.color = '#000';
-                        detailsTab.style.borderColor = 'transparent';
-                        detailsTab.style.color = '#999';
-                        
-                        connsContent.style.display = 'flex';
-                        detailsContent.style.display = 'none';
-                    }
-                }
-            </script>
-        </div>
-    </div>
-
-    <!-- About Modal -->
-    <div id="about-modal" class="modal">
-        <span class="close-btn" id="btn-close-about" onclick="document.getElementById('about-modal').classList.remove('visible'); document.getElementById('modal-overlay').classList.remove('visible');" style="position: absolute; top: 40px; right: 40px; font-size: 32px; font-weight: 300; cursor: pointer; color: inherit; z-index: 10; line-height: 1;">&times;</span>
-        
-        <div style="position: relative; width: 100%; height: 100%; display: flex; flex-direction: column; padding: calc(12vh + 5px) 10% 0; font-family: 'Helvetica', Arial, sans-serif;">
-            
-            <h1 style="font-weight: 800; font-size: 15vw; line-height: 0.85; margin-bottom: 6vh; text-transform: uppercase; letter-spacing: -0.02em; word-break: keep-all; color: inherit; z-index: 2; user-select: none;">
-                FEED THE<br>BEAST
-            </h1>
-            
-            <div style="position: relative; width: 100%; z-index: 2;">
-                <!-- Paragraph text moved to the right and aligned with "H" -->
-                <div style="margin-top: 6vh; margin-left: 63%; font-weight: 300; font-size: 18px; line-height: 1.6; color: inherit; opacity: 0.85; text-wrap: pretty;">
-                    <p style="margin: 0;">An interactive installation that reveals the <strong style="font-weight: 500;">hidden network of human connections</strong> surrounding us. Each node represents a real person. Each line represents a real relationship. Together, they form a <strong style="font-weight: 500;">living organism</strong>. Explore the system, trace paths between individuals, uncover hidden links, and discover how people are connected in ways that often remain unseen. The organism is <strong style="font-weight: 500;">never complete</strong>. With every new participant and every new connection, it grows, adapts, and reorganizes itself.</p>
-                </div>
-                
-                <!-- Button moved to the left -->
-                <div style="position: absolute; left: 0; margin-left: -2px; bottom: 140px; font-size: 12px; font-weight: 300; letter-spacing: 1.5px; text-transform: uppercase; color: inherit; opacity: 0.5; user-select: none;">
-                    [ SCROLL TO EXPLORE ]
-                </div>
-            </div>
-        </div>
-    </div>
-    
-    <div id="discover-modal" class="modal" style="display: none; padding-top: 40px; padding-bottom: 20px; max-width: 95vw; width: 95vw; height: 90vh; box-sizing: border-box; flex-direction: column;">
-        <span class="close-btn" id="btn-close-discover" style="position: absolute; font-size: 32px; right: 25px; top: 15px; cursor: pointer; color: #F5F5F5;">&times;</span>
-        <h2 style="margin-bottom: 5px; font-weight: 300; font-size: 28px; text-align: center;">Discover Connections</h2>
-        <p style="font-size: 14px; color: rgba(245,245,245,0.6); margin-bottom: 30px; text-align: center;">Help us map the network by approving suggested matches.</p>
-        <div id="discover-list" style="flex: 1; overflow-y: auto; padding-right: 15px; display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 25px; align-content: start;"></div>
-    </div>
-
-    <div id="add-modal" class="modal">
-        <span class="close-btn" id="btn-close-modal" style="position: absolute; top: 15px; right: 20px; font-size: 28px; cursor: pointer; color: #F5F5F5; opacity: 0.6; transition: 0.2s; z-index: 10;">&times;</span>
-        <h2 id="modal-title" style="display: none;">Add Person</h2>
-        
-        <!-- VERTICAL PROGRESS BAR (NEW DESIGN) -->
-        <div class="wizard-progress-container" id="wizard-progress-container">
-            <div class="wizard-progress-line"></div>
-            
-            <div class="wizard-progress-item" id="prog-item-1">
-                <div class="wizard-progress-circle"></div>
-                <div class="wizard-progress-text">1. Origin</div>
-            </div>
-                   <div class="wizard-progress-item" id="prog-item-2">
-                <div class="wizard-progress-circle"></div>
-                <div class="wizard-progress-text">2. Work & Education</div>
-            </div>
-            
-            <div class="wizard-progress-item" id="prog-item-3">
-                <div class="wizard-progress-circle"></div>
-                <div class="wizard-progress-text">3. Military</div>
-            </div>
-
-            <div class="wizard-progress-item" id="prog-item-4">
-                <div class="wizard-progress-circle"></div>
-                <div class="wizard-progress-text">4. General</div>
-            </div>
-        </div>
-
-        <form id="add-form" style="display: flex; flex-direction: column; flex: 1; overflow: hidden; margin: 0;">
-        <!-- NEW UI WIZARD CONTAINER -->
-        <style>
-            .editorial-input {
-                background: transparent;
-                border: none;
-                border-bottom: 1px solid rgba(245,245,245,0.4);
-                color: #F5F5F5;
-                font-size: 16px;
-                padding: 10px 0;
-                width: 100%;
-                outline: none;
-                font-family: inherit;
-                transition: border-color 0.3s;
-                letter-spacing: 1px;
-                text-transform: capitalize;
-            }
-            .editorial-input:focus {
-                border-bottom-color: #F5F5F5;
-            }
-            .editorial-input::placeholder {
-                color: rgba(245, 245, 245, 0.15);
-            }
-            .editorial-label {
-                font-size: 11px;
-                text-transform: uppercase;
-                letter-spacing: 1px;
-                color: rgba(245,245,245,0.6);
-                margin-bottom: 5px;
-                display: block;
-            }
-            .wizard-layout {
-                display: flex; 
-                flex-direction: row;
-                flex: 1;
-                overflow: hidden;
-            }
-            .wizard-form-area {
-                flex: 1.5; 
-                padding: 40px;
-                padding-left: 50px; 
-                overflow-y: auto; 
-                display: flex; 
-                flex-direction: column;
-                justify-content: flex-start;
-            }
-            #wizard-step-0, #wizard-step-1, #wizard-step-4, #wizard-step-4a, #wizard-step-5, #wizard-step-6, #wizard-step-8 {
-                padding-right: 280px; /* Shortened inputs further */
-            }
-            .wizard-preview-area {
-                flex: 1; 
-                background: rgba(0,0,0,0.2); 
-                border-left: 1px solid rgba(245,245,245,0.1); 
-                padding: 40px; 
-                display: flex; 
-                flex-direction: column; 
-                align-items: center; 
-                justify-content: flex-start;
-                overflow-y: auto;
-            }
-            #live-network-preview {
-                display: flex;
-                flex-direction: row;
-                flex-wrap: wrap;
-                align-items: center;
-                justify-content: center;
-                gap: 10px;
-                width: 100%;
-            }
-            .preview-node {
-                display: flex;
-                flex-direction: row;
-                align-items: center;
-                animation: fadeInNode 0.5s ease forwards;
-            }
-            .preview-dot {
-                width: 14px;
-                height: 14px;
-                border-radius: 50%;
-                background: rgba(245,245,245,0.9);
-                box-shadow: 0 0 15px rgba(245,245,245,0.5);
-                margin: 0 10px 8px 10px;
-            }
-            .preview-line {
-                width: 30px;
-                height: 1px;
-                background: rgba(245,245,245,0.3);
-                margin: 0;
-            }
-            .preview-text {
-                font-size: 11px;
-                color: rgba(245,245,245,0.8);
-                text-transform: uppercase;
-                letter-spacing: 1px;
-                text-align: center;
-                margin-bottom: 2px;
-            }
-            .circle-person-row {
-                margin-bottom: 2px;
-            }
-            @keyframes fadeInNode {
-                from { opacity: 0; transform: translateY(10px); }
-                to { opacity: 1; transform: translateY(0); }
-            }
-            .footer-buttons {
-                margin-top: 40px;
-                display: flex;
-                gap: 15px;
-            }
-            .chapter-block {
-                margin-bottom: 30px;
-            }
-            .autocomplete-wrapper {
-                position: relative;
-            }
-            .autocomplete-dropdown {
-                position: absolute;
-                top: 100%;
-                left: 0;
-                width: 100%;
-                background: rgba(10,10,10,0.95);
-                border: 1px solid rgba(245,245,245,0.2);
-                border-radius: 8px;
-                margin-top: 5px;
-                box-shadow: 0 4px 15px rgba(0,0,0,0.5);
-                z-index: 50;
-                max-height: 200px;
-                overflow-y: auto;
-                display: none;
-            }
-            #edit-person-form .autocomplete-dropdown {
-                background: #ffffff;
-                border: 1px solid rgba(0,0,0,0.1);
-                box-shadow: 0 4px 15px rgba(0,0,0,0.1);
-            }
-            #edit-person-form .autocomplete-item {
-                color: #111;
-                border-bottom: 1px solid rgba(0,0,0,0.05);
-            }
-            #edit-person-form .autocomplete-item:hover, #edit-person-form .autocomplete-item.active {
-                background: rgba(0,0,0,0.05);
-            }
-            #edit-person-form .autocomplete-count {
-                color: rgba(0,0,0,0.5);
-            }
-
-            .autocomplete-item {
-                padding: 12px 15px;
-                font-size: 13px;
-                cursor: pointer;
-                border-bottom: 1px solid rgba(245,245,245,0.1);
-                color: #F5F5F5;
-                display: flex;
-                justify-content: space-between;
-                align-items: center;
-            }
-            .autocomplete-item:hover, .autocomplete-item.active {
-                background: rgba(245,245,245,0.1);
-            }
-            .custom-select-dropdown .custom-select-item:hover {
-                background: #f0f0f0 !important;
-            }
-            .autocomplete-count {
-                font-size: 11px;
-                color: rgba(245,245,245,0.5);
-            }
-            .dynamic-stats {
-                font-size: 12px;
-                color: rgba(245,245,245,0.5);
-                margin-top: 8px;
-                min-height: 18px;
-            }
-            .wizard-inner-content {
-                position: absolute;
-                top: 20%;
-                left: 50px;
-                width: calc(100% - 330px);
-            }
-            .wizard-inner-content.name-group {
-                top: 5%;
-            }
-            
-
-            .wizard-form-area.edit-mode h2[id^="step-"] {
-                display: none !important;
-            }
-            .wizard-form-area.edit-mode #edit-name-group {
-                display: block !important;
-                margin-bottom: 0 !important;
-            }
-            
-            /* --- TAGS SYSTEM --- */
-            .tags-wrapper {
-                display: flex;
-                flex-wrap: wrap;
-                gap: 8px;
-                align-items: center;
-                border-bottom: 1px solid rgba(245,245,245,0.4);
-                padding-bottom: 4px;
-                min-height: 38px;
-                transition: border-bottom-color 0.3s ease;
-            }
-            .tags-wrapper:focus-within {
-                border-bottom-color: rgba(245,245,245,0.8);
-            }
-            .tags-wrapper .editorial-input {
-                border-bottom: none;
-                padding: 4px 0;
-                flex-grow: 1;
-                min-width: 120px;
-                width: auto;
-            }
-            .tags-wrapper .editorial-input:focus {
-                border-bottom-color: transparent;
-            }
-            .tag-item {
-                display: flex;
-                align-items: center;
-                background: #000;
-                border: 1px solid rgba(245,245,245,0.2);
-                border-radius: 12px;
-                padding: 4px 12px;
-                font-family: 'Helvetica', Arial, sans-serif;
-                font-weight: 300;
-                font-size: 14px;
-                color: #fff;
-                white-space: nowrap;
-            }
-            
-            /* --- SUGGESTED CONNECTIONS --- */
-            .suggested-card {
-                position: relative;
-                background: rgba(255, 255, 255, 0.95);
-                backdrop-filter: blur(15px);
-                -webkit-backdrop-filter: blur(15px);
-                border: 1px solid rgba(255, 255, 255, 0.2);
-                border-radius: 12px;
-                padding: 24px 30px;
-                margin-bottom: 16px;
-                display: flex;
-                flex-direction: row;
-                align-items: center;
-                color: #111111;
-            }
-            .btn-dismiss-rec {
-                position: absolute;
-                top: 10px;
-                right: 10px;
-                left: auto;
-                background: transparent !important;
-                border: none !important;
-                color: #888 !important;
-                font-size: 16px;
-                cursor: pointer;
-                padding: 0;
-                margin: 0;
-                width: 24px;
-                height: 24px;
-                min-width: 0;
-            }
-            .btn-dismiss-rec:hover {
-                color: #000 !important;
-                background: transparent !important;
-            }
-            .suggested-card-content {
-                flex: 1;
-                display: flex;
-                flex-direction: column;
-            }
-            .suggested-card-action {
-                width: 180px;
-                display: flex;
-                justify-content: center;
-                align-items: center;
-                padding-left: 30px;
-            }
-            .suggested-name {
-                font-family: 'Helvetica', Arial, sans-serif;
-                font-size: 20px;
-                font-weight: 500;
-                color: #111;
-                letter-spacing: -0.01em;
-                margin-bottom: 8px;
-                text-wrap: balance;
-            }
-            .suggested-meta {
-                font-family: 'Helvetica', Arial, sans-serif;
-                font-size: 14px;
-                color: #666;
-                font-weight: 400;
-                letter-spacing: 0.2px;
-                text-wrap: balance;
-            }
-            .suggested-meta span {
-                margin: 0 8px;
-                opacity: 0.4;
-            }
-            .btn-connect-sleek {
-                font-family: 'Helvetica', Arial, sans-serif;
-                background: transparent;
-                color: #111;
-                border: 1px solid rgba(0,0,0,0.1);
-                border-radius: 8px;
-                padding: 10px 16px;
-                font-weight: 500;
-                font-size: 11px;
-                cursor: pointer;
-                transition: 0.2s;
-                text-transform: uppercase;
-                letter-spacing: 2px;
-                outline: none;
-            }
-            .btn-connect-sleek:hover {
-                color: #FFF !important;
-                background: #000 !important;
-                transform: scale(1.02);
-            }
-            .btn-connect-sleek.added {
-                color: #888;
-                border-color: transparent;
-                cursor: default;
-                transform: none;
-            }
-            .suggested-shared-wrap {
-                display: flex;
-                flex-direction: column;
-                align-items: flex-start;
-                gap: 12px;
-                margin-top: 24px;
-            }
-            .suggested-shared-label {
-                font-family: 'Helvetica', Arial, sans-serif;
-                font-size: 11px;
-                color: #888;
-                text-transform: uppercase;
-                letter-spacing: 1.5px;
-                font-weight: 500;
-                margin-bottom: 4px;
-            }
-            body.light-mode .suggested-card {
-                filter: invert(1) hue-rotate(180deg) !important;
-            }
-
-            /* --- CIRCLES DESIGN V9 (Centered List) --- */
-            #recommendation-list {
-                display: flex;
-                flex-direction: column;
-                gap: 4px;
-                width: 100%;
-                max-width: 600px;
-                margin: 0;
-                padding-bottom: 80px;
-                text-align: left;
-            }
-            .suggested-circle-card {
-                background: #ffffff;
-                border: 1px solid rgba(0,0,0,0.05);
-                padding: 0;
-                border-radius: 16px;
-                color: #000000;
-                width: 100%;
-                pointer-events: auto;
-                box-shadow: none;
-                display: flex;
-                flex-direction: column;
-                transition: height 0.3s ease;
-                margin-bottom: 20px;
-            }
-            .circle-header-wrap {
-                position: relative;
-                cursor: pointer;
-            }
-            .circle-title {
-                font-family: 'Helvetica', Arial, sans-serif;
-                font-size: 20px;
-                font-weight: 400;
-                color: #111;
-                margin-bottom: 12px;
-                letter-spacing: -0.01em;
-            }
-            .circle-context-row {
-                display: flex;
-                justify-content: space-between;
-                align-items: center;
-                margin-bottom: 12px;
-            }
-            .circle-subtitle {
-                font-family: 'Helvetica', Arial, sans-serif;
-                font-size: 14px;
-                color: #555;
-            }
-            .circle-meta {
-                font-family: 'Helvetica', Arial, sans-serif;
-                font-size: 13px;
-                color: #888;
-            }
-            .circle-toggle {
-                font-family: 'Helvetica', Arial, sans-serif;
-                font-size: 11px;
-                font-weight: 600;
-                letter-spacing: 1px;
-                color: #111;
-                background: transparent;
-                border: none;
-                cursor: pointer;
-                text-transform: uppercase;
-            }
-            .circle-content {
-                display: none;
-                padding: 0 32px 32px 32px;
-                background: #FFFFFF !important;
-                border: none !important;
-            }
-            .circle-bulk-actions {
-                display: flex;
-                justify-content: center;
-                gap: 40px;
-                margin: 24px 0;
-            }
-            
-            /* Native Button Styles */
-            .btn-circle-action {
-                background: transparent !important;
-                border: none !important;
-                font-family: 'Helvetica', Arial, sans-serif;
-                font-size: 11px;
-                font-weight: 300;
-                letter-spacing: 1.5px;
-                color: #111 !important;
-                cursor: pointer;
-                padding: 0;
-                text-transform: uppercase;
-                transition: opacity 0.2s;
-            }
-            .btn-circle-action:hover {
-                opacity: 0.5;
-            }
-            .btn-circle-action:hover {
-                opacity: 0.5;
-            }
-            .btn-circle-action:disabled {
-                opacity: 0.3;
-                cursor: default;
-                transform: none;
-            }
-
-            /* Minimal Person Row */
-            .circle-content .suggested-card {
-                border: 1px solid rgba(0,0,0,0.06) !important;
-                background: #FFFFFF !important;
-                color: #111111 !important;
-                border-radius: 6px !important;
-                margin-bottom: 8px !important;
-                padding: 16px 20px !important;
-                display: flex !important;
-                flex-direction: column !important;
-                box-shadow: none !important;
-                animation: none !important;
-                transition: border-color 0.2s;
-            }
-            .circle-content .suggested-card:last-child {
-                margin-bottom: 0;
-            }
-            .circle-content .suggested-card-main {
-                display: flex;
-                align-items: center;
-                justify-content: space-between;
-            }
-            .circle-content .suggested-name {
-                font-family: 'Helvetica', Arial, sans-serif;
-                font-size: 15px;
-                font-weight: 400;
-                color: #111;
-                white-space: nowrap;
-                overflow: hidden;
-                text-overflow: ellipsis;
-            }
-            
-            .circle-footer {
-                display: flex;
-                justify-content: center;
-                margin-top: 24px;
-            }
-
-            /* Inline Customization Panel */
-            .suggested-card-edit {
-                display: none;
-                margin-top: 20px;
-                padding-top: 20px;
-                border-top: 1px solid rgba(0,0,0,0.05);
-            }
-            .edit-field-group {
-                display: flex;
-                gap: 32px;
-                margin-top: 16px;
-                margin-bottom: 20px;
-            }
-            .edit-label {
-                display: block;
-                font-size: 10px;
-                text-transform: uppercase;
-                color: #888;
-                margin-bottom: 8px;
-                letter-spacing: 1px;
-            }
-            .edit-select {
-                padding: 10px;
-                border: 1px solid #EAEAEA;
-                border-radius: 4px;
-                background: #FFF;
-                font-family: 'Helvetica', Arial, sans-serif;
-                font-size: 14px;
-                color: #111;
-                width: 160px;
-                outline: none;
-            }
-            .edit-slider-wrap {
-                display: flex;
-                align-items: center;
-                gap: 12px;
-            }
-            .edit-slider {
-                width: 140px;
-                height: 24px;
-                margin: 0;
-                accent-color: #111;
-                cursor: pointer;
-                pointer-events: auto !important;
-                touch-action: none;
-                position: relative;
-                z-index: 50;
-            }
-            .edit-slider-val {
-                font-family: 'Helvetica', Arial, sans-serif;
-                font-size: 14px;
-                color: #111;
-                width: 16px;
-            }
-            
-            .suggested-shared-pill {
-                font-family: 'Helvetica', Arial, sans-serif;
-                display: flex;
-                align-items: center;
-                background: #f5f5f5;
-                border: 1px solid rgba(0,0,0,0.05);
-                border-radius: 12px;
-                padding: 4px 12px;
-                font-weight: 400;
-                font-size: 14px;
-                color: #333;
-                white-space: nowrap;
-            }
-
-            .tag-remove {
-                margin-left: 8px;
-                cursor: pointer;
-                font-size: 14px;
-                color: rgba(255,255,255,0.5);
-                transition: color 0.2s;
-                font-weight: 400;
-            }
-            .tag-remove:hover {
-                color: #fff;
-            }
-
-        /* --- VERTICAL PROGRESS BAR (NEW DESIGN) --- */
-        .wizard-progress-container {
-            position: absolute;
-            right: 40px;
-            top: 104px;
-            bottom: 120px;
-            transform: none;
-            display: none;
-            flex-direction: column;
-            justify-content: space-between;
-            z-index: 1000;
-            width: 140px; /* Fixed width to allow proper alignment with footer */
-        }
-        .wizard-progress-line {
-            position: absolute;
-            left: 5px; /* Center of the 10px circle */
-            top: 5px;
-            bottom: 5px;
-            width: 1px;
-            background: rgba(255, 255, 255, 0.3);
-            z-index: 1;
-        }
-        .wizard-progress-item {
-            display: flex;
-            align-items: center;
-            gap: 15px;
-            z-index: 2;
-        }
-        .wizard-progress-circle {
-            width: 11px;
-            height: 11px;
-            border-radius: 50%;
-            border: 1px solid rgba(255, 255, 255, 0.5);
-            background: rgba(255, 255, 255, 0); /* will invert to black background for modal */
-            box-sizing: border-box;
-            transition: all 0.3s ease;
-            position: relative;
-        }
-        .wizard-progress-item.completed .wizard-progress-circle,
-        .wizard-progress-item.active .wizard-progress-circle {
-            background: #fff;
-            border-color: #fff;
-        }
-        .wizard-progress-text {
-            font-size: 13px;
-            color: rgba(255, 255, 255, 0.5);
-            font-weight: 300;
-            transition: color 0.3s ease;
-            letter-spacing: 0.5px;
-        }
-        .wizard-progress-item.active .wizard-progress-text {
-            color: #F5F5F5;
-            font-weight: 400;
-        }
-        
-        #feed-more-popup-v2 {
-            position: absolute; left: 80px; top: -10px; width: max-content; 
-            padding: 30px 35px; 
-            background: rgba(255, 255, 255, 0.95) !important; 
-            backdrop-filter: blur(15px) !important; 
-            -webkit-backdrop-filter: blur(15px) !important; 
-            border-radius: 12px; pointer-events: auto; text-align: center; 
-            box-shadow: 0 20px 60px rgba(0,0,0,0.08); z-index: 100; 
-            color: #0a0a0a !important;
-        }
-        .btn-close-feed-more {
-            position: absolute;
-            top: 10px;
-            right: 12px;
-            background: transparent;
-            border: none;
-            font-size: 18px;
-            font-weight: 300;
-            color: #111111;
-            cursor: pointer;
-            opacity: 0.5;
-            transition: opacity 0.2s;
-            padding: 0;
-            line-height: 1;
-        }
-        .btn-close-feed-more:hover {
-            opacity: 1;
-        }
-        body.light-mode #feed-more-popup-v2 {
-            filter: invert(1) hue-rotate(180deg) !important;
-        }
-
-        @keyframes custom-swal-show {
-            0% { opacity: 0; transform: scale(0.95); }
-            100% { opacity: 1; transform: scale(1); }
-        }
-        @keyframes custom-swal-hide {
-            0% { opacity: 1; transform: scale(1); }
-            100% { opacity: 0; transform: scale(0.95); }
-        }
-        .swal2-popup.glass-popup-white {
-            border-radius: 12px !important;
-            background: rgba(255, 255, 255, 0.95) !important;
-            backdrop-filter: blur(20px) !important;
-            -webkit-backdrop-filter: blur(20px) !important;
-            border: none !important;
-            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.08) !important;
-            padding: 90px 80px !important;
-            width: auto !important;
-            min-width: 580px;
-        }
-        .swal2-popup.glass-popup-white .swal2-title {
-            font-family: 'Helvetica', Arial, sans-serif !important;
-            font-size: 24px !important;
-            font-weight: 400 !important;
-            text-transform: none !important;
-            letter-spacing: normal !important;
-            color: #111111 !important;
-            margin-bottom: 12px !important;
-            padding: 0 !important;
-        }
-        .swal2-popup.glass-popup-white .swal2-html-container {
-            font-family: 'Helvetica', Arial, sans-serif !important;
-            font-size: 16px !important;
-            font-weight: 300 !important;
-            color: #666666 !important;
-            letter-spacing: normal !important;
-            margin: 0 !important;
-            padding: 0 !important;
-        }
-        .swal2-spinner {
-            width: 32px;
-            height: 32px;
-            border: 1px solid rgba(0, 0, 0, 0.1);
-            border-top-color: #111111;
-            border-radius: 50%;
-            animation: spin 1s linear infinite;
-            margin: 0 auto 30px auto;
-        }
-        .swal2-popup.glass-popup-white.swal2-show {
-            animation: custom-swal-show 1s ease-out forwards !important;
-        }
-        .swal2-popup.glass-popup-white.swal2-hide {
-            animation: custom-swal-hide 1s ease-in forwards !important;
-        }
-        body.light-mode .swal2-container {
-            filter: invert(1) hue-rotate(180deg) !important;
-        }
-    </style>
-
-        <div class="wizard-layout">
-            <div class="wizard-form-area" id="wizard-form-area">
-                <input type="hidden" id="form-mode" value="add">
-                <input type="hidden" id="form-person-id" value="">
-                <input type="hidden" id="form-is-myself" value="yes">
-                <input type="hidden" id="f-tags" value="">
-                <input type="hidden" id="f-desc" value="">
-                
-                <!-- STEP 0 -->
-                <div id="wizard-step-0" class="wizard-step active" style="height: 100%;">
-                    <!-- Normal flow title -->
-                    <h2 id="step-0-title">Who are we adding?</h2>
-                    
-                    <!-- Radio buttons aligned perfectly with "1. Name" (20%) -->
-                    <div style="position: absolute; top: 20%; left: 50px; transform: translateY(-50%); z-index: 30;">
-                        <div style="display: flex; align-items: center; gap: 20px;">
-                            <div style="display: flex; align-items: center; gap: 10px; cursor: pointer;" onclick="setPersonType('myself')">
-                                <div class="custom-radio active" id="radio-myself"></div>
-                                <span style="font-size: 15px; color: #F5F5F5; font-weight: 300; letter-spacing: 0.5px;">It's me</span>
-                            </div>
-                            <div style="width: 1px; height: 16px; background: rgba(255,255,255,0.2);"></div>
-                            <div style="display: flex; align-items: center; gap: 10px; cursor: pointer;" onclick="setPersonType('someone')">
-                                <div class="custom-radio" id="radio-someone"></div>
-                                <span style="font-size: 15px; color: #F5F5F5; font-weight: 300; letter-spacing: 0.5px;">Someone else</span>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <!-- Text input aligned perfectly with "2. Your story" (40%) -->
-                    <div class="chapter-block" style="position: absolute; top: 40%; left: 50px; transform: translateY(-50%); width: 360px; z-index: 20; margin-top: 0;">
-                        <label class="editorial-label" id="step-1-title">What's your name?</label>
-                        <input type="text" id="f-name-initial" class="editorial-input" placeholder="e.g. John Doe" autocomplete="off" style="width: 100%; text-transform: capitalize;">
-                    </div>
-                </div>
-
-                <!-- STEP 2 -->
-                <div id="wizard-step-2" class="wizard-step" style="text-align: center; height: 100%; min-height: 400px;">
-                    <div style="display: flex; flex-direction: column; justify-content: center; align-items: center; height: 100%; width: 100%;">
-                        <div class="scan-spinner"></div>
-                        <h3 id="loading-playful-msg" style="font-weight: 300; margin-top: 30px; letter-spacing: 1px; font-size: 24px;">Looking for existing traces...</h3>
-                        <p id="step-2-explanation" style="color: rgba(245,245,245,0.5); font-size: 13px; margin-top: 10px;">Searching the network</p>
-                    </div>
-                </div>
-
-                <!-- STEP 3 MATCH FOUND -->
-                <div id="wizard-step-3" class="wizard-step" style="text-align: center; height: 100%; min-height: 400px;">
-                    <div style="display: flex; flex-direction: column; height: 100%; width: 100%;">
-                        <div style="flex: 1; display: flex; flex-direction: column; justify-content: center; align-items: center;">
-                            <h2 id="step-3-title">Have we met before?</h2>
-                            <p class="step-explanation" id="step-3-explanation" style="margin-bottom: 30px;">We found someone in the network who might be you.</p>
-                            
-                            <div id="match-profile-card" style="background: rgba(245,245,245,0.05); border: 1px solid rgba(245,245,245,0.2); border-radius: 10px; padding: 20px; margin: 0 auto; width: 100%; max-width: 320px;">
-                                <div id="match-name" style="font-size: 18px; font-weight: 600; margin-bottom: 8px;"></div>
-                                <div id="match-role" style="font-size: 14px; color: rgba(245,245,245,0.7); margin-bottom: 4px;"></div>
-                                <div id="match-city" style="font-size: 14px; color: rgba(245,245,245,0.7);"></div>
-                            </div>
-                        </div>
-                        <div class="footer-buttons" style="margin-top: auto; display: flex; justify-content: space-between; gap: 10px; padding-top: 20px;">
-                            <button type="button" id="btn-match-yes" class="info-action-btn" style="margin: 0; min-width: auto;">[ Yes, that's me ]</button>
-                            <button type="button" id="btn-match-no" class="info-action-btn" style="margin: 0; min-width: auto;">[ No, not me ]</button>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- STEP 4 BASICS -->
-                <div id="wizard-step-4" class="wizard-step" style="height: 100%;">
-                    <h2 id="step-4-title">Where does your story begin?</h2>
-                    
-                    <!-- Full Name Block (only visible when adding connections) -->
-                    <div class="chapter-block wizard-inner-content name-group" id="edit-name-group" style="display: none; z-index: 40;">
-                        <label class="editorial-label">Full Name</label>
-                        <input type="text" id="f-name" class="editorial-input" required style="text-transform: capitalize;">
-                    </div>
-
-                    <!-- 20% Block: Birth Year & Country -->
-                    <div class="wizard-inner-content" style="z-index: 30; display:flex; flex-direction: column; gap:80px;">
-                        <div>
-                            <label class="editorial-label">Birth Year</label>
-                            <input type="number" id="f-birth-year" class="editorial-input" placeholder="YYYY" min="1900" max="2026">
-                        </div>
-                        <div>
-                            <label class="editorial-label">Country</label>
-                            <input type="text" id="f-country" class="editorial-input" placeholder="e.g. Israel" value="Israel">
-                        </div>
-                    </div>
-                </div>
-
-                <!-- STEP 4a LOCATIONS -->
-                <div id="wizard-step-4a" class="wizard-step" style="height: 100%;">
-                    <h2 id="step-4a-title">Where are you located?</h2>
-                    <!-- Current City & Checkbox and Originally From -->
-                    <div class="wizard-inner-content" style="z-index: 20; display: flex; flex-direction: column; gap: 40px;">
-                        <div>
-                            <div class="chapter-block autocomplete-wrapper" style="margin-bottom: 0px;">
-                                <label class="editorial-label">Current City</label>
-                                <label class="tags-wrapper" id="tw-f-city" for="f-city" style="display:flex; cursor:text;">
-                                    <input type="text" id="f-city" class="editorial-input auto-location" placeholder="Where do you live?">
-                                </label>
-                        <div class="autocomplete-dropdown" id="dropdown-f-city"></div>
-                                <div class="dynamic-stats" id="stats-f-city"></div>
-                            </div>
-
-                            <!-- Checkbox just below -->
-                            <div style="display: flex; align-items: center; gap: 8px; font-size: 11px; color: rgba(245,245,245,0.6); text-transform: uppercase; letter-spacing: 1px; margin-top: 5px;">
-                                <input type="checkbox" id="f-same-city" class="white-checkbox" onchange="toggleHometown()">
-                                <label for="f-same-city" style="cursor: pointer; margin-top: 1px;">I grew up there too.</label>
-                            </div>
-                        </div>
-
-                        <!-- Originally From -->
-                        <div class="chapter-block autocomplete-wrapper" id="origin-city-wrapper">
-                            <label class="editorial-label">Originally From</label>
-                            <label class="tags-wrapper" id="tw-f-origin-city" for="f-origin-city" style="display:flex; cursor:text;">
-                                <input type="text" id="f-origin-city" class="tag-input editorial-input auto-location" placeholder="Hometown" style="margin-top:0;">
-                            </label>
-                        <div class="autocomplete-dropdown" id="dropdown-f-origin-city"></div>
-                            <div class="dynamic-stats" id="stats-f-origin-city"></div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- STEP 5 CURRENT POSITION -->
-                <div id="wizard-step-5" class="wizard-step" style="height: 100%;">
-                    <h2 id="step-5-title">What keeps you busy?</h2>
-                    <div class="wizard-inner-content" style="z-index: 20; display: flex; flex-direction: column; gap: 80px;">
-                        <div class="chapter-block autocomplete-wrapper">
-                        <label class="editorial-label" style="display: block; margin-bottom: 5px;">Current Role</label>
-                        <div style="font-size: 14px; opacity: 0.7; font-weight: 300; margin-bottom: 15px;">(If you're a student, you can write that instead)</div>
-                        <label class="tags-wrapper" id="tw-f-role" for="f-role" style="display:flex; cursor:text;">
-                            <input type="text" id="f-role" class="editorial-input auto-role" placeholder="e.g. Graphic Designer, Software Engineer">
-                        </label>
-                        <div class="autocomplete-dropdown" id="dropdown-f-role"></div>
-                        <div class="dynamic-stats" id="stats-f-role"></div>
-                    </div>
-
-                        <div class="chapter-block autocomplete-wrapper">
-                        <label class="editorial-label">Current Workplace</label>
-                        <label class="tags-wrapper" id="tw-f-workplace" for="f-workplace" style="display:flex; cursor:text;">
-                            <input type="text" id="f-workplace" class="editorial-input auto-work" placeholder="Company or Institution">
-                        </label>
-                        <div class="autocomplete-dropdown" id="dropdown-f-workplace"></div>
-                        <div class="dynamic-stats" id="stats-f-workplace"></div>
-                    </div>
-                    </div>
-                </div>
-
-                <!-- STEP 6 EDUCATION -->
-                <div id="wizard-step-6" class="wizard-step" style="height: 100%;">
-                    <h2 id="step-6-title">Where did you study?</h2>
-                    <div class="wizard-inner-content" style="z-index: 20; display: flex; flex-direction: column; gap: 30px;">
-                        <div class="chapter-block autocomplete-wrapper">
-                        <label class="editorial-label" for="f-highschool">School / High School</label>
-                        <label class="tags-wrapper" id="tw-f-highschool" for="f-highschool" style="display:flex; cursor:text;">
-                            <input type="text" id="f-highschool" class="editorial-input auto-highschool" placeholder="e.g. Kadoorie School">
-                        </label>
-                        <div class="autocomplete-dropdown" id="dropdown-f-highschool"></div>
-                        <div class="dynamic-stats" id="stats-f-highschool"></div>
-                    </div>
-
-                        <div class="chapter-block autocomplete-wrapper">
-                        <label class="editorial-label" for="f-university">University</label>
-                        <label class="tags-wrapper" id="tw-f-university" for="f-university" style="display:flex; cursor:text;">
-                            <input type="text" id="f-university" class="editorial-input auto-university" placeholder="University (e.g. University of Haifa), Graduation Year">
-                        </label>
-                        <div class="autocomplete-dropdown" id="dropdown-f-university"></div>
-                        <div class="dynamic-stats" id="stats-f-university"></div>
-                    </div>
-
-                        <div class="chapter-block autocomplete-wrapper">
-                        <label class="editorial-label" for="f-degree">Degree / Major</label>
-                        <label class="tags-wrapper" id="tw-f-degree" for="f-degree" style="display:flex; cursor:text;">
-                            <input type="text" id="f-degree" class="editorial-input auto-degree" placeholder="e.g. Computer Science">
-                        </label>
-                        <div class="autocomplete-dropdown" id="dropdown-f-degree"></div>
-                        <div class="dynamic-stats" id="stats-f-degree"></div>
-                    </div>
-                    </div>
-                </div>
-
-                <!-- STEP 7 ARMY -->
-                <div id="wizard-step-7" class="wizard-step" style="height: 100%;">
-                    <h2 id="step-7-title">Military Service</h2>
-                    <div class="wizard-inner-content" style="z-index: 20; display: flex; flex-direction: column; gap: 80px;">
-                        <div class="chapter-block autocomplete-wrapper">
-                        <label class="editorial-label">Military Role</label>
-                        <label class="tags-wrapper" id="tw-f-army-role" for="f-army-role" style="display:flex; cursor:text;">
-                            <input type="text" id="f-army-role" class="editorial-input auto-army-role" placeholder="e.g. Combat Soldier, Commander">
-                        </label>
-                        <div class="autocomplete-dropdown" id="dropdown-f-army-role"></div>
-                        <div class="dynamic-stats" id="stats-f-army-role"></div>
-                    </div>
-
-                        <div class="chapter-block autocomplete-wrapper">
-                        <label class="editorial-label">Army Base</label>
-                        <label class="tags-wrapper" id="tw-f-army-base" for="f-army-base" style="display:flex; cursor:text;">
-                            <input type="text" id="f-army-base" class="editorial-input auto-army-base" placeholder="e.g. Kirya, Tzeelim">
-                        </label>
-                        <div class="autocomplete-dropdown" id="dropdown-f-army-base"></div>
-                        <div class="dynamic-stats" id="stats-f-army-base"></div>
-                    </div>
-                    </div>
-                </div>
-
-                <!-- STEP 8 GENERAL -->
-                <div id="wizard-step-8" class="wizard-step" style="height: 100%;">
-                    <h2 id="step-8-title">Other Chapters & Topics</h2>
-                    <div class="wizard-inner-content" style="z-index: 20; display: flex; flex-direction: column; gap: 80px;">
-                        <div class="chapter-block">
-                            <label class="editorial-label">Other Chapters (Mechina, Shnat Sherut, etc.)</label>
-                            <div id="wizard-dynamic-other-chapters" style="display: flex; flex-direction: column; gap: 15px; margin-top: 15px;">
-                                <!-- Wizard dynamic rows will be injected here via JS -->
-                            </div>
-                        </div>
-
-
-                    </div>
-                </div>
-
-                <!-- STEP REC SHARED PATHS (Suggested Connections) -->
-                <div id="wizard-step-rec" class="wizard-step" style="text-align: left; height: 100%; overflow-y: auto; padding-top: 40px; display: flex; flex-direction: column; align-items: flex-start;">
-                    <h2 style="font-size: 32px; font-weight: 300; letter-spacing: -0.5px; margin-bottom: 8px;">Let's find your people.</h2>
-                    <p class="step-explanation" style="font-size: 15px; margin-bottom: 32px;">We found a few groups you might already have in common with people.</p>
-                    
-                    <div id="recommendation-list"></div>
-                </div>
-
-                <!-- STEP 9 ADD CONNECTIONS -->
-                <div id="wizard-step-9" class="wizard-step">
-                    <h2>Let's trace a few connections</h2>
-                    <p class="step-explanation">Add a few people already connected to their story.</p>
-                    
-                    <div id="wizard-step-9-original-parent">
-                        <div id="connections-section" style="padding-right: 180px;">
-                            <button type="button" class="btn-add-more-conn" id="btn-add-conn-entry" style="width:100%; border:1px dashed rgba(255,255,255,0.3); background:transparent; color:#F5F5F5; font-size: 11px; font-weight: 500; letter-spacing: 1px; padding:15px; border-radius:8px; cursor:pointer; text-transform: uppercase; transition: 0.2s; margin-bottom: 15px;">+ Add connection</button>
-                            <div id="connections-list"></div>
-                        </div>
-                    </div>
-
-                    <!-- Accordion for Edit Mode Connections -->
-                    <div id="edit-connections-accordion" style="display: none; margin-top: 30px; border-top: 1px solid rgba(245,245,245,0.2); padding-top: 20px;">
-                        <div id="btn-toggle-edit-conns" style="cursor: pointer; display: flex; justify-content: space-between; align-items: center; font-weight: 600; font-size: 16px; color: rgba(245,245,245,0.9);">
-                            <span>Edit Existing Connections</span>
-                            <span id="edit-conns-arrow" style="transition: transform 0.3s; font-size: 12px;">▼</span>
-                        </div>
-                        <div id="edit-connections-content" style="display: none; margin-top: 20px;">
-                        </div>
-                    </div>
-                </div>
-
-                <!-- STEP SUMMARY -->
-                <div id="wizard-step-summary" class="wizard-step" style="height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 20px; box-sizing: border-box;">
-                    <div id="summary-session-text" style="margin-top: 10px; font-size: 9px; text-transform: uppercase; letter-spacing: 2px; color: rgba(245,245,245,0.4); margin-bottom: 10px; text-align: center; width: 100%;"></div>
-                    <h2 id="summary-title" style="text-align: center; font-weight: 300; font-size: 24px; line-height: 1.3; margin-bottom: 25px; color: #f5f5f5;">The more you fill, the more connections you'll find.</h2>
-                    
-                    <div id="summary-card" class="summary-card-v2" style="padding: 15px; gap: 10px; width: 100%; max-width: 450px;">
-                        <!-- dynamic items will be injected here -->
-                    </div>
-
-                    <div style="margin-top: 30px; width: 100%; text-align: center;">
-                        <button type="button" id="btn-summary-feed-now" class="info-action-btn" style="margin: 0; border: none; position: relative; z-index: 1001; cursor: pointer;">[ FEED IT NOW ]</button>
-                    </div>
-
-                    <div style="position: absolute; bottom: 0; left: 0; right: 0; padding: 20px 40px; display: flex; justify-content: space-between; align-items: center; z-index: 1000; background: transparent; pointer-events: none;">
-                        <button type="button" id="btn-summary-back" class="info-action-btn" style="margin: 0; opacity: 0.8; pointer-events: auto;">[ BACK ]</button>
-                        <button type="button" id="btn-summary-continue" class="info-action-btn" style="margin: 0; pointer-events: auto;">[ CONTINUE TO FEED ]</button>
-                    </div>
-                </div>
-
-                <!-- STEP 10 JOINING ANIMATION -->
-                <div id="wizard-step-10" class="wizard-step" style="display: flex; flex-direction: column; justify-content: center; align-items: center; height: 100%; text-align: center; padding: 0;">
-                    <div class="scan-spinner"></div>
-                    <h3 style="font-weight: 300; margin-top: 30px; letter-spacing: 1px; font-size: 24px;" id="join-network-text">A new thread has entered the network.</h3>
-                    <p style="color: rgba(245,245,245,0.5); font-size: 13px; margin-top: 10px;">The Beast has grown.</p>
-                </div>
-
-                </div>
-            </div>
-
-
-        <div id="global-wizard-footer" style="display: none; padding: 20px 40px; justify-content: space-between; align-items: center; position: absolute; bottom: 0; left: 0; right: 0; z-index: 1000; background: transparent;">
-            <button type="button" id="btn-wizard-global-back" class="info-action-btn" style="margin: 0; visibility: hidden; color: #fff;">[ BACK ]</button>
-            <div style="display: flex; align-items: center; gap: 15px; white-space: nowrap;">
-                <button type="button" id="btn-wizard-global-next" class="info-action-btn" style="margin: 0;">[ CONTINUE ]</button>
-            </div>
-        </div>        
-        </form>
-    </div>
-
-    <script type="importmap">
-      {
-        "imports": {
-          "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
-          "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
-        }
-      }
-    </script>
-    <script type="module">
         console.log('MODULE SCRIPT LOADED');
         import * as THREE from 'three';
         import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
@@ -2521,7 +96,7 @@
         let strandSegs = null;
         const viewFrustum = new THREE.Frustum();
         const projScreenMatrix = new THREE.Matrix4();
-
+        let pathLineSegFamily = null, pathLineSegFriend = null;
         let connectionMap = new Map(); // Maps "id1-id2" to connection type for fast lookup
         let lineUniforms = {}; // { family, friend, acquaintance } → shader uniform objects
         let connectionTubes = []; // Array of {mesh, a, b} for tracking tube visibility
@@ -2546,7 +121,6 @@
             varying float vIsRing;
             varying float vPointRand;
             uniform float uFreq;
-            uniform float uPathModeMultiplier;
             void main() {
                 vPointRand = pointRand;
                 vColor = color; vStrandIndex = strandIndex; vRadiusNormal = strandRadius; vIsRing = isRing;
@@ -2556,8 +130,7 @@
                 float freqThresh = (uFreq - 1.0) / 4.0;
                 if (pointRand > freqThresh && pointRand > 0.01) finalSize = 0.0;
                 vDepthDist = -mvPosition.z;
-                float minSize = 2.0 * uPathModeMultiplier;
-                gl_PointSize = finalSize > 0.0 ? clamp(finalSize * distScale * 0.9 * uPathModeMultiplier, minSize, 35.0) : 0.0;
+                gl_PointSize = finalSize > 0.0 ? clamp(finalSize * distScale * 0.9, 2.0, 35.0) : 0.0;
                 gl_Position = projectionMatrix * mvPosition;
             }
         `;
@@ -2628,7 +201,7 @@
             uniform float uCamDist;
             uniform float uOpacity;
             void main() {
-                float dash = fract((vWorldPos.x * 1.0 + vWorldPos.y * 1.7 + vWorldPos.z * 2.3) * 0.1);
+                float dash = fract((vWorldPos.x + vWorldPos.y + vWorldPos.z) * 0.1);
                 if (dash > 0.55) discard;
                 float fogFactor = clamp(1400.0 / vDepthDist, 0.05, 1.0);
                 gl_FragColor = vec4(1.0, 1.0, 1.0, 0.6 * fogFactor * uOpacity);
@@ -2641,7 +214,7 @@
             uniform float uCamDist;
             uniform float uOpacity;
             void main() {
-                float dotPattern = fract((vWorldPos.x * 1.0 + vWorldPos.y * 1.7 + vWorldPos.z * 2.3) * 0.03);
+                float dotPattern = fract((vWorldPos.x + vWorldPos.y + vWorldPos.z) * 0.03);
                 if (dotPattern > 0.2) discard; // Small dots, large gaps
                 float fogFactor = clamp(1400.0 / vDepthDist, 0.05, 1.0);
                 gl_FragColor = vec4(1.0, 1.0, 1.0, 0.5 * fogFactor * uOpacity);
@@ -2923,8 +496,7 @@
                 uFreq: { value: connParams.freq }, 
                 uResil: { value: connParams.resil },
                 uZoomLevel: { value: 0.0 },
-                uIsSearching: { value: 0.0 },
-                uPathModeMultiplier: { value: 1.0 }
+                uIsSearching: { value: 0.0 }
             };
 
             // Three separate line geometries sharing the same position buffer
@@ -2995,6 +567,46 @@
                 friend: new THREE.Color(0x4ECDC4),
                 acquaintance: new THREE.Color(0x95E1D3)
             };
+
+            // Create organic curved connections using TubeGeometry
+            connectionTubes = [];
+            /*
+            try {
+                for (const conn of connectionsData) {
+                    const posA = sortedCenters[conn.a];
+                    const posB = sortedCenters[conn.b];
+
+                    // Create intermediate control points for an organic curve
+                    const midpoint = new THREE.Vector3().addVectors(posA, posB).multiplyScalar(0.5);
+                    const towardOrigin = new THREE.Vector3(0, 0, 0).sub(midpoint).normalize();
+
+                    const controlPt1 = new THREE.Vector3().copy(posA).add(towardOrigin.clone().multiplyScalar(50));
+                    const controlPt2 = new THREE.Vector3().copy(posB).add(towardOrigin.clone().multiplyScalar(50));
+
+                    // Create curve with more segments for better quality
+                    const curve = new THREE.CatmullRomCurve3([posA, controlPt1, controlPt2, posB]);
+                    const points = curve.getPoints(20);
+
+                    // Create simple line instead of tube for better compatibility
+                    const lineGeo = new THREE.BufferGeometry().setFromPoints(points);
+                    const lineMat = new THREE.LineBasicMaterial({
+                        color: connectionColors[conn.type] || connectionColors.acquaintance,
+                        linewidth: 2,
+                        transparent: true,
+                        opacity: 0.4
+                    });
+
+                    const lineMesh = new THREE.Line(lineGeo, lineMat);
+                    lineMesh.renderOrder = 1;
+                    lineMesh.frustumCulled = false;
+                    masterGroup.add(lineMesh);
+
+                    connectionTubes.push({ mesh: lineMesh, a: conn.a, b: conn.b });
+                }
+            } catch (e) {
+                console.error('Error creating connection tubes:', e);
+            }
+            */
 
             // Organic strand internal connections (always visible, no proximity fade)
             if (lineIndices.length) {
@@ -3245,7 +857,7 @@
                 else {
                     pathTargetMode = true;
                     const btn = document.getElementById('btn-path-dest');
-                    btn.textContent = "[ CLICK ON A NODE ]";
+                    btn.textContent = "Click destination node on canvas...";
                     btn.classList.add('active');
                 }
             };
@@ -3277,7 +889,25 @@
                         let isValidTarget = true;
                         
                         if (isValidTarget) {
-                            selectNode(strandId, true);
+                            if (pathTargetMode) {
+                                const endId = strandId;
+                                const startId = selectedNodeId;
+                                disablePathTargetMode();
+                                
+                                if (startId !== null && startId !== endId) {
+                                    const path = findPath(startId, endId);
+                                    if (path) {
+                                        initiatePathReveal(path);
+                                        selectNode(endId, true);
+                                    } else {
+                                        alert("No connection path exists between these two people in the current network.");
+                                    }
+                                } else {
+                                    selectNode(strandId, true);
+                                }
+                            } else {
+                                selectNode(strandId, true);
+                            }
                         } else {
                             if (pathTargetMode) disablePathTargetMode();
                             resetView();
@@ -3298,9 +928,9 @@
                 mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
                 mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
                 raycaster.setFromCamera(mouse, camera);
-                // Dynamic threshold: MUCH larger when zoomed out so they are easy to click
+                // Dynamic threshold: smaller when zoomed out, slightly larger when zoomed in
                 const camDist = camera.position.length();
-                raycaster.params.Points.threshold = camDist > 800 ? 30.0 : (camDist < 300 ? 8.0 : 15.0);
+                raycaster.params.Points.threshold = camDist > 800 ? 1.0 : (camDist < 300 ? 4.0 : 2.0);
                 
                 const intersects = raycaster.intersectObject(meshPoints);
                 const validHits = intersects.filter(hit => hit.index % pPerStrand === 0);
@@ -3482,8 +1112,9 @@
             });
             
             renderPathChain(path);
+            drawPathLines(path);
 
-            // Lay them out linearly on X-axis (original diagonal feel)
+            // Lay them out linearly
             const pathSpacing = 500;
             const offsetX = -((path.length - 1) * pathSpacing) / 2;
             for (let i = 0; i < numStrands; i++) {
@@ -3491,9 +1122,7 @@
                 const pathIdx = path.indexOf(i);
                 p.vx = 0; p.vy = 0; p.vz = 0;
                 if (pathIdx !== -1) {
-                    p.targetCx = offsetX + pathIdx * pathSpacing;
-                    p.targetCy = 0;
-                    p.targetCz = 0;
+                    p.targetCx = offsetX + pathIdx * pathSpacing; p.targetCy = 0; p.targetCz = 0;
                 } else {
                     // Push all non-path points outward like a magnet, forming a background shell
                     const d = Math.hypot(p.baseCx, p.baseCy, p.baseCz);
@@ -3507,16 +1136,15 @@
 
             // Background connections will be dimmed in animate(), no need to hide them completely
 
-            // Release any camera locks so the user is free
-            controls.maxPolarAngle = Math.PI;
-            controls.minPolarAngle = 0;
+            // Lock camera to view the path correctly from the front
+            const flatAngle = Math.PI / 2;
+            controls.maxPolarAngle = flatAngle;
+            controls.minPolarAngle = flatAngle;
             controls.autoRotate = false;
 
-            // Move camera back along Z axis so the whole chain fits in view
+            // Fly camera to see the whole path perfectly from the front (2D view), much closer
             camTargetLookAt.set(0, 0, 0);
-            const pathWidth = (currentPath.length - 1) * 500;
-            camTargetPos.set(0, 0, Math.max(1200, pathWidth * 1.2));
-            isCameraAnimating = true;
+            camTargetPos.set(0, 0, Math.max(800, path.length * 280));
             
             // Let the points fly to their new positions
             setTimeout(() => {
@@ -3545,6 +1173,102 @@
             container.appendChild(chainDiv);
         }
 
+        function drawPathLines(path) {
+            // Clean up existing path lines
+            if (pathLineSegFamily) { masterGroup.remove(pathLineSegFamily); pathLineSegFamily = null; }
+            if (pathLineSegFriend) { masterGroup.remove(pathLineSegFriend); pathLineSegFriend = null; }
+
+            if (path.length < 2) return;
+
+            // Collect family and friend path segments
+            const familyPoints = [], friendPoints = [];
+
+            for (let i = 0; i < path.length - 1; i++) {
+                const nodeA = path[i];
+                const nodeB = path[i + 1];
+                const connInfo = getConnectionInfo(nodeA, nodeB);
+                const connType = connInfo.type;
+
+                const posA = sortedCenters[nodeA];
+                const posB = sortedCenters[nodeB];
+
+                if (connType === 'family') {
+                    familyPoints.push(posA.clone());
+                    familyPoints.push(posB.clone());
+                } else {
+                    // Friend or acquaintance
+                    friendPoints.push(posA.clone());
+                    friendPoints.push(posB.clone());
+                }
+            }
+
+            // Create family path line (solid white) using Cylinders for real thickness
+            if (familyPoints.length > 0) {
+                const group = new THREE.Group();
+                const mat = new THREE.MeshBasicMaterial({ color: 0xFFFFFF, transparent: true, opacity: 0.95 });
+                for (let i = 0; i < familyPoints.length; i += 2) {
+                    const p1 = familyPoints[i];
+                    const p2 = familyPoints[i+1];
+                    const dist = p1.distanceTo(p2);
+                    const geo = new THREE.CylinderGeometry(4, 4, dist, 6);
+                    geo.translate(0, dist / 2, 0);
+                    const cyl = new THREE.Mesh(geo, mat);
+                    cyl.position.copy(p1);
+                    cyl.lookAt(p2);
+                    cyl.rotateX(Math.PI / 2);
+                    group.add(cyl);
+                }
+                pathLineSegFamily = group;
+                masterGroup.add(pathLineSegFamily);
+            }
+
+            // Create friend/acquaintance path lines with dashed pattern
+            if (friendPoints.length > 0) {
+                // Create dashed line segments manually
+                const dashedSegments = [];
+                const dashLength = 20;
+                const gapLength = 15;
+
+                for (let i = 0; i < friendPoints.length; i += 2) {
+                    if (i + 1 < friendPoints.length) {
+                        const start = friendPoints[i];
+                        const end = friendPoints[i + 1];
+                        const direction = new THREE.Vector3().subVectors(end, start);
+                        const totalLength = direction.length();
+                        direction.normalize();
+
+                        let currentPos = 0;
+                        while (currentPos < totalLength) {
+                            const segStart = start.clone().addScaledVector(direction, currentPos);
+                            const nextPos = Math.min(currentPos + dashLength, totalLength);
+                            const segEnd = start.clone().addScaledVector(direction, nextPos);
+                            dashedSegments.push(segStart);
+                            dashedSegments.push(segEnd);
+                            currentPos = nextPos + gapLength;
+                        }
+                    }
+                }
+
+                if (dashedSegments.length > 0) {
+                    const group = new THREE.Group();
+                    const mat = new THREE.MeshBasicMaterial({ color: 0xFFFFFF, transparent: true, opacity: 0.8 });
+                    for (let i = 0; i < dashedSegments.length; i += 2) {
+                        const p1 = dashedSegments[i];
+                        const p2 = dashedSegments[i+1];
+                        const dist = p1.distanceTo(p2);
+                        const geo = new THREE.CylinderGeometry(4, 4, dist, 6);
+                        geo.translate(0, dist / 2, 0);
+                        const cyl = new THREE.Mesh(geo, mat);
+                        cyl.position.copy(p1);
+                        cyl.lookAt(p2);
+                        cyl.rotateX(Math.PI / 2);
+                        group.add(cyl);
+                    }
+                    pathLineSegFriend = group;
+                    masterGroup.add(pathLineSegFriend);
+                }
+            }
+        }
 
         function selectNode(id, triggerFocus = true, forceZoomDist = null) {
             if (pathTargetMode && selectedNodeId !== null && selectedNodeId !== id) {
@@ -3566,7 +1290,6 @@
                 layoutMode = 'focus';
                 focusedNodeId = id;
                 focusedNeighbors = new Set(graphAdjacency[id] || []);
-                window.smoothedRevealRadius = 0.0; // Reset smooth reveal radius
             
                 let neighborsArr = Array.from(focusedNeighbors);
                 const numNeighbors = neighborsArr.length;
@@ -3636,112 +1359,100 @@
                 }
                 const trueUp = new THREE.Vector3().crossVectors(camRight, viewDir).normalize();
                 
-                if (layoutMode !== 'path') {
-                    const repelRadius = 3000; // Force background nodes outside the 2D planar network
-                    let maxRadius = 120; // Default minimum radius
-                    
-                    for (let i = 0; i < numStrands; i++) {
-                        const p = pointData[i * pPerStrand];
-                        if (i === id) {
-                            p.targetCx = C.x; p.targetCy = C.y; p.targetCz = C.z;
-                        } else if (focusedNeighbors.has(i)) {
-                            const nIdx = neighborsArr.indexOf(i);
-                            const angle = (angularPositions[nIdx] / Math.max(1, totalAngularPos)) * Math.PI * 2;
-                            
-                            const connInfo = getConnectionInfo(id, i);
-                            let r = 300;
-                            if (connInfo.type === 'family_core') r = 120 - ((connInfo.strength - 1) * 12.5);
-                            else if (connInfo.type === 'family_extended') r = 200 - ((connInfo.strength - 1) * 12.5);
-                            else if (connInfo.type === 'friend') r = 350 - ((connInfo.strength - 1) * 25);
-                            else r = 550 - ((connInfo.strength - 1) * 32.5);
-                            
-                            if (r > maxRadius) maxRadius = r;
-                            
-                            const c = Math.cos(angle) * r;
-                            const s = Math.sin(angle) * r;
-                            p.targetCx = C.x + camRight.x * c + trueUp.x * s;
-                            p.targetCy = C.y + camRight.y * c + trueUp.y * s;
-                            p.targetCz = C.z + camRight.z * c + trueUp.z * s;
-                        } else {
-                            // Calculate push vector based on their ORIGINAL sphere position so the animation is consistent on every click
-                            const P = new THREE.Vector3(p.cx, p.cy, p.cz);
-                            const v = P.clone().sub(C);
-                            
-                            const z = v.dot(viewDir); 
-                            const v2d = v.clone().sub(viewDir.clone().multiplyScalar(z));
-                            
-                            let dist2d = v2d.length();
-                            if (dist2d < repelRadius) {
-                                const scale = dist2d > 0.1 ? repelRadius / dist2d : 1;
-                                v2d.multiplyScalar(scale);
-                            }
-                            
-                            let pushedZ = z;
-                            if (pushedZ < 200) pushedZ = 200; // Push safely behind the 2D plane
-                            
-                            const finalP = C.clone().add(v2d).add(viewDir.clone().multiplyScalar(pushedZ));
-                            p.targetCx = finalP.x;
-                            p.targetCy = finalP.y;
-                            p.targetCz = finalP.z;
+                const repelRadius = 3000; // Force background nodes outside the 2D planar network
+                
+                for (let i = 0; i < numStrands; i++) {
+                    const p = pointData[i * pPerStrand];
+                    if (i === id) {
+                        p.targetCx = C.x; p.targetCy = C.y; p.targetCz = C.z;
+                    } else if (focusedNeighbors.has(i)) {
+                        const nIdx = neighborsArr.indexOf(i);
+                        const angle = (angularPositions[nIdx] / Math.max(1, totalAngularPos)) * Math.PI * 2;
+                        
+                        const connInfo = getConnectionInfo(id, i);
+                        let r = 300;
+                        if (connInfo.type === 'family_core') r = 120 - ((connInfo.strength - 1) * 12.5);
+                        else if (connInfo.type === 'family_extended') r = 200 - ((connInfo.strength - 1) * 12.5);
+                        else if (connInfo.type === 'friend') r = 350 - ((connInfo.strength - 1) * 25);
+                        else r = 550 - ((connInfo.strength - 1) * 32.5);
+                        
+                        const c = Math.cos(angle) * r;
+                        const s = Math.sin(angle) * r;
+                        p.targetCx = C.x + camRight.x * c + trueUp.x * s;
+                        p.targetCy = C.y + camRight.y * c + trueUp.y * s;
+                        p.targetCz = C.z + camRight.z * c + trueUp.z * s;
+                    } else {
+                        const P = new THREE.Vector3(p.baseCx, p.baseCy, p.baseCz);
+                        const v = P.clone().sub(C);
+                        
+                        const z = v.dot(viewDir); 
+                        const v2d = v.clone().sub(viewDir.clone().multiplyScalar(z));
+                        
+                        let dist2d = v2d.length();
+                        if (dist2d < repelRadius) {
+                            const scale = dist2d > 0.1 ? repelRadius / dist2d : 1;
+                            v2d.multiplyScalar(scale);
                         }
+                        
+                        let pushedZ = z;
+                        if (pushedZ < 200) pushedZ = 200; // Push safely behind the 2D plane
+                        
+                        const finalP = C.clone().add(v2d).add(viewDir.clone().multiplyScalar(pushedZ));
+                        p.targetCx = finalP.x;
+                        p.targetCy = finalP.y;
+                        p.targetCz = finalP.z;
                     }
-                    window.currentMaxRadius = maxRadius;
                 }
                 
-                
-                if (layoutMode !== 'path') {
-                    labelObjects.forEach((l, idx) => {
-                        if (labelObjects[idx]) {
-                            let l = labelObjects[idx];
-                            l.element.style.color = idx === id ? 'rgba(245, 245, 245, 1)' : 'rgba(245, 245, 245, 0.95)';
-                            l.element.style.transform = idx === id ? 'translateY(60px) scale(1.3)' : 'translateY(60px) scale(1)';
-                            l.element.style.fontWeight = idx === id ? '600' : '300';
-                            l.element.style.zIndex = idx === id ? '100' : '1';
-                        }
-                        if (idx === id || focusedNeighbors.has(idx)) {
-                            l.element.style.opacity = '1.0';
-                            l.element.style.display = 'block';
+                labelObjects.forEach((l, idx) => {
+                    if (labelObjects[idx]) {
+                        let l = labelObjects[idx];
+                        l.element.style.color = idx === id ? 'rgba(245, 245, 245, 1)' : 'rgba(245, 245, 245, 0.95)';
+                        l.element.style.transform = idx === id ? 'translateY(60px) scale(1.3)' : 'translateY(60px) scale(1)';
+                        l.element.style.fontWeight = idx === id ? '600' : '300';
+                        l.element.style.zIndex = idx === id ? '100' : '1';
+                    }
+                    if (idx === id || focusedNeighbors.has(idx)) {
+                        l.element.style.opacity = '1.0';
+                        l.element.style.display = 'block';
+                    } else {
+                        l.element.style.opacity = '0.05';
+                    }
+                });
+
+                if (typeof connectionCurves !== 'undefined') {
+                    connectionCurves.forEach(curve => {
+                        const aNode = curve.aIdx / pPerStrand;
+                        const bNode = curve.bIdx / pPerStrand;
+                        if (aNode === id || bNode === id) {
+                            curve.mesh.material.uniforms.uOpacity.value = 1.0;
                         } else {
-                            l.element.style.opacity = '0.05';
+                            curve.mesh.material.uniforms.uOpacity.value = 0.03;
                         }
                     });
-
-                    if (typeof connectionCurves !== 'undefined') {
-                        connectionCurves.forEach(curve => {
-                            const aNode = curve.aIdx / pPerStrand;
-                            const bNode = curve.bIdx / pPerStrand;
-                            if (aNode === id || bNode === id) {
-                                curve.mesh.material.uniforms.uOpacity.value = 1.0;
-                            } else {
-                                curve.mesh.material.uniforms.uOpacity.value = 0.03;
-                            }
-                        });
-                    }
-                    
-                    const colors = globalGeometry.attributes.color.array;
-                    for (let i = 0; i < numStrands; i++) {
-                        const isRelevant = (i === id || focusedNeighbors.has(i));
-                        const val = isRelevant ? 1.0 : 0.0;
-                        for (let j = 0; j < pPerStrand; j++) {
-                            const idx = (i * pPerStrand + j) * 3;
-                            colors[idx] = val;
-                            colors[idx+1] = val;
-                            colors[idx+2] = val;
-                        }
-                    }
-                    globalGeometry.attributes.color.needsUpdate = true;
                 }
-
-                // Move camera
-                controls.autoRotate = false;
                 
-                if (layoutMode !== 'path') {
-                    camTargetLookAt.copy(C);
-                    // Adaptive zoom: Perfectly fit the network radius with some padding
-                    let currentDist = forceZoomDist !== null ? forceZoomDist : Math.max(400, window.currentMaxRadius * 1.5 + 200);
-                    if (currentDist < 100 || currentDist > 1500) currentDist = Math.max(400, window.currentMaxRadius * 1.5 + 200);
-                    camTargetPos.copy(C).add(dir.multiplyScalar(currentDist));
+                const colors = globalGeometry.attributes.color.array;
+                for (let i = 0; i < numStrands; i++) {
+                    const isRelevant = (i === id || focusedNeighbors.has(i));
+                    const val = isRelevant ? 1.0 : 0.0;
+                    for (let j = 0; j < pPerStrand; j++) {
+                        const idx = (i * pPerStrand + j) * 3;
+                        colors[idx] = val;
+                        colors[idx+1] = val;
+                        colors[idx+2] = val;
+                    }
                 }
+                globalGeometry.attributes.color.needsUpdate = true;
+                
+
+                // Move camera to view the node in its natural environment
+                controls.autoRotate = false;
+                camTargetLookAt.copy(C);
+                
+                let currentDist = forceZoomDist !== null ? forceZoomDist : camera.position.distanceTo(C);
+                if (currentDist < 100 || currentDist > 1500) currentDist = 400;
+                camTargetPos.copy(C).add(dir.multiplyScalar(currentDist));
                 
                 isCameraAnimating = true;
             }
@@ -3804,7 +1515,11 @@
             globalGeometry.attributes.color.needsUpdate = true;
             globalGeometry.attributes.size.needsUpdate = true;
             
-            // Removed instant opacity reset to allow animate() to lerp it smoothly
+            if (typeof connectionCurves !== 'undefined') {
+                connectionCurves.forEach(curve => {
+                    curve.mesh.material.uniforms.uOpacity.value = 1.0;
+                });
+            }
             
             labelObjects.forEach(l => { 
                 l.element.style.color = 'rgba(245,245,245,0.95)'; 
@@ -3816,7 +1531,8 @@
             selectedNodeId = null;
             disablePathTargetMode();
             // Clean up path lines
-
+            if (pathLineSegFamily) { masterGroup.remove(pathLineSegFamily); pathLineSegFamily = null; }
+            if (pathLineSegFriend) { masterGroup.remove(pathLineSegFriend); pathLineSegFriend = null; }
         }
 
         function getNodeWorldPos(nodeId) {
@@ -4107,7 +1823,7 @@
                     popupCopy = "Is that all you got?<br>Feed the beast more!";
                 }
                 
-                // Wait for the success Swal popup (5000ms) to disappear before showing this
+                // Wait for the success Swal popup (3500ms) to disappear before showing this
                 setTimeout(() => {
                     // Make sure the node is still selected
                     if (selectedNodeId !== index) return;
@@ -4120,13 +1836,13 @@
                     `;
                     labelObjects[index].element.appendChild(feedMorePopup);
 
-                    // Auto-close after 5 seconds
+                    // Auto-close after 7 seconds
                     window._feedMoreTimeout = setTimeout(() => {
                         if (feedMorePopup && feedMorePopup.parentNode) {
                             feedMorePopup.remove();
                         }
-                    }, 5000);
-                }, 5000);
+                    }, 7000);
+                }, 3500);
             }
             
             document.getElementById('info-panel-container').classList.add('visible');
@@ -4227,10 +1943,10 @@
 
             const camDist = camera.position.distanceTo(controls.target);
             
-            // Auto-exit removed to allow slow network construction and roaming
-            // if (!isCameraAnimating && layoutMode === 'focus' && camDist > 1500) {
-            //     resetView(true);
-            // }
+            // Auto-exit focus mode when zooming out fully!
+            if (!isCameraAnimating && layoutMode === 'focus' && camDist > 1500) {
+                resetView(true); // Preserve camera state but transition back to normal sphere logic
+            }
             
             const zoomLevel = Math.max(0, 1100 - camDist) / 1100;
             let speedMult = 1.0 - zoomLevel * 0.9; // Slow down drastically as we zoom in
@@ -4253,7 +1969,6 @@
             if (shaderUniforms) {
                 shaderUniforms.uZoomLevel.value = zoomLevel; // Fade out tail dots
                 shaderUniforms.uIsSearching.value = currentSearchNodes.size > 0 ? 1.0 : 0.0;
-                shaderUniforms.uPathModeMultiplier.value = pathTargetMode ? 2.5 : 1.0;
             }
 
             const cullThreshold = 0.1; // Hide hairs almost immediately when starting to zoom in!
@@ -4311,21 +2026,20 @@
                 if (layoutMode === 'path') {
                     targetOpacity = inPath ? 1.0 : 0.15; // Background network is faint
                 } else if (layoutMode === 'focus') {
-                    let baseOpacity = 0.25;
                     if (aNode === focusedNodeId || bNode === focusedNodeId) {
-                        baseOpacity = 1.0; // Connections to center are fully visible
+                        targetOpacity = 1.5; // Connections to center are fully visible (black)
                     } else if (focusedNeighbors.has(aNode) && focusedNeighbors.has(bNode)) {
-                        baseOpacity = 0.3; // Connections between neighbors are semi-visible
+                        targetOpacity = 0.15; // Connections between neighbors are very faint
+                    } else {
+                        const opA = window.nodeRevealOpacities ? window.nodeRevealOpacities[aNode] : 0.0;
+                        const opB = window.nodeRevealOpacities ? window.nodeRevealOpacities[bNode] : 0.0;
+                        targetOpacity = Math.min(opA, opB) * 1.0; // Appear only when both nodes appear
                     }
-                    const opA = window.nodeRevealOpacities ? (window.nodeRevealOpacities[aNode] || 0) : 1;
-                    const opB = window.nodeRevealOpacities ? (window.nodeRevealOpacities[bNode] || 0) : 1;
-                    targetOpacity = baseOpacity * Math.min(opA, opB);
                 } else if (currentSearchNodes.size > 0) {
                     targetOpacity = 0.0; // User requested: NO lines should be visible during search
                 }
                 if (curve.mesh.material.uniforms && curve.mesh.material.uniforms.uOpacity) {
-                    const currentOp = curve.mesh.material.uniforms.uOpacity.value;
-                    curve.mesh.material.uniforms.uOpacity.value = THREE.MathUtils.lerp(currentOp, targetOpacity, 0.05);
+                    curve.mesh.material.uniforms.uOpacity.value = targetOpacity;
                 }
                 
                 pA.set(posArray[curve.aIdx*3], posArray[curve.aIdx*3+1], posArray[curve.aIdx*3+2]);
@@ -4344,44 +2058,21 @@
                     pB.add(right.clone().multiplyScalar(4.0));
                 }
 
-                let cp;
-                if (inPath) {
-                    // Make the path chain straight
-                    cp = midpoint.clone();
-                } else {
-                    cp = midpoint.clone().add(towardOrigin.multiplyScalar(dist * 0.25));
-                }
+                const cp = midpoint.clone().add(towardOrigin.multiplyScalar(dist * 0.25));
                 const bCurve = new THREE.QuadraticBezierCurve3(pA, cp, pB);
                 
                 curve.mesh.geometry.setFromPoints(bCurve.getPoints(12));
             }
             
-
             // Dynamically update background opacity in focus mode based on zoom distance
             if (layoutMode === 'focus') {
                 const colors = globalGeometry.attributes.color.array;
-                const targetRevealRadius = (camDist - 650) * 2.5; // Radius expands much slower as you zoom out
-                
-                if (window.smoothedRevealRadius === undefined || isNaN(window.smoothedRevealRadius)) {
-                    window.smoothedRevealRadius = targetRevealRadius || 0;
-                }
-                
-                // Lerp towards the target radius so the network builds smoothly and doesn't jump
-                let diff = (targetRevealRadius || 0) - window.smoothedRevealRadius;
-                if (!isNaN(diff)) {
-                    window.smoothedRevealRadius += diff * 0.05;
-                }
-                
-                let revealRadius = window.smoothedRevealRadius;
-                if (isNaN(revealRadius)) revealRadius = 0;
+                const revealRadius = (camDist - 650) * 2.5; // Radius expands much slower as you zoom out
                 
                 window.nodeRevealOpacities = window.nodeRevealOpacities || new Float32Array(numStrands);
                 const C_node = pointData[focusedNodeId * pPerStrand];
                 const centerPos = new THREE.Vector3(C_node.baseCx, C_node.baseCy, C_node.baseCz);
                 
-                let colorsUpdated = false;
-                let sizesUpdated = false;
-                const sizes = globalGeometry.attributes.size.array;
                 for (let i = 0; i < numStrands; i++) {
                     const pIdx = i * pPerStrand;
                     let opacity = 1.0;
@@ -4392,27 +2083,14 @@
                     }
                     window.nodeRevealOpacities[i] = opacity;
                     
-                    // Make the dots brighter so they are clearly visible alongside their names
-                    const targetColor = (i === focusedNodeId || focusedNeighbors.has(i)) ? 1.0 : (opacity * 0.8);
-                    const targetSize = (i === focusedNodeId || focusedNeighbors.has(i)) ? 176.0 : 350.0;
-                    
-                    if (Math.abs(sizes[pIdx] - targetSize) > 1.0) {
-                        sizes[pIdx] = targetSize;
-                        sizesUpdated = true;
-                    }
-                    
                     for (let j = 0; j < pPerStrand; j++) {
                         const idx = (pIdx + j) * 3;
-                        if (Math.abs(colors[idx] - targetColor) > 0.02) {
-                            colors[idx] = targetColor;
-                            colors[idx+1] = targetColor;
-                            colors[idx+2] = targetColor;
-                            colorsUpdated = true;
-                        }
+                        colors[idx] = opacity;
+                        colors[idx+1] = opacity;
+                        colors[idx+2] = opacity;
                     }
                 }
-                if (colorsUpdated) globalGeometry.attributes.color.needsUpdate = true;
-                if (sizesUpdated) globalGeometry.attributes.size.needsUpdate = true;
+                globalGeometry.attributes.color.needsUpdate = true;
                 
                 labelObjects.forEach((l, idx) => {
                     if (idx !== focusedNodeId && !focusedNeighbors.has(idx)) {
@@ -4424,7 +2102,7 @@
             }
 
             let introCamRight, introCamUp;
-            if ((introAnimationNode !== null && (introAnimationPhase === 1 || introAnimationPhase === 2)) || layoutMode === 'path') {
+            if (introAnimationNode !== null && (introAnimationPhase === 1 || introAnimationPhase === 2)) {
                 introCamRight = new THREE.Vector3();
                 introCamUp = new THREE.Vector3();
                 camera.matrixWorld.extractBasis(introCamRight, introCamUp, new THREE.Vector3());
@@ -4432,25 +2110,6 @@
                 const invMatrix = new THREE.Matrix4().copy(masterGroup.matrixWorld).invert();
                 introCamRight.transformDirection(invMatrix).normalize();
                 introCamUp.transformDirection(invMatrix).normalize();
-            }
-
-            if (layoutMode === 'path' && introCamRight) {
-                const spacing = 500;
-                const pathLen = currentPath.length;
-                const startX = -(pathLen - 1) * spacing * 0.5;
-                
-                for (let idx = 0; idx < particleCount; idx++) {
-                    const data = pointData[idx];
-                    const strandId = data.strandIndex;
-                    const pathIndex = currentPath.indexOf(strandId);
-                    
-                    if (pathIndex !== -1) {
-                        const localX = startX + pathIndex * spacing;
-                        data.targetCx = introCamRight.x * localX;
-                        data.targetCy = introCamRight.y * localX;
-                        data.targetCz = introCamRight.z * localX;
-                    }
-                }
             }
 
             for (let idx = 0; idx < particleCount; idx++) {
@@ -4561,12 +2220,6 @@
                 const twX = Math.sin(data.ny*2.5+elapsedTime*speedMult*0.5)*0.4;
                 const twY = Math.cos(data.nx*2.5+elapsedTime*speedMult*0.5)*0.4;
                 const twZ = Math.sin(data.nx*2.0+data.ny*2.0-elapsedTime*speedMult*0.6)*0.4;
-
-                let startNormal = new THREE.Vector3(0,1,0);
-                if (sortedCenters[data.strandIndex]) {
-                    startNormal.copy(sortedCenters[data.strandIndex]).normalize();
-                }
-
                 let tx = data.nx+twX, ty = data.ny+twY, tz = data.nz+twZ;
                 const len = Math.sqrt(tx*tx+ty*ty+tz*tz); tx/=len; ty/=len; tz/=len;
                 const reach = (200+data.globalT*400)*0.5;
@@ -4652,7 +2305,24 @@
                 const screenY = (-(labelScreenPos.y) * 0.5 + 0.5) * window.innerHeight;
                 const dist = Math.hypot(screenX - event.clientX, screenY - event.clientY);
                 if (dist < 60) {
-                    selectNode(i, true);
+                    if (pathTargetMode) {
+                        const endId = i;
+                        const startId = selectedNodeId;
+                        disablePathTargetMode();
+                        if (startId !== null && startId !== endId) {
+                            const path = findPath(startId, endId);
+                            if (path) {
+                                initiatePathReveal(path);
+                                selectNode(endId, true);
+                            } else {
+                                alert("No connection path exists between these two people in the current network.");
+                            }
+                        } else {
+                            selectNode(i, false);
+                        }
+                    } else {
+                        selectNode(i, true);
+                    }
                     break;
                 }
             }
@@ -4993,10 +2663,16 @@
                         processStep9();
                     }
                     
-                    else if (currentStr === '5') goToWizardStep(6);
+                    else if (currentStr === '5') showSummaryScreen(2, '5');
                     
-                    else if (currentStr === '6') showSummaryScreen(2, '6');
                     else if (currentStr === 'rec-2' || currentStr === 'conn-2') {
+                        window._nextWizardStep = '6';
+                        window._isPartialAdd = true;
+                        processStep9();
+                    }
+                    
+                    else if (currentStr === '6') showSummaryScreen(3, '6');
+                    else if (currentStr === 'rec-3' || currentStr === 'conn-3') {
                         const cityOrigin = getFieldValues('tw-f-origin-city', 'f-origin-city').join(' ').toLowerCase();
                         const cityCurrent = getFieldValues('tw-f-city', 'f-city').join(' ').toLowerCase();
                         const hebrewRegex = /[\u0590-\u05FF]/;
@@ -5006,15 +2682,15 @@
                         processStep9();
                     }
                     
-                    else if (currentStr === '7') showSummaryScreen(3, '7');
-                    else if (currentStr === 'rec-3' || currentStr === 'conn-3') {
+                    else if (currentStr === '7') showSummaryScreen(4, '7');
+                    else if (currentStr === 'rec-4' || currentStr === 'conn-4') {
                         window._nextWizardStep = '8';
                         window._isPartialAdd = true;
                         processStep9();
                     }
                     
-                    else if (currentStr === '8') showSummaryScreen(4, '8');
-                    else if (currentStr === 'rec-4' || currentStr === 'conn-4') {
+                    else if (currentStr === '8') showSummaryScreen(5, '8');
+                    else if (currentStr === 'rec-5' || currentStr === 'conn-5') {
                         window._nextWizardStep = null;
                         window._isPartialAdd = false;
                         processStep9();
@@ -5035,7 +2711,7 @@
             };
             
             if (progressContainer) {
-                if (currentStr === '2' || currentStr === '3' || currentStr === '9' || currentStr === '10' || currentStr === 'summary') {
+                if (currentStr === '9' || currentStr === '10' || currentStr === 'summary') {
                     progressContainer.style.display = 'none';
                 } else {
                     progressContainer.style.display = 'flex';
@@ -5066,30 +2742,11 @@
         window.goToWizardStep = goToWizardStep;
         
         function processStep0() {
-            const val = document.getElementById('f-name-initial').value.trim();
+            const val = document.getElementById('f-name-initial').value;
             if (val) {
                 document.getElementById('f-name').value = val;
-                
-                goToWizardStep(2); // Scanning animation
-                
-                setTimeout(() => {
-                    const lowerVal = val.toLowerCase();
-                    const matchIndex = people.findIndex(p => p.name.toLowerCase() === lowerVal);
-                    
-                    if (matchIndex !== -1) {
-                        const match = people[matchIndex];
-                        document.getElementById('match-name').textContent = match.name;
-                        document.getElementById('match-role').textContent = match.role || 'Unknown Role';
-                        document.getElementById('match-city').textContent = match.city || 'Unknown City';
-                        document.getElementById('btn-match-yes').dataset.matchIndex = matchIndex;
-                        goToWizardStep(3);
-                    } else {
-                        goToWizardStep(4);
-                    }
-                }, 1200);
-            } else {
-                goToWizardStep(4);
             }
+            goToWizardStep(4);
         }
 
         window.submitAddPerson = function() {
@@ -5180,7 +2837,7 @@
         document.getElementById('btn-match-no').addEventListener('click', () => {
             document.getElementById('form-mode').value = 'add';
             document.getElementById('form-person-id').value = '';
-            goToWizardStep(4);
+            goToWizardStep('4a');
         });
         
         window.toggleAdvancedDetails = function(btn) {
@@ -5425,28 +3082,29 @@
             let nextSessionStep = null;
             let recStep = '';
             let connStep = '';
-            
             if (sessionNum === 1) { nextSessionStep = '5'; recStep = 'rec-1'; connStep = 'conn-1'; }
-            else if (sessionNum === 2) { nextSessionStep = '7'; recStep = 'rec-2'; connStep = 'conn-2'; } // Work+Edu completed -> next is Army/Other
-            else if (sessionNum === 3) { nextSessionStep = '8'; recStep = 'rec-3'; connStep = 'conn-3'; } // Army completed -> next is Other
-            else if (sessionNum === 4) { nextSessionStep = null; recStep = 'rec-4'; connStep = 'conn-4'; } // Other completed -> Finish
+            else if (sessionNum === 2) { nextSessionStep = '6'; recStep = 'rec-2'; connStep = 'conn-2'; }
+            else if (sessionNum === 3) { nextSessionStep = '7'; recStep = 'rec-3'; connStep = 'conn-3'; }
+            else if (sessionNum === 4) { nextSessionStep = '8'; recStep = 'rec-4'; connStep = 'conn-4'; }
+            else if (sessionNum === 5) { nextSessionStep = null; recStep = 'rec-5'; connStep = 'conn-5'; }
             
             window._currentConnStep = connStep;
+            
             window._forceStopFeeding = isFeedNow;
             
             const hasRecs = generateRecommendations();
             
             // Calculate next session step ALWAYS, so if they return later, they start at the right place
             if (sessionNum === 1) window._nextWizardStep = '5';
-            else if (sessionNum === 2) {
+            else if (sessionNum === 2) window._nextWizardStep = '6';
+            else if (sessionNum === 3) {
                 const cityOrigin = getFieldValues('tw-f-origin-city', 'f-origin-city').join(' ').toLowerCase();
                 const cityCurrent = getFieldValues('tw-f-city', 'f-city').join(' ').toLowerCase();
                 const hebrewRegex = /[\u0590-\u05FF]/;
                 const isIsrael = cityOrigin.includes('israel') || cityOrigin.includes('ישראל') || cityCurrent.includes('israel') || cityCurrent.includes('ישראל') || hebrewRegex.test(cityOrigin) || hebrewRegex.test(cityCurrent) || ['tel aviv', 'jerusalem', 'haifa', 'rishon', 'petah', 'ashdod', 'netanya', 'beer sheva', 'holon', 'ramat gan', 'herzliya'].some(c => cityOrigin.includes(c) || cityCurrent.includes(c));
                 window._nextWizardStep = isIsrael ? '7' : '8';
             }
-            else if (sessionNum === 3) window._nextWizardStep = '8';
-            else if (sessionNum === 4) window._nextWizardStep = null;
+            else if (sessionNum === 4) window._nextWizardStep = '8';
             else window._nextWizardStep = null;
             
             if (hasRecs) {
@@ -5543,44 +3201,6 @@
             // Focus input again
             input.focus();
         }
-
-        window.cleanCircleName = function(name) {
-            if (!name) return name;
-            let parts = name.split(/\s*(?:\/|\-|·|\.|,)\s*/);
-            if (parts.length === 1) return name;
-            let uniqueParts = [];
-            parts.forEach(p => {
-                let normalized = p.replace(/^#+/, '').toLowerCase().trim();
-                if (!normalized) return;
-                
-                let isDuplicate = uniqueParts.some(up => {
-                    let upNorm = up.replace(/^#+/, '').toLowerCase().trim();
-                    if (normalized === upNorm) return true;
-                    
-                    // Direct substring inclusion (e.g. "kadoorie" in "kadoorie school")
-                    if (normalized.includes(upNorm) || upNorm.includes(normalized)) return true;
-                    
-                    // Typo / Prefix matching for similar lengths
-                    if (normalized.length >= 4 && upNorm.length >= 4) {
-                        let matchLen = 0;
-                        for (let i = 0; i < Math.min(normalized.length, upNorm.length); i++) {
-                            if (normalized[i] === upNorm[i]) matchLen++;
-                            else break;
-                        }
-                        if (matchLen >= 4 && Math.abs(normalized.length - upNorm.length) <= 2) return true;
-                    }
-                    return false;
-                });
-                
-                if (!isDuplicate) {
-                    uniqueParts.push(p);
-                } else {
-                    // If it's a duplicate due to substring, maybe we want to keep the longer descriptive one?
-                    // Or the one without a hashtag? For now, we just skip it so the first one wins.
-                }
-            });
-            return uniqueParts.join(' / ');
-        };
 
         function setupAutocomplete(inputId, staticPrefix) {
             const input = document.getElementById(inputId);
@@ -5749,59 +3369,8 @@
                     });
                 }
                 
-                // Deduplicate and normalize counts
-                let mergedCounts = {};
-                Object.keys(counts).forEach(k => {
-                    let normalized = k.replace(/^#+/, '').trim();
-                    if (normalized.length > 0) {
-                        normalized = normalized.charAt(0).toUpperCase() + normalized.slice(1);
-                    } else {
-                        normalized = k;
-                    }
-                    
-                    let existingKey = Object.keys(mergedCounts).find(mk => {
-                        let normK = normalized.toLowerCase();
-                        let normMk = mk.toLowerCase();
-                        if (normK === normMk) return true;
-                        if (normK.length >= 4 && normMk.length >= 4) {
-                            let matchLen = 0;
-                            for (let i = 0; i < Math.min(normK.length, normMk.length); i++) {
-                                if (normK[i] === normMk[i]) matchLen++;
-                                else break;
-                            }
-                            if (matchLen >= 4 && Math.abs(normK.length - normMk.length) <= 2) return true;
-                        }
-                        return false;
-                    });
-                    
-                    if (existingKey) {
-                        mergedCounts[existingKey] += counts[k];
-                    } else {
-                        mergedCounts[normalized] = counts[k];
-                    }
-                });
-                counts = mergedCounts;
 
-                // --- TEXT AUTOFILL LOGIC ---
-                if (!isDeleting && searchValForMatch.length >= 2) {
-                    const sortedKeys = Object.keys(counts).sort((a, b) => counts[b] - counts[a]);
-                    const bestMatch = sortedKeys.find(k => k.toLowerCase().startsWith(searchValForMatch.toLowerCase()));
-                    
-                    if (bestMatch) {
-                        let remainder = bestMatch.substring(searchValForMatch.length);
-                        
-                        // Truncate remainder at the next space to only autofill one word at a time
-                        const nextSpaceIndex = remainder.indexOf(' ');
-                        if (nextSpaceIndex !== -1) {
-                            remainder = remainder.substring(0, nextSpaceIndex);
-                        }
-                        
-                        if (remainder.length > 0) {
-                            input.value = val + remainder;
-                            input.setSelectionRange(val.length, input.value.length);
-                        }
-                    }
-                }
+                
 
                 // Dropdown logic
                 const rawVal = input.value.substring(0, input.selectionStart || input.value.length).trim();
@@ -6409,10 +3978,7 @@
                         if (!mergedConcepts.includes(compareCircle.concept)) {
                             mergedConcepts.push(compareCircle.concept);
                         }
-                        const uniquePeople = new Map();
-                        intersectionPeople.forEach(p => uniquePeople.set(p.person.id, p));
-                        compareCircle.people.forEach(p => uniquePeople.set(p.person.id, p));
-                        intersectionPeople = Array.from(uniquePeople.values());
+                        intersectionPeople = intersectionPeople.filter(p => compareIds.has(p.person.id));
                     }
                 }
                 
@@ -6422,19 +3988,10 @@
                 }
                 
                 const parsedConcepts = mergedConcepts.map(c => parseConcept(c));
-                const uniqueConcepts = [];
-                const seenNorm = new Set();
-                parsedConcepts.forEach(pc => {
-                    const norm = pc.title.replace(/^#/, '').toLowerCase();
-                    if (!seenNorm.has(norm)) {
-                        seenNorm.add(norm);
-                        uniqueConcepts.push(pc);
-                    }
-                });
-                const nonGenericTitles = uniqueConcepts.map(pc => pc.title).filter(t => !['Student', 'Design', 'Tech'].includes(t));
-                let finalTitle = nonGenericTitles.length > 0 ? nonGenericTitles.slice(0, 2).join(' / ') : uniqueConcepts[0].title;
+                const nonGenericTitles = parsedConcepts.map(pc => pc.title).filter(t => !['Student', 'Design', 'Tech'].includes(t));
+                let finalTitle = nonGenericTitles.length > 0 ? nonGenericTitles.slice(0, 2).join(' / ') : parsedConcepts[0].title;
                 
-                let finalSubtitle = uniqueConcepts.map(pc => pc.title).join(' · ');
+                let finalSubtitle = parsedConcepts.map(pc => pc.title).join(' · ');
                 if (finalSubtitle === finalTitle) finalSubtitle = "Discovered connections";
                 
                 mergedCircles.push({
@@ -6444,7 +4001,7 @@
                     score: intersectionPeople.reduce((sum, p) => sum + p.score, 0)
                 });
             }
-
+            
             mergedCircles.sort((a, b) => b.score - a.score);
 
             scores.forEach(s => {
@@ -6469,7 +4026,6 @@
             recList.innerHTML = '';
             
             if (pendingRecs.length === 0) {
-                recList.innerHTML = '<p style="color: rgba(17,17,17,0.6); font-family: \'Space Mono\', monospace; font-size: 14px;">No connections found based on the info provided so far.</p>';
                 return false;
             }
             
@@ -6488,11 +4044,15 @@
                 
                 const handleNextLogic = () => {
                     if (currentRecIndex >= pendingRecs.length && visibleCount === 0) {
-                        const currentConn = window._currentConnStep || 'conn-1';
-                        document.querySelectorAll('.wizard-step.active').forEach(el => el.classList.remove('active'));
-                        const nextStepEl = document.getElementById('wizard-step-' + currentConn);
-                        if (nextStepEl) nextStepEl.classList.add('active');
-                        document.getElementById('btn-wizard-global-next').click();
+                        if (window._addedSomeoneInRecs) {
+                            goToWizardStep(window._currentConnStep || 'conn-1');
+                        } else {
+                            const currentConn = window._currentConnStep || 'conn-1';
+                            document.querySelectorAll('.wizard-step.active').forEach(el => el.classList.remove('active'));
+                            const nextStepEl = document.getElementById('wizard-step-' + currentConn);
+                            if (nextStepEl) nextStepEl.classList.add('active');
+                            document.getElementById('btn-wizard-global-next').click();
+                        }
                     } else {
                         renderNextCard();
                     }
@@ -6523,39 +4083,31 @@
                     div.className = 'suggested-circle-card';
                     
                     div.innerHTML = `
-                        <div class="circle-header-wrap" style="position: relative; padding: 25px 30px; padding-bottom: 25px; cursor: pointer; display: flex; flex-direction: column; min-height: 120px;">
+                        <div class="circle-header-wrap" style="position: relative; padding: 25px; padding-bottom: 25px; cursor: pointer; display: flex; flex-direction: column; min-height: 120px;">
                             <div style="position: absolute; top: 12px; right: 12px;">
-                                <button type="button" class="circle-dismiss" style="background:transparent; border:none; color:#000; font-size:14px; cursor:pointer; padding:4px; line-height:1; font-weight:300; opacity:0.25; outline:none; position: absolute; right: 18px;">&times;</button>
+                                <button type="button" class="circle-dismiss" style="background:transparent; border:none; color:#000; font-size:14px; cursor:pointer; padding:4px; line-height:1; font-weight:300; opacity:0.25; outline:none;">&times;</button>
                             </div>
-                            <div class="circle-title" style="font-size: 20px; font-weight: 500; letter-spacing: 0px; color: #000; line-height: 1.2; padding-right: 30px; margin-bottom: 8px;">${window.cleanCircleName(circle.title)}</div>
+                            <div class="circle-title" style="font-size: 20px; font-weight: 500; letter-spacing: 0px; color: #000; line-height: 1.2; padding-right: 30px; margin-bottom: 8px;">${circle.title}</div>
                             <div class="circle-tags" style="display: flex; flex-wrap: wrap; gap: 4px; margin-bottom: 16px;">
                                 ${(() => {
-                                    if (!circle.subtitle) {
-                                        let cat = getPersonalCopy(circle.category).replace(/^#+/, '').trim();
-                                        return `<span class="tag-pill" style="color:#666; border-color:rgba(0,0,0,0.1); background:transparent;">${cat.charAt(0).toUpperCase() + cat.slice(1)}</span>`;
-                                    }
-                                    const tags = window.cleanCircleName(circle.subtitle).split(' / ');
-                                    return tags.map(t => {
-                                        let norm = t.replace(/^#+/, '').trim();
-                                        if (norm.length > 0) norm = norm.charAt(0).toUpperCase() + norm.slice(1);
-                                        return `<span class="tag-pill" style="color:#666; border-color:rgba(0,0,0,0.1); background:transparent;">${norm}</span>`;
-                                    }).join('');
+                                    if (!circle.subtitle) return `<span class="tag-pill" style="color:#666; border-color:rgba(0,0,0,0.1); background:transparent;">#${getPersonalCopy(circle.category)}</span>`;
+                                    const tags = circle.subtitle.split(' · ');
+                                    return tags.map(t => `<span class="tag-pill" style="color:#666; border-color:rgba(0,0,0,0.1); background:transparent;">#${t}</span>`).join('');
                                 })()}
                             </div>
                             <div style="display: flex; justify-content: space-between; align-items: flex-end; margin-top: auto;">
-                                <div class="circle-meta" style="display: flex; align-items: baseline; gap: 8px; font-size: 10px; text-transform: uppercase; letter-spacing: 1.5px; color: #666; font-weight: 500; height: 16px; white-space: nowrap;">
-                                    <span style="white-space: nowrap;">${circle.people.length} people &middot; Friend &middot; Strength 3</span>
-                                    <button type="button" class="btn-customize-circle" style="background: transparent; border: none; cursor: pointer; color: #111; font-weight: 500; font-size: 10px; opacity: 0.6; padding: 0; white-space: nowrap; display: none;">[ EDIT ]</button>
+                                <div class="circle-meta" style="display: flex; align-items: center; gap: 8px; font-size: 10px; text-transform: uppercase; letter-spacing: 1.5px; color: #666; font-weight: 500; height: 16px; white-space: nowrap;">
+                                    <span>${circle.people.length} people &middot; Friend &middot; Strength 3</span>
                                 </div>
                                 <div style="display: flex; gap: 10px; align-items: center; height: 16px;">
-                                    <button type="button" class="circle-toggle btn-sleek btn-connect-sleek" style="margin: 0; white-space: nowrap; font-weight: 300 !important; border: none !important; outline: none !important;">[ EXPAND ]</button>
+                                    <button type="button" class="circle-toggle info-action-btn" style="margin: 0; font-weight: 300; border: none; white-space: nowrap;">[ EXPAND ]</button>
                                 </div>
                             </div>
                         </div>
-                        <div class="circle-content" style="display: none; padding: 0 25px 0px 25px; max-height: 0px; opacity: 0; overflow: hidden; transition: max-height 0.6s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.5s ease, padding 0.6s ease;">
-                            <div class="circle-bulk-actions" style="display: flex; gap: 10px; margin-top: 30px; margin-bottom: 30px; justify-content: center;">
-                                <button type="button" class="circle-action-btn btn-bulk-partial">[ I KNOW SOME ]</button>
-                                <button type="button" class="circle-action-btn btn-bulk-connect">[ I KNOW EVERYONE ]</button>
+                        <div class="circle-content" style="display: none; padding: 0 25px 25px 25px;">
+                            <div class="circle-bulk-actions" style="display: flex; gap: 10px; margin-bottom: 25px;">
+                                <button type="button" class="info-action-btn btn-bulk-connect" style="margin: 0;">[ I KNOW EVERYONE ]</button>
+                                <button type="button" class="info-action-btn btn-bulk-partial" style="margin: 0;">[ I KNOW SOME ]</button>
                             </div>
 
                             <div class="circle-people-list" style="display: flex; flex-direction: column; gap: 0;"></div>
@@ -6566,74 +4118,15 @@
                     const content = div.querySelector('.circle-content');
                     const peopleList = div.querySelector('.circle-people-list');
                     const toggleBtn = div.querySelector('.circle-toggle');
-                    const editCircleBtn = div.querySelector('.btn-customize-circle');
-                    
-                    if (editCircleBtn) {
-                        editCircleBtn.addEventListener('click', (e) => {
-                            e.stopPropagation();
-                            const rows = peopleList.querySelectorAll('.circle-person-row');
-                            rows.forEach(row => {
-                                const meta = row.querySelector('.suggested-meta');
-                                const editFields = row.querySelector('.circle-edit-fields');
-                                if (meta && editFields) {
-                                    if (meta.style.display !== 'none') {
-                                        meta.style.display = 'none';
-                                        editFields.style.display = 'flex';
-                                    } else {
-                                        meta.style.display = 'flex';
-                                        editFields.style.display = 'none';
-                                    }
-                                }
-                            });
-                        });
-                    }
-
                     const toggleFunc = () => {
-                        if (content.style.maxHeight && content.style.maxHeight !== '0px') {
-                            content.style.maxHeight = '0px';
-                            content.style.opacity = '0';
-                            content.style.paddingBottom = '0px';
-                            if (editCircleBtn) editCircleBtn.style.display = 'none';
-                            setTimeout(() => {
-                                if (content.style.maxHeight === '0px') {
-                                    content.style.display = 'none';
-                                }
-                            }, 600);
+                        if (content.style.display === 'block') {
+                            content.style.display = 'none';
                             headerWrap.style.paddingBottom = '25px';
-                            if (toggleBtn) {
-                                toggleBtn.innerHTML = '[ EXPAND ]';
-                                toggleBtn.classList.add('btn-sleek', 'btn-connect-sleek');
-                                toggleBtn.style.fontSize = '';
-                                toggleBtn.style.fontWeight = '300';
-                                toggleBtn.style.letterSpacing = '';
-                                toggleBtn.style.padding = '';
-                                toggleBtn.style.background = '';
-                                toggleBtn.style.color = '';
-                                toggleBtn.style.setProperty('font-weight', '300', 'important');
-                                toggleBtn.style.setProperty('border', 'none', 'important');
-                                toggleBtn.style.setProperty('outline', 'none', 'important');
-                            }
+                            if (toggleBtn) toggleBtn.innerText = '[ EXPAND ]';
                         } else {
                             content.style.display = 'block';
-                            void content.offsetWidth; // force reflow
-                            content.style.maxHeight = '2000px';
-                            content.style.opacity = '1';
-                            content.style.paddingBottom = '25px';
-                            headerWrap.style.paddingBottom = '0px';
-                            if (editCircleBtn) editCircleBtn.style.display = 'inline-block';
-                            if (toggleBtn) {
-                                toggleBtn.innerHTML = '&#x2303;';
-                                toggleBtn.classList.remove('btn-sleek', 'btn-connect-sleek');
-                                toggleBtn.style.fontSize = '20px';
-                                toggleBtn.style.fontWeight = '300';
-                                toggleBtn.style.letterSpacing = '0px';
-                                toggleBtn.style.padding = '4px';
-                                toggleBtn.style.border = 'none';
-                                toggleBtn.style.background = 'transparent';
-                                toggleBtn.style.color = '#999';
-                                toggleBtn.style.cursor = 'pointer';
-                                toggleBtn.style.outline = 'none';
-                            }
+                            headerWrap.style.paddingBottom = '0';
+                            if (toggleBtn) toggleBtn.innerText = '[ CLOSE ]';
                         }
                     };
                     
@@ -6655,46 +4148,10 @@
                     
                     div.querySelector('.btn-bulk-partial').addEventListener('click', (e) => {
                         e.stopPropagation();
-                        // Show checkboxes
-                        const checkboxes = peopleList.querySelectorAll('.circle-person-checkbox');
-                        checkboxes.forEach(cb => cb.style.display = 'block');
-                        
-                        // Change buttons to single CONNECT button
-                        const bulkActions = div.querySelector('.circle-bulk-actions');
-                        bulkActions.innerHTML = `<button type="button" class="circle-action-btn btn-bulk-connect-selected">[ CONNECT SELECTED ]</button>`;
-                        
-                        bulkActions.querySelector('.btn-bulk-connect-selected').addEventListener('click', (ev) => {
-                            ev.stopPropagation();
-                            let addedAny = false;
-                            circle.people.forEach(s => {
-                                const pCard = peopleList.querySelector('[data-person-id="' + s.person.id + '"]');
-                                if (pCard && !pCard.classList.contains('is-added')) {
-                                    const cb = pCard.querySelector('.circle-person-checkbox');
-                                    if (cb && cb.checked) {
-                                        const typeVal = pCard.querySelector('.type-input') ? pCard.querySelector('.type-input').getAttribute('data-value') : 'friend';
-                                        const strengthVal = pCard.querySelector('.strength-input') ? parseInt(pCard.querySelector('.strength-input').value, 10) : 3;
-                                        addConnectionEntry(s.person.id, typeVal, strengthVal);
-                                        pCard.classList.add('is-added');
-                                        pCard.style.opacity = '0.5';
-                                        cb.disabled = true;
-                                        addedAny = true;
-                                        const editPanel = pCard.querySelector('.suggested-card-edit');
-                                        if (editPanel) editPanel.style.display = 'none';
-                                    }
-                                }
-                            });
-                            if (addedAny) window._addedSomeoneInRecs = true;
-                            
-                            // Make the entire circle card disappear
-                            div.style.transition = 'opacity 0.3s ease, transform 0.3s ease';
-                            div.style.opacity = '0';
-                            div.style.transform = 'scale(0.98)';
-                            setTimeout(() => {
-                                div.remove();
-                                visibleCount--;
-                                handleNextLogic();
-                            }, 300);
-                        });
+                        // Open all inline editors inside this circle
+                        const editors = peopleList.querySelectorAll('.suggested-card-edit');
+                        editors.forEach(ed => ed.style.display = 'block');
+                        e.target.style.display = 'none';
                     });
 
                     div.querySelector('.btn-bulk-connect').addEventListener('click', (e) => {
@@ -6702,8 +4159,8 @@
                         circle.people.forEach(s => {
                             const pCard = peopleList.querySelector('[data-person-id="' + s.person.id + '"]');
                             if (pCard && !pCard.classList.contains('is-added')) {
-                                const typeVal = pCard.querySelector('.type-input') ? pCard.querySelector('.type-input').getAttribute('data-value') : 'friend';
-                                const strengthVal = pCard.querySelector('.strength-input') ? parseInt(pCard.querySelector('.strength-input').value, 10) : 3;
+                                const typeVal = pCard.querySelector('.type-input').getAttribute('data-value') || 'friend';
+                                const strengthVal = parseInt(pCard.querySelector('.strength-input').value, 10) || 3;
                                 addConnectionEntry(s.person.id, typeVal, strengthVal);
                                 pCard.classList.add('is-added');
                                 pCard.style.opacity = '0.5';
@@ -6712,83 +4169,81 @@
                             }
                         });
                         window._addedSomeoneInRecs = true;
-                        
-                        // Make the entire circle card disappear
-                        div.style.transition = 'opacity 0.3s ease, transform 0.3s ease';
-                        div.style.opacity = '0';
-                        div.style.transform = 'scale(0.98)';
-                        setTimeout(() => {
-                            div.remove();
-                            visibleCount--;
-                            handleNextLogic();
-                        }, 300);
+                        e.target.innerText = '[ ADDED ALL ]';
+                        e.target.disabled = true;
                     });
                     
                     circle.people.forEach(s => {
                         const p = s.person;
                         const pDiv = document.createElement('div');
-                        pDiv.className = 'circle-person-row';
+                        pDiv.className = 'suggested-card';
                         pDiv.setAttribute('data-person-id', p.id);
                         
                         pDiv.innerHTML = `
-                            <div class="suggested-card-main" style="display: flex; flex-direction: row; align-items: center; justify-content: space-between; padding: 12px 16px; margin-bottom: 2px; background: #ffffff; border: 1px solid rgba(0,0,0,0.06); border-radius: 4px; box-sizing: border-box; width: 100%;">
-                                <div class="suggested-name-wrap" style="display: flex; align-items: center; gap: 8px; flex: 1; min-width: 0;">
-                                    <input type="checkbox" class="circle-person-checkbox" checked style="display: none; width: 14px; height: 14px; cursor: pointer; accent-color: #111; margin: 0; position: relative; top: 1px; flex-shrink: 0;">
-                                    <div class="suggested-name" style="font-size: 13px; font-weight: 500; line-height: 1; color: #111; text-align: left; text-transform: capitalize; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${p.name.replace(/ ([^ ]*)$/, '&nbsp;$1')}</div>
+                            <div class="suggested-card-main info-row-v2" style="margin-bottom: 8px;">
+                                <div class="suggested-name" style="font-size: 13px; font-weight: 400; color: #111;">${p.name.replace(/ ([^ ]*)$/, '&nbsp;$1')}</div>
+                                <div class="suggested-meta info-row-label" style="display: flex; align-items: center; gap: 8px; color: #666;">
+                                    <span class="meta-label">Friend &middot; 3</span>
+                                    <button type="button" class="btn-customize-person" style="background: transparent; border: none; cursor: pointer; color: #111; font-weight: 500; font-size: 9px; opacity: 0.6; padding: 0; white-space: nowrap;">[ EDIT ]</button>
+                                    <button type="button" class="btn-connect-person" style="background: transparent; border: none; cursor: pointer; color: #111; font-weight: 500; font-size: 9px; padding: 0; white-space: nowrap;">[ CONNECT ]</button>
                                 </div>
-                                <div class="suggested-meta info-row-label" style="display: flex; align-items: baseline; color: #666; margin-left: auto; justify-content: flex-end; flex-shrink: 0;">
-                                    <span class="meta-label" style="white-space: nowrap; font-size: 10px; line-height: 1; letter-spacing: 1px;">FRIEND &middot; STRENGTH 3</span>
-                                </div>
-                                <div class="circle-edit-fields" style="display: none; align-items: center; gap: 14px; margin-left: auto; flex-shrink: 0;">
-                                    <div class="custom-select-wrapper" style="position: relative;">
-                                        <div class="custom-select-display type-input" data-value="friend" style="border: 1px solid rgba(0,0,0,0.1); padding: 6px 10px; border-radius: 4px; font-size: 11px; cursor: pointer; display: flex; justify-content: space-between; align-items: center; background: #fff; text-transform: uppercase; min-width: 100px;">
-                                            <span class="custom-select-text">Friend</span>
-                                            <span style="font-size: 8px; opacity: 0.5; margin-left: 8px;">▼</span>
-                                        </div>
-                                        <div class="custom-select-dropdown autocomplete-dropdown" style="display: none; position: absolute; z-index: 9999; top: 100%; left: 0; background: #ffffff; border: 1px solid rgba(0,0,0,0.1); border-radius: 4px; overflow: hidden; box-shadow: 0 4px 15px rgba(0,0,0,0.1); width: 140px; padding-bottom: 8px; margin-top: 4px;">
-                                            <div class="autocomplete-item custom-select-item" data-value="close_family" data-label="Close Family" style="color: #111; padding: 10px 12px; font-size: 11px; cursor: pointer; border-bottom: 1px solid rgba(0,0,0,0.05); text-transform: uppercase;">Close Family</div>
-                                            <div class="autocomplete-item custom-select-item" data-value="extended_family" data-label="Extended Family" style="color: #111; padding: 10px 12px; font-size: 11px; cursor: pointer; border-bottom: 1px solid rgba(0,0,0,0.05); text-transform: uppercase;">Extended Family</div>
-                                            <div class="autocomplete-item custom-select-item" data-value="friend" data-label="Friend" style="color: #111; padding: 10px 12px; font-size: 11px; cursor: pointer; border-bottom: 1px solid rgba(0,0,0,0.05); text-transform: uppercase;">Friend</div>
-                                            <div class="autocomplete-item custom-select-item" data-value="acquaintance" data-label="Acquaintance" style="color: #111; padding: 10px 12px; font-size: 11px; cursor: pointer; text-transform: uppercase;">Acquaintance</div>
+                            </div>
+                            <div class="suggested-card-edit" style="display: none; padding: 16px; background: #F5F5F5; border-top: 1px solid #EAEAEA;">
+                                <div class="edit-field-group">
+                                    <div>
+                                        <label class="edit-label">Connection Type</label>
+                                        <div class="custom-select-wrapper" style="position: relative;">
+                                            <div class="custom-select-display type-input" data-value="friend" style="border: 1px solid rgba(0,0,0,0.1); padding: 8px 12px; border-radius: 4px; font-size: 11px; cursor: pointer; display: flex; justify-content: space-between; align-items: center; background: #fff;">
+                                                <span class="custom-select-text">Friend</span>
+                                                <span style="font-size: 8px; opacity: 0.5;">▼</span>
+                                            </div>
+                                            <div class="custom-select-dropdown autocomplete-dropdown" style="display: none; background: #ffffff; border: 1px solid rgba(0,0,0,0.1); box-shadow: 0 4px 15px rgba(0,0,0,0.1); width: 100%;">
+                                                <div class="autocomplete-item custom-select-item" data-value="close_family" data-label="Close Family" style="color: #111; padding: 8px 12px; font-size: 11px; cursor: pointer; border-bottom: 1px solid rgba(0,0,0,0.05);">Close Family</div>
+                                                <div class="autocomplete-item custom-select-item" data-value="family" data-label="Family" style="color: #111; padding: 8px 12px; font-size: 11px; cursor: pointer; border-bottom: 1px solid rgba(0,0,0,0.05);">Family</div>
+                                                <div class="autocomplete-item custom-select-item" data-value="friend" data-label="Friend" style="color: #111; padding: 8px 12px; font-size: 11px; cursor: pointer; border-bottom: 1px solid rgba(0,0,0,0.05);">Friend</div>
+                                                <div class="autocomplete-item custom-select-item" data-value="acquaintance" data-label="Acquaintance" style="color: #111; padding: 8px 12px; font-size: 11px; cursor: pointer; border-bottom: 1px solid rgba(0,0,0,0.05);">Acquaintance</div>
+                                                <div class="autocomplete-item custom-select-item" data-value="professional" data-label="Professional" style="color: #111; padding: 8px 12px; font-size: 11px; cursor: pointer;">Professional</div>
+                                            </div>
                                         </div>
                                     </div>
-                                    <div class="edit-slider-wrap" style="display: flex; align-items: center; gap: 8px;">
-                                        <input type="range" class="edit-slider strength-input" min="1" max="5" value="3" style="width: 100px;">
-                                        <span class="edit-slider-val strength-display" style="font-size: 11px; font-weight: 500;">3</span>
+                                    <div>
+                                        <label class="edit-label">Strength (1-5)</label>
+                                        <div class="edit-slider-wrap">
+                                            <input type="range" class="edit-slider strength-input" min="1" max="5" value="3">
+                                            <span class="edit-slider-val strength-display">3</span>
+                                        </div>
                                     </div>
                                 </div>
+
                             </div>
                         `;
                         
-                        const editPanel = pDiv.querySelector('.circle-edit-fields');
+                        const editPanel = pDiv.querySelector('.suggested-card-edit');
+                        const statusDisplay = pDiv.querySelector('.suggested-status');
                         const strengthSlider = pDiv.querySelector('.strength-input');
                         const strengthDisplay = pDiv.querySelector('.strength-display');
                         const typeInput = pDiv.querySelector('.type-input');
+                        
+                        const metaLabel = pDiv.querySelector('.meta-label');
                         const customDisplay = pDiv.querySelector('.custom-select-display');
                         const customDropdown = pDiv.querySelector('.custom-select-dropdown');
                         const customItems = pDiv.querySelectorAll('.custom-select-item');
-                        const metaLabel = pDiv.querySelector('.meta-label');
                         
                         const updateMeta = () => {
                             const typeLabel = customDisplay.querySelector('.custom-select-text').innerText;
                             const strength = strengthSlider.value;
-                            if (metaLabel) metaLabel.innerHTML = `${typeLabel.toUpperCase()} &middot; STRENGTH ${strength}`;
+                            if (metaLabel) metaLabel.innerHTML = `${typeLabel} &middot; ${strength}`;
                         };
 
-                        if (strengthSlider) {
-                            strengthSlider.addEventListener('input', (e) => {
-                                strengthDisplay.innerText = e.target.value;
-                                updateMeta();
-                            });
-                        }
+                        strengthSlider.addEventListener('input', (e) => {
+                            strengthDisplay.innerText = e.target.value;
+                            updateMeta();
+                        });
 
                         if (customDisplay && customDropdown) {
                             customDisplay.addEventListener('click', (e) => {
                                 e.stopPropagation();
-                                const isOpening = customDropdown.style.display === 'none';
-                                customDropdown.style.display = isOpening ? 'block' : 'none';
-                                pDiv.style.position = 'relative';
-                                pDiv.style.zIndex = isOpening ? '99999' : '';
+                                customDropdown.style.display = customDropdown.style.display === 'none' ? 'block' : 'none';
                             });
                             
                             customItems.forEach(item => {
@@ -6799,7 +4254,6 @@
                                     customDisplay.setAttribute('data-value', val);
                                     customDisplay.querySelector('.custom-select-text').innerText = label;
                                     customDropdown.style.display = 'none';
-                                    pDiv.style.zIndex = '';
                                     updateMeta();
                                 });
                             });
@@ -6807,14 +4261,53 @@
                             document.addEventListener('click', (e) => {
                                 if (!customDisplay.contains(e.target) && !customDropdown.contains(e.target)) {
                                     customDropdown.style.display = 'none';
-                                    pDiv.style.zIndex = '';
                                 }
+                            });
+                        }
+                        
+                        const editBtn = pDiv.querySelector('.btn-customize-person');
+                        if (editBtn) {
+                            editBtn.addEventListener('click', (e) => {
+                                e.stopPropagation();
+                                editPanel.style.display = editPanel.style.display === 'none' ? 'block' : 'none';
+                            });
+                        }
+                        
+                        const connectBtn = pDiv.querySelector('.btn-connect-person');
+                        if (connectBtn) {
+                            connectBtn.addEventListener('click', (e) => {
+                                e.stopPropagation();
+                                const typeVal = customDisplay.getAttribute('data-value') || 'friend';
+                                const strengthVal = parseInt(strengthSlider.value, 10) || 3;
+                                
+                                addConnectionEntry(p.id, typeVal, strengthVal);
+                                window._addedSomeoneInRecs = true;
+                                
+                                pDiv.classList.add('is-added');
+                                pDiv.style.opacity = '0.5';
+                                pDiv.style.borderColor = 'transparent';
+                                editPanel.style.display = 'none';
+                                connectBtn.innerText = '[ ADDED ]';
+                                connectBtn.disabled = true;
+                                connectBtn.style.opacity = '0.5';
                             });
                         }
                         
 
                         
-
+                        pDiv.querySelector('.btn-save-custom').addEventListener('click', (e) => {
+                            const selType = typeInput.value;
+                            const selStrength = parseInt(strengthSlider.value);
+                            
+                            addConnectionEntry(p.id, selType, selStrength);
+                            window._addedSomeoneInRecs = true;
+                            
+                            statusDisplay.innerText = `[ ADDED ]`;
+                            pDiv.classList.add('is-added');
+                            pDiv.style.opacity = '0.5';
+                            pDiv.style.borderColor = 'transparent';
+                            editPanel.style.display = 'none';
+                        });
                         
                         peopleList.appendChild(pDiv);
                     });
@@ -6825,47 +4318,44 @@
                     div.className = 'suggested-circle-card';
                     
                     div.innerHTML = `
-                        <div class="circle-header-wrap" style="position: relative; padding: 25px 30px; padding-bottom: 25px; cursor: default; display: flex; flex-direction: column; min-height: 120px;">
+                        <div class="circle-header-wrap" style="position: relative; padding: 25px; padding-bottom: 25px; cursor: default; display: flex; flex-direction: column; min-height: 120px;">
                             <div style="position: absolute; top: 12px; right: 12px;">
                                 <button type="button" class="btn-bulk-skip" style="background:transparent; border:none; color:#000; font-size:14px; cursor:pointer; padding:4px; line-height:1; font-weight:300; opacity:0.25; outline:none;">&times;</button>
                             </div>
                             <div class="circle-title" style="font-size: 20px; font-weight: 500; letter-spacing: 0px; color: #000; line-height: 1.2; padding-right: 30px; margin-bottom: 8px;">${p.name.replace(/ ([^ ]*)$/, '&nbsp;$1')}</div>
                             <div class="circle-tags" style="display: flex; flex-wrap: wrap; gap: 4px; margin-bottom: 16px;">
                                 ${(() => {
-                                    if (!rec.data.shared || rec.data.shared.length === 0) return `<span class="tag-pill" style="color:#666; border-color:rgba(0,0,0,0.1); background:transparent;">Connection</span>`;
-                                    return rec.data.shared.map(t => {
-                                        let text = t.split(':')[1] ? t.split(':')[1].trim() : t.trim();
-                                        text = text.replace(/^#+/, '');
-                                        return `<span class="tag-pill" style="color:#666; border-color:rgba(0,0,0,0.1); background:transparent;">${text.split(' ').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ')}</span>`;
-                                    }).join('');
+                                    if (!rec.data.shared || rec.data.shared.length === 0) return `<span class="tag-pill" style="color:#666; border-color:rgba(0,0,0,0.1); background:transparent;">#Connection</span>`;
+                                    return rec.data.shared.map(t => `<span class="tag-pill" style="color:#666; border-color:rgba(0,0,0,0.1); background:transparent;">#${t.split(':')[1] ? t.split(':')[1].split(' ').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ') : t}</span>`).join('');
                                 })()}
                             </div>
                             <div style="display: flex; justify-content: space-between; align-items: flex-end; margin-top: auto;">
-                                <div class="circle-meta" style="display: flex; align-items: baseline; gap: 8px; font-size: 10px; text-transform: uppercase; letter-spacing: 1.5px; color: #666; font-weight: 500; height: 16px; white-space: nowrap;">
-                                    <span class="meta-label" style="white-space: nowrap; font-size: 10px; line-height: 1;">Friend &middot; Strength 3</span>
-                                    <button type="button" class="btn-customize-person" style="background: transparent; border: none; cursor: pointer; color: #111; font-weight: 500; font-size: 10px; opacity: 0.6; padding: 0; white-space: nowrap;">[ EDIT ]</button>
+                                <div class="circle-meta" style="display: flex; align-items: center; gap: 8px; font-size: 10px; text-transform: uppercase; letter-spacing: 1.5px; color: #666; font-weight: 500; height: 16px; white-space: nowrap;">
+                                    <span class="meta-label">Friend &middot; Strength 3</span>
+                                    <button type="button" class="btn-customize-person" style="background: transparent; border: none; cursor: pointer; color: #111; font-weight: 500; font-size: 9px; opacity: 0.6; padding: 0; white-space: nowrap;">[ EDIT ]</button>
+                                    <button type="button" class="btn-connect-person" style="background: transparent; border: none; cursor: pointer; color: #111; font-weight: 500; font-size: 9px; padding: 0; white-space: nowrap;">[ CONNECT ]</button>
                                 </div>
                                 <div style="display: flex; gap: 10px; align-items: center; height: 16px;">
-                                    <button type="button" class="btn-sleek btn-connect-sleek" data-id="${p.id}" style="margin: 0; white-space: nowrap; border: none !important; outline: none !important;">[ CONNECT ]</button>
+                                    <button type="button" class="info-action-btn btn-connect-sleek" data-id="${p.id}" style="margin: 0; font-weight: 300; border: none; white-space: nowrap;">[ CONNECT ]</button>
                                 </div>
                             </div>
                         </div>
                         <div class="circle-content" style="display: none; padding: 0 25px 25px 25px;">
-                            <div class="suggested-card-edit" style="display: block; padding-top: 16px; padding-bottom: 16px; padding-right: 40px; border-top: 1px solid rgba(0,0,0,0.05); position: relative; width: 100%; box-sizing: border-box;">
-                                <button type="button" class="btn-close-edit" style="position: absolute; top: 16px; right: 0px; width: 24px; text-align: center; background: transparent; border: none; cursor: pointer; color: #999; font-size: 20px; font-weight: 300; line-height: 1; padding: 4px; z-index: 10;">&#x2303;</button>
+                            <div class="suggested-card-edit" style="display: block; padding-top: 16px; border-top: 1px solid rgba(0,0,0,0.05);">
                                 <div class="edit-field-group">
                                     <div>
                                         <label class="edit-label">Connection Type</label>
                                         <div class="custom-select-wrapper" style="position: relative;">
-                                            <div class="custom-select-display type-input" data-value="friend" style="border: 1px solid rgba(0,0,0,0.1); padding: 12px 16px; border-radius: 4px; font-size: 14px; cursor: pointer; display: flex; justify-content: space-between; align-items: center; background: #fff;">
+                                            <div class="custom-select-display type-input" data-value="friend" style="border: 1px solid rgba(0,0,0,0.1); padding: 8px 12px; border-radius: 4px; font-size: 11px; cursor: pointer; display: flex; justify-content: space-between; align-items: center; background: #fff;">
                                                 <span class="custom-select-text">Friend</span>
-                                                <span style="font-size: 10px; opacity: 0.5;">▼</span>
+                                                <span style="font-size: 8px; opacity: 0.5;">▼</span>
                                             </div>
-                                            <div class="custom-select-dropdown autocomplete-dropdown" style="display: none; position: absolute; z-index: 9999; top: 100%; left: 0; background: #ffffff; border: 1px solid rgba(0,0,0,0.1); border-radius: 4px; overflow: hidden; box-shadow: 0 4px 15px rgba(0,0,0,0.1); width: auto; min-width: 100%; padding-bottom: 8px;">
-                                                <div class="autocomplete-item custom-select-item" data-value="close_family" data-label="Close Family" style="color: #111; padding: 12px 16px; font-size: 14px; cursor: pointer; border-bottom: 1px solid rgba(0,0,0,0.05); white-space: nowrap;">Close Family</div>
-                                                <div class="autocomplete-item custom-select-item" data-value="extended_family" data-label="Extended Family" style="color: #111; padding: 12px 16px; font-size: 14px; cursor: pointer; border-bottom: 1px solid rgba(0,0,0,0.05); white-space: nowrap;">Extended Family</div>
-                                                <div class="autocomplete-item custom-select-item" data-value="friend" data-label="Friend" style="color: #111; padding: 12px 16px; font-size: 14px; cursor: pointer; border-bottom: 1px solid rgba(0,0,0,0.05); white-space: nowrap;">Friend</div>
-                                                <div class="autocomplete-item custom-select-item" data-value="acquaintance" data-label="Acquaintance" style="color: #111; padding: 12px 16px; font-size: 14px; cursor: pointer; white-space: nowrap;">Acquaintance</div>
+                                            <div class="custom-select-dropdown autocomplete-dropdown" style="display: none; background: #ffffff; border: 1px solid rgba(0,0,0,0.1); box-shadow: 0 4px 15px rgba(0,0,0,0.1); width: 100%;">
+                                                <div class="autocomplete-item custom-select-item" data-value="close_family" data-label="Close Family" style="color: #111; padding: 8px 12px; font-size: 11px; cursor: pointer; border-bottom: 1px solid rgba(0,0,0,0.05);">Close Family</div>
+                                                <div class="autocomplete-item custom-select-item" data-value="family" data-label="Family" style="color: #111; padding: 8px 12px; font-size: 11px; cursor: pointer; border-bottom: 1px solid rgba(0,0,0,0.05);">Family</div>
+                                                <div class="autocomplete-item custom-select-item" data-value="friend" data-label="Friend" style="color: #111; padding: 8px 12px; font-size: 11px; cursor: pointer; border-bottom: 1px solid rgba(0,0,0,0.05);">Friend</div>
+                                                <div class="autocomplete-item custom-select-item" data-value="acquaintance" data-label="Acquaintance" style="color: #111; padding: 8px 12px; font-size: 11px; cursor: pointer; border-bottom: 1px solid rgba(0,0,0,0.05);">Acquaintance</div>
+                                                <div class="autocomplete-item custom-select-item" data-value="professional" data-label="Professional" style="color: #111; padding: 8px 12px; font-size: 11px; cursor: pointer;">Professional</div>
                                             </div>
                                         </div>
                                     </div>
@@ -6907,10 +4397,7 @@
                     if (customDisplay && customDropdown) {
                         customDisplay.addEventListener('click', (e) => {
                             e.stopPropagation();
-                            const isOpening = customDropdown.style.display === 'none';
-                            customDropdown.style.display = isOpening ? 'block' : 'none';
-                            div.style.position = 'relative';
-                            div.style.zIndex = isOpening ? '99999' : '';
+                            customDropdown.style.display = customDropdown.style.display === 'none' ? 'block' : 'none';
                         });
                         
                         customItems.forEach(item => {
@@ -6921,7 +4408,6 @@
                                 customDisplay.setAttribute('data-value', val);
                                 customDisplay.querySelector('.custom-select-text').innerText = label;
                                 customDropdown.style.display = 'none';
-                                div.style.zIndex = '';
                                 updateMeta();
                             });
                         });
@@ -6929,7 +4415,6 @@
                         document.addEventListener('click', (e) => {
                             if (!customDisplay.contains(e.target) && !customDropdown.contains(e.target)) {
                                 customDropdown.style.display = 'none';
-                                div.style.zIndex = '';
                             }
                         });
                     }
@@ -6950,27 +4435,26 @@
                     
                     const contentPanel = div.querySelector('.circle-content');
                     const headerWrap = div.querySelector('.circle-header-wrap');
-                    const indEditBtn = div.querySelector('.btn-customize-person');
-                    indEditBtn.addEventListener('click', (e) => {
+                    div.querySelector('.btn-customize-person').addEventListener('click', (e) => {
                         e.stopPropagation();
-                        contentPanel.style.display = 'block';
-                        headerWrap.style.paddingBottom = '12px';
-                        indEditBtn.style.display = 'none';
-                    });
-                    
-                    const indCloseEditBtn = div.querySelector('.btn-close-edit');
-                    if (indCloseEditBtn) {
-                        indCloseEditBtn.addEventListener('click', (e) => {
-                            e.stopPropagation();
+                        if (contentPanel.style.display === 'block') {
                             contentPanel.style.display = 'none';
                             headerWrap.style.paddingBottom = '25px';
-                            indEditBtn.style.display = 'flex';
-                        });
-                    }
+                        } else {
+                            contentPanel.style.display = 'block';
+                            headerWrap.style.paddingBottom = '12px';
+                        }
+                    });
                     
 
                     
-
+                    div.querySelector('.btn-save-custom').addEventListener('click', (e) => {
+                        const selType = typeInput.value;
+                        const selStrength = parseInt(strengthSlider.value);
+                        addConnectionEntry(p.id, selType, selStrength);
+                        window._addedSomeoneInRecs = true;
+                        removeMainCard();
+                    });
                 }
             };
 
@@ -7301,44 +4785,35 @@
         // Update datalist when typing name or connections
         document.getElementById('f-name').addEventListener('input', updateDatalist);
 
-        function markPersonAsAddedGlobally(personId) {
-            const allCards = document.querySelectorAll(`[data-person-id="${personId}"]`);
-            allCards.forEach(card => {
-                if (card.classList.contains('is-added')) return;
-                card.classList.add('is-added');
-                card.style.opacity = '0.5';
-                card.style.pointerEvents = 'none';
-                
-                const cb = card.querySelector('.circle-person-checkbox');
-                if (cb) { cb.checked = false; cb.disabled = true; }
-                
-                const metaLabel = card.querySelector('.meta-label');
-                if (metaLabel) {
-                    metaLabel.innerHTML = `<span style="color: #4CAF50; font-weight: 600;">ALREADY ADDED</span>`;
-                }
-                
-                const editFields = card.querySelector('.circle-edit-fields');
-                if (editFields) editFields.style.display = 'none';
-                
-                const connectBtn = card.querySelector('.btn-connect-sleek');
-                if (connectBtn) {
-                    connectBtn.innerText = '[ ALREADY ADDED ]';
-                    connectBtn.disabled = true;
-                    connectBtn.style.background = 'transparent';
-                    connectBtn.style.color = '#999';
-                    connectBtn.style.borderColor = 'rgba(0,0,0,0.1)';
-                }
-            });
-        }
-
         function addConnectionEntry(defaultTargetId = null, defaultType = 'friend', defaultStrength = 3, isCompact = false) {
-            if (defaultTargetId) markPersonAsAddedGlobally(defaultTargetId);
             if (document.getElementById('edit-person-overlay') && document.getElementById('edit-person-overlay').classList.contains('visible')) {
                 isCompact = true;
             }
             
             const div = document.createElement('div');
             div.className = 'connection-entry';
+            
+            if (isCompact) {
+                div.style.background = '#fdfdfd';
+                div.style.border = '1px solid rgba(0,0,0,0.06)';
+                div.style.borderRadius = '8px';
+                div.style.padding = '12px 16px';
+                div.style.display = 'flex';
+                div.style.flexDirection = 'column';
+                div.style.gap = '10px';
+                div.style.marginBottom = '8px';
+                div.style.position = 'relative';
+            } else {
+                div.style.background = 'transparent';
+                div.style.border = '1px solid rgba(255,255,255,0.15)';
+                div.style.borderRadius = '8px';
+                div.style.padding = '30px';
+                div.style.display = 'flex';
+                div.style.justifyContent = 'space-between';
+                div.style.alignItems = 'center';
+                div.style.marginBottom = '15px';
+                div.style.position = 'relative'; 
+            }
             
             let defaultName = '';
             let infoString = 'Select a person...';
@@ -7362,64 +4837,39 @@
             };
 
             if (isCompact) {
-                div.style.background = '#fdfdfd';
-                div.style.border = '1px solid rgba(0,0,0,0.06)';
-                div.style.borderRadius = '8px';
-                div.style.padding = '8px 4px 8px 12px';
-                div.style.marginBottom = '8px';
-                div.style.position = 'relative';
-                
                 div.innerHTML = `
-                    <style>
-                    .light-slider { -webkit-appearance: none; width: 100%; height: 4px; border-radius: 2px; background: rgba(0,0,0,0.1); outline: none; }
-                    .light-slider::-webkit-slider-thumb { -webkit-appearance: none; appearance: none; width: 12px; height: 12px; border-radius: 50%; background: #111; cursor: pointer; }
-                    </style>
-                    <div style="display: flex; justify-content: space-between; align-items: center; gap: 8px; min-height: 28px;">
-                        <!-- Left side: Name input & Autocomplete -->
-                        <div style="flex: 1; min-width: 60px; display: flex; align-items: center; position: relative; height: 100%;">
-                            <input type="text" class="conn-target" placeholder="Search Name..." value="${defaultName}" autocomplete="off" style="font-family: 'Helvetica', Arial, sans-serif; font-weight: 500; font-size: 14px; border: none; outline: none; background: transparent; color: #111; padding: 0; width: 100%; text-overflow: ellipsis; overflow: hidden; white-space: nowrap; transform: translateY(1px);">
-                            <div class="conn-info" style="display: none;">${infoString}</div>
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                        <div style="flex: 1; display: flex; flex-direction: column; position: relative;">
+                            <input type="text" class="conn-target" placeholder="Search Name..." value="${defaultName}" autocomplete="off" style="font-family: 'Helvetica', Arial, sans-serif; font-weight: 500; font-size: 15px; border: none; outline: none; background: transparent; color: #111; padding: 0; margin-bottom: 2px; width: 100%; border-bottom: 1px solid rgba(0,0,0,0.05);">
+                            <div class="conn-info" style="font-family: 'Helvetica', Arial, sans-serif; font-size: 10px; color: #888;">${infoString}</div>
                             <div class="conn-autocomplete" style="display: none; position: absolute; top: 100%; left: 0; background: #fff; border: 1px solid rgba(0,0,0,0.1); border-radius: 8px; z-index: 100; min-width: 200px; flex-direction: column; max-height: 200px; overflow-y: auto; box-shadow: 0 4px 15px rgba(0,0,0,0.1); margin-top: 5px;"></div>
                         </div>
+                        <button type="button" class="btn-remove-conn" style="background: transparent; border: none; color: #999; cursor: pointer; font-size: 20px; padding: 0 0 0 15px; line-height: 1; transition: 0.2s;">&times;</button>
+                    </div>
+                    
+                    <div style="display: flex; gap: 15px; align-items: center; margin-top: 5px;">
+                        <div style="flex: 1; display: flex; flex-direction: column; position: relative;">
+                            <div style="font-size: 9px; letter-spacing: 1px; color: #888; text-transform: uppercase; margin-bottom: 4px;">Relationship</div>
+                            <div class="conn-type-display" style="font-size: 13px; font-weight: 500; color: #333; cursor: pointer; display: flex; justify-content: space-between; align-items: center; background: rgba(0,0,0,0.04); padding: 6px 10px; border-radius: 6px;"><span>${getRelLabel(defaultType)}</span> <span style="font-size: 8px;">▼</span></div>
+                            <div class="conn-type-dropdown" style="display: none; position: absolute; top: 100%; left: 0; background: #fff; border: 1px solid rgba(0,0,0,0.1); border-radius: 8px; z-index: 100; min-width: 140px; flex-direction: column; padding: 5px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); margin-top: 5px;">
+                                <div class="conn-type-option" data-val="friend" style="padding: 10px 12px; font-size: 12px; cursor: pointer; color: #333; transition: 0.2s; border-radius: 4px;" onmouseover="this.style.background='rgba(0,0,0,0.05)'" onmouseout="this.style.background='transparent'">Friend</div>
+                                <div class="conn-type-option" data-val="acquaintance" style="padding: 10px 12px; font-size: 12px; cursor: pointer; color: #333; transition: 0.2s; border-radius: 4px;" onmouseover="this.style.background='rgba(0,0,0,0.05)'" onmouseout="this.style.background='transparent'">Acquaintance</div>
+                                <div class="conn-type-option" data-val="family_core" style="padding: 10px 12px; font-size: 12px; cursor: pointer; color: #333; transition: 0.2s; border-radius: 4px;" onmouseover="this.style.background='rgba(0,0,0,0.05)'" onmouseout="this.style.background='transparent'">Family (Close)</div>
+                                <div class="conn-type-option" data-val="family_extended" style="padding: 10px 12px; font-size: 12px; cursor: pointer; color: #333; transition: 0.2s; border-radius: 4px;" onmouseover="this.style.background='rgba(0,0,0,0.05)'" onmouseout="this.style.background='transparent'">Family (Ext)</div>
+                            </div>
+                            <input type="hidden" class="conn-type" value="${defaultType}">
+                        </div>
                         
-                        <!-- Right side: Controls -->
-                        <div style="display: flex; gap: 8px; align-items: center; justify-content: flex-end; height: 100%;">
-                            <!-- Dropdown -->
-                            <div style="position: relative; width: 135px;">
-                                <div class="conn-type-display" style="font-size: 12px; font-weight: 500; color: #333; cursor: pointer; display: flex; justify-content: space-between; align-items: center; background: rgba(0,0,0,0.04); padding: 6px 10px; border-radius: 6px;"><span>${getRelLabel(defaultType)}</span> <span style="font-size: 8px;">▼</span></div>
-                                <div class="conn-type-dropdown" style="display: none; position: absolute; top: 100%; left: 0; background: #fff; border: 1px solid rgba(0,0,0,0.1); border-radius: 8px; z-index: 100; min-width: 140px; flex-direction: column; padding: 5px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); margin-top: 5px;">
-                                    <div class="conn-type-option" data-val="friend" style="padding: 8px 10px; font-size: 12px; cursor: pointer; color: #333; transition: 0.2s; border-radius: 4px;" onmouseover="this.style.background='rgba(0,0,0,0.05)'" onmouseout="this.style.background='transparent'">Friend</div>
-                                    <div class="conn-type-option" data-val="acquaintance" style="padding: 8px 10px; font-size: 12px; cursor: pointer; color: #333; transition: 0.2s; border-radius: 4px;" onmouseover="this.style.background='rgba(0,0,0,0.05)'" onmouseout="this.style.background='transparent'">Acquaintance</div>
-                                    <div class="conn-type-option" data-val="family_core" style="padding: 8px 10px; font-size: 12px; cursor: pointer; color: #333; transition: 0.2s; border-radius: 4px;" onmouseover="this.style.background='rgba(0,0,0,0.05)'" onmouseout="this.style.background='transparent'">Family (Close)</div>
-                                    <div class="conn-type-option" data-val="family_extended" style="padding: 8px 10px; font-size: 12px; cursor: pointer; color: #333; transition: 0.2s; border-radius: 4px;" onmouseover="this.style.background='rgba(0,0,0,0.05)'" onmouseout="this.style.background='transparent'">Family (Ext)</div>
-                                </div>
-                                <input type="hidden" class="conn-type" value="${defaultType}">
+                        <div style="flex: 1; display: flex; flex-direction: column; position: relative;">
+                            <div style="font-size: 9px; letter-spacing: 1px; color: #888; text-transform: uppercase; margin-bottom: 4px;">Strength</div>
+                            <div style="display: flex; align-items: center; width: 100%; height: 24px; position: relative;">
+                                <input type="range" class="conn-strength strength-slider" min="1" max="5" value="${defaultStrength}" style="width: 100%;">
+                                <div class="conn-strength-label" style="position: absolute; top: 18px; font-size: 9px; color: #888; transform: translateX(-50%); pointer-events: none;">${defaultStrength}</div>
                             </div>
-                            
-                            <!-- Slider -->
-                            <div style="display: flex; align-items: center; gap: 5px; width: 75px;">
-                                <input type="range" class="conn-strength light-slider" min="1" max="5" value="${defaultStrength}" style="flex: 1; min-width: 0;">
-                                <span class="light-slider-val" style="font-family: 'Helvetica', Arial, sans-serif; font-size: 12px; font-weight: 600; color: #333; width: 12px; text-align: center;">${defaultStrength}</span>
-                            </div>
-                            
-                            <!-- Remove Button -->
-                            <button type="button" class="btn-remove-conn" style="background: transparent; border: none; color: #111; cursor: pointer; font-size: 18px; line-height: 1; padding: 0 4px; margin-left: 0; opacity: 0.4; transition: 0.2s;" onmouseover="this.style.opacity='1'" onmouseout="this.style.opacity='0.4'">&times;</button>
                         </div>
                     </div>
                 `;
-            
-
-} else {
-                div.style.background = 'transparent';
-                div.style.border = '1px solid rgba(255,255,255,0.15)';
-                div.style.borderRadius = '8px';
-                div.style.padding = '30px';
-                div.style.display = 'flex';
-                div.style.justifyContent = 'space-between';
-                div.style.alignItems = 'center';
-                div.style.marginBottom = '15px';
-                div.style.position = 'relative'; 
-
+            } else {
                 div.innerHTML = `
                     <div style="flex: 1; display: flex; flex-direction: column; position: relative;">
                         <input type="text" class="conn-target" placeholder="Search Name..." value="${defaultName}" autocomplete="off" style="font-family: 'Helvetica', Arial, sans-serif; font-weight: 300; font-size: 16px; border: none; outline: none; background: transparent; color: #F5F5F5; padding: 0; margin-bottom: 4px; width: 100%;">
@@ -7455,7 +4905,7 @@
                 `;
             }
             
-// Name Autocomplete
+            // Name Autocomplete
             const targetInput = div.querySelector('.conn-target');
             const targetAc = div.querySelector('.conn-autocomplete');
             const infoDiv = div.querySelector('.conn-info');
@@ -7478,17 +4928,10 @@
                     matches.forEach(p => {
                         const opt = document.createElement('div');
                         opt.className = 'conn-ac-option';
-                        
-                        const isLight = isCompact;
-                        const borderColor = isLight ? 'rgba(0,0,0,0.05)' : 'rgba(255,255,255,0.1)';
-                        const hoverBg = isLight ? 'rgba(0,0,0,0.05)' : 'rgba(255,255,255,0.1)';
-                        const titleColor = isLight ? '#111' : '#F5F5F5';
-                        const subColor = isLight ? 'rgba(0,0,0,0.5)' : 'rgba(255,255,255,0.5)';
-                        
-                        opt.style.cssText = `padding: 12px 15px; cursor: pointer; border-bottom: 1px solid ${borderColor}; transition: 0.2s; display: flex; flex-direction: column; align-items: flex-start; justify-content: center; gap: 4px; border-radius: 4px;`;
+                        opt.style.cssText = 'padding: 12px 15px; cursor: pointer; border-bottom: 1px solid rgba(255,255,255,0.1); transition: 0.2s; display: flex; flex-direction: column; align-items: flex-start; justify-content: center; gap: 4px; border-radius: 4px;';
                         opt.onmouseover = () => {
                             Array.from(targetAc.querySelectorAll('.conn-ac-option')).forEach(el => { el.style.background = 'transparent'; el.classList.remove('active'); });
-                            opt.style.background = hoverBg;
+                            opt.style.background = 'rgba(255,255,255,0.1)';
                             opt.classList.add('active');
                         };
                         opt.onmouseout = () => {
@@ -7501,7 +4944,7 @@
                         if (p.city) parts.push(p.city);
                         const partsStr = parts.join(' • ').replace(/ ([^ ]*)$/, '&nbsp;$1');
                         const nameStr = p.name.replace(/ ([^ ]*)$/, '&nbsp;$1');
-                        opt.innerHTML = `<div style="font-size: 13px; font-weight: 500; color: ${titleColor}; line-height: 1;">${nameStr}</div><div style="font-size:11px; color: ${subColor}; line-height: 1; margin-top: 2px;">${partsStr}</div>`;
+                        opt.innerHTML = `<div style="font-size: 13px; font-weight: 500; color: #F5F5F5; line-height: 1;">${nameStr}</div><div style="font-size:11px; color:rgba(255,255,255,0.5); line-height: 1; margin-top: 2px;">${partsStr}</div>`;
                         opt.onclick = () => {
                             targetInput.value = p.name;
                             infoDiv.textContent = parts.join(' • ');
@@ -7515,8 +4958,8 @@
                     if (val) infoDiv.textContent = 'Person not found...';
                 }
             };
-            
-targetInput.addEventListener('input', () => {
+
+            targetInput.addEventListener('input', () => {
                 if (!targetInput.value) infoDiv.textContent = 'Select a person...';
                 renderAutocomplete();
             });
@@ -7590,16 +5033,14 @@ targetInput.addEventListener('input', () => {
             });
             
             // Strength slider label update
-            const strSlider = div.querySelector('.strength-slider') || div.querySelector('.light-slider');
-            const strLabel = div.querySelector('.conn-strength-label') || div.querySelector('.light-slider-val');
+            const strSlider = div.querySelector('.strength-slider');
+            const strLabel = div.querySelector('.conn-strength-label');
             if (strSlider && strLabel) {
                 const updateSliderLabel = () => {
                     const val = strSlider.value;
                     strLabel.textContent = val;
-                    if (strLabel.classList.contains('conn-strength-label')) {
-                        const percent = (val - 1) / 4 * 100;
-                        strLabel.style.left = `calc(${percent}% + ${6 - (percent * 0.12)}px)`;
-                    }
+                    const percent = (val - 1) / 4 * 100;
+                    strLabel.style.left = `calc(${percent}% + ${6 - (percent * 0.12)}px)`;
                 };
                 strSlider.addEventListener('input', updateSliderLabel);
                 updateSliderLabel();
@@ -7651,47 +5092,6 @@ targetInput.addEventListener('input', () => {
                 }
             }
         });
-
-        window.deleteEditedPerson = async function() {
-            const id = document.getElementById('edit-form-person-id').value;
-            if (!id) return;
-            
-            const result = await Swal.fire({
-                title: 'Delete person?',
-                text: 'Are you sure you want to delete this person?',
-                icon: 'warning',
-                showCancelButton: true,
-                confirmButtonColor: '#111',
-                cancelButtonColor: '#ff4444',
-                confirmButtonText: 'Yes, delete!'
-            });
-            
-            if (result.isConfirmed) {
-                try {
-                    const res = await fetch(`/api/people/${id}`, { method: 'DELETE' });
-                    if (res.ok) {
-                        Swal.fire({
-                            icon: 'success',
-                            title: 'Deleted!',
-                            text: 'Person has been removed.',
-                            timer: 1500,
-                            showConfirmButton: false
-                        });
-                        document.getElementById('edit-person-overlay').classList.remove('visible');
-                        await init();
-                    } else {
-                        throw new Error('Failed to delete');
-                    }
-                } catch (e) {
-                    console.error('Error deleting person:', e);
-                    Swal.fire({
-                        icon: 'error',
-                        title: 'Error',
-                        text: 'Could not delete person.'
-                    });
-                }
-            }
-        };
 
         window.saveEditedPerson = async function() {
             const id = document.getElementById('edit-form-person-id').value;
@@ -7779,8 +5179,7 @@ targetInput.addEventListener('input', () => {
             }
 
             // Also collect connections if they were edited
-            const editConnsList = document.getElementById('edit-connections-list');
-            const connectionDivs = editConnsList ? editConnsList.querySelectorAll('.connection-entry') : [];
+            const connectionDivs = document.querySelectorAll('.connection-entry');
             const connectionsData = Array.from(connectionDivs).map(div => {
                 const targetName = div.querySelector('.conn-target').value.trim();
                 if (!targetName) return null;
@@ -7794,9 +5193,9 @@ targetInput.addEventListener('input', () => {
                     strength: parseInt(div.querySelector('.conn-strength').value) || 3
                 };
             }).filter(Boolean);
-            
-            // Always set data.connections so deletions are saved
-            data.connections = connectionsData;
+            if (connectionsData.length > 0) {
+                data.connections = connectionsData;
+            }
 
             try {
                 const res = await fetch(`/api/people/${id}`, {
@@ -8067,7 +5466,6 @@ targetInput.addEventListener('input', () => {
                         if (idx !== -1) targetIdx = idx;
                     }
                     
-
                     const pIdx = targetIdx * pPerStrand;
                     
                     if (mode === 'add') {
@@ -8256,6 +5654,3 @@ targetInput.addEventListener('input', () => {
         window.removeConnectionEntry = removeConnectionEntry;
         window.selectNode = selectNode;
 
-</script>
-</body>
-</html>
