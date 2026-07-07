@@ -2954,26 +2954,28 @@
                 const aIdx = conn.a * pPerStrand;
                 const bIdx = conn.b * pPerStrand;
                 const curveGeo = new THREE.BufferGeometry();
-                let curveMat;
+                let curveMatTemplate;
                 if (conn.type === 'family' || conn.type === 'family_core' || conn.type === 'family_extended') {
-                    curveMat = new THREE.ShaderMaterial({
+                    curveMatTemplate = new THREE.ShaderMaterial({
                         uniforms: { uCamDist: { value: 9999 }, uOpacity: { value: 1.0 } },
                         vertexShader: vertexShaderLines, fragmentShader: fragmentShaderFamily,
                         transparent: true, depthWrite: false, blending: THREE.AdditiveBlending
                     });
                 } else if (conn.type === 'friend') {
-                    curveMat = new THREE.ShaderMaterial({
+                    curveMatTemplate = new THREE.ShaderMaterial({
                         uniforms: { uCamDist: { value: 9999 }, uOpacity: { value: 1.0 } },
                         vertexShader: vertexShaderLines, fragmentShader: fragmentShaderFriend,
                         transparent: true, depthWrite: false, blending: THREE.AdditiveBlending
                     });
                 } else {
-                    curveMat = new THREE.ShaderMaterial({
+                    curveMatTemplate = new THREE.ShaderMaterial({
                         uniforms: { uCamDist: { value: 9999 }, uOpacity: { value: 1.0 } },
                         vertexShader: vertexShaderLines, fragmentShader: fragmentShaderAcq,
                         transparent: true, depthWrite: false, blending: THREE.AdditiveBlending
                     });
                 }
+                const curveMat = curveMatTemplate.clone();
+                curveMat.uniforms = THREE.UniformsUtils.clone(curveMatTemplate.uniforms);
                 const lineMesh = new THREE.Line(curveGeo, curveMat);
                 lineMesh.frustumCulled = false;
                 masterGroup.add(lineMesh);
@@ -3663,26 +3665,13 @@
                             p.targetCy = C.y + camRight.y * c + trueUp.y * s;
                             p.targetCz = C.z + camRight.z * c + trueUp.z * s;
                         } else {
-                            // Calculate push vector based on their ORIGINAL sphere position so the animation is consistent on every click
-                            const P = new THREE.Vector3(p.cx, p.cy, p.cz);
-                            const v = P.clone().sub(C);
-                            
-                            const z = v.dot(viewDir); 
-                            const v2d = v.clone().sub(viewDir.clone().multiplyScalar(z));
-                            
-                            let dist2d = v2d.length();
-                            if (dist2d < repelRadius) {
-                                const scale = dist2d > 0.1 ? repelRadius / dist2d : 1;
-                                v2d.multiplyScalar(scale);
-                            }
-                            
-                            let pushedZ = z;
-                            if (pushedZ < 200) pushedZ = 200; // Push safely behind the 2D plane
-                            
-                            const finalP = C.clone().add(v2d).add(viewDir.clone().multiplyScalar(pushedZ));
-                            p.targetCx = finalP.x;
-                            p.targetCy = finalP.y;
-                            p.targetCz = finalP.z;
+                            // Radial push: Push all non-path points outward like a magnet, forming a giant background sphere
+                            const d = Math.hypot(p.baseCx, p.baseCy, p.baseCz);
+                            const pushR = Math.max(d, 2000); // Push to at least radius 2000
+                            const scale = (d > 0.1) ? (pushR / d) : 1.0;
+                            p.targetCx = p.baseCx * scale;
+                            p.targetCy = p.baseCy * scale;
+                            p.targetCz = p.baseCz * scale;
                         }
                     }
                     window.currentMaxRadius = maxRadius;
@@ -3792,6 +3781,7 @@
                 camTargetPos.set(0, 0, 1800);
                 camTargetLookAt.set(0, 0, 0);
                 isCameraAnimating = true;
+                controls.enabled = false; // Lock controls so scroll doesn't interrupt the flight!
             }
             for (let i = 0; i < numStrands; i++) {
                 const p = pointData[i * pPerStrand];
@@ -3799,10 +3789,12 @@
             }
             const colors = globalGeometry.attributes.color.array;
             const sizes = globalGeometry.attributes.size.array;
-            for (let i = 0; i < colors.length; i++) colors[i] = 1.0;
-            for (let i = 0; i < numStrands; i++) sizes[i * pPerStrand] = 176.0; // Reset to default
-            globalGeometry.attributes.color.needsUpdate = true;
-            globalGeometry.attributes.size.needsUpdate = true;
+            
+            // Let animate() handle the smooth morphing of colors and sizes when layoutMode === 'sphere'
+            // for (let i = 0; i < colors.length; i++) colors[i] = 1.0;
+            // for (let i = 0; i < numStrands; i++) sizes[i * pPerStrand] = 176.0; // Reset to default
+            // globalGeometry.attributes.color.needsUpdate = true;
+            // globalGeometry.attributes.size.needsUpdate = true;
             
             // Removed instant opacity reset to allow animate() to lerp it smoothly
             
@@ -4204,6 +4196,44 @@
                 const effectiveRotSpeed = speedFactor * Math.max(0.0, 1.0 - deepZoom); // Drops to 0!
                 
                 if (layoutMode === 'sphere') {
+                    const colors = globalGeometry.attributes.color.array;
+                    const sizes = globalGeometry.attributes.size.array;
+                    let colorsUpdated = false;
+                    let sizesUpdated = false;
+                    for (let i = 0; i < numStrands; i++) {
+                        const val = 1.0; // Fully visible
+                        const pIdx = i * pPerStrand;
+                        
+                        // Smoothly morph size back to sphere mode size (176.0)
+                        if (Math.abs(sizes[pIdx] - 176.0) > 1.0) {
+                            sizes[pIdx] += (176.0 - sizes[pIdx]) * 0.1;
+                            sizesUpdated = true;
+                        }
+                        
+                        // Smoothly morph color
+                        for (let j = 0; j < pPerStrand; j++) {
+                            const idx = (pIdx + j) * 3;
+                            if (Math.abs(colors[idx] - val) > 0.02) {
+                                colors[idx] += (val - colors[idx]) * 0.1;
+                                colors[idx+1] = colors[idx];
+                                colors[idx+2] = colors[idx];
+                                colorsUpdated = true;
+                            }
+                        }
+                    }
+                    if (colorsUpdated) globalGeometry.attributes.color.needsUpdate = true;
+                    if (sizesUpdated) globalGeometry.attributes.size.needsUpdate = true;
+                    
+                    let currentOp = 1.0;
+                    if (camDist < 1000) currentOp = 0.05;
+                    else if (camDist < 1800) currentOp = 0.05 + (camDist-1000)/800 * 0.95;
+                    
+                    labelObjects.forEach(l => {
+                        l.element.style.opacity = currentOp.toFixed(3);
+                        l.element.style.pointerEvents = 'none'; // Ensure pointer-events are disabled so OrbitControls gets events!
+                        if (currentOp > 0.05) l.element.style.display = 'block';
+                    });
+                    
                     scene.rotation.y += 0.002 * effectiveRotSpeed;
                     scene.rotation.x += 0.0008 * effectiveRotSpeed;
                 } else {
@@ -4222,6 +4252,7 @@
                 // Stop animating if close enough
                 if (camera.position.distanceTo(camTargetPos) < 1.0 && controls.target.distanceTo(camTargetLookAt) < 1.0) {
                     isCameraAnimating = false;
+                    controls.enabled = true; // Unlock controls when arrived
                 }
             }
 
@@ -4311,18 +4342,25 @@
                 if (layoutMode === 'path') {
                     targetOpacity = inPath ? 1.0 : 0.15; // Background network is faint
                 } else if (layoutMode === 'focus') {
-                    let baseOpacity = 0.25;
                     if (aNode === focusedNodeId || bNode === focusedNodeId) {
-                        baseOpacity = 1.0; // Connections to center are fully visible
+                        targetOpacity = 1.0; // Connections to center
                     } else if (focusedNeighbors.has(aNode) && focusedNeighbors.has(bNode)) {
-                        baseOpacity = 0.3; // Connections between neighbors are semi-visible
+                        targetOpacity = 1.0; // Connections between neighbors
+                    } else {
+                        // Let lines fade in smoothly along with the nodes
+                        const opA = window.nodeRevealOpacities ? (window.nodeRevealOpacities[aNode] || 0) : 1;
+                        const opB = window.nodeRevealOpacities ? (window.nodeRevealOpacities[bNode] || 0) : 1;
+                        // User specifically requested that lines ONLY appear if both nodes are clearly visible.
+                        if (opA < 0.99 || opB < 0.99) {
+                            targetOpacity = 0.0;
+                        } else {
+                            targetOpacity = 1.0; // Nodes are fully visible, show connection clearly
+                        }
                     }
-                    const opA = window.nodeRevealOpacities ? (window.nodeRevealOpacities[aNode] || 0) : 1;
-                    const opB = window.nodeRevealOpacities ? (window.nodeRevealOpacities[bNode] || 0) : 1;
-                    targetOpacity = baseOpacity * Math.min(opA, opB);
                 } else if (currentSearchNodes.size > 0) {
                     targetOpacity = 0.0; // User requested: NO lines should be visible during search
                 }
+                
                 if (curve.mesh.material.uniforms && curve.mesh.material.uniforms.uOpacity) {
                     const currentOp = curve.mesh.material.uniforms.uOpacity.value;
                     curve.mesh.material.uniforms.uOpacity.value = THREE.MathUtils.lerp(currentOp, targetOpacity, 0.05);
@@ -4357,10 +4395,17 @@
             }
             
 
-            // Dynamically update background opacity in focus mode based on zoom distance
+            // Dynamically update background opacity and morph back to sphere in focus mode
             if (layoutMode === 'focus') {
                 const colors = globalGeometry.attributes.color.array;
-                const targetRevealRadius = (camDist - 650) * 2.5; // Radius expands much slower as you zoom out
+                const sizes = globalGeometry.attributes.size.array;
+                
+                // Automatically return to the sphere gracefully when zooming out far enough
+                if (camDist > 3800) {
+                    resetView(false); // Animate camera back to initial 1800 distance
+                }
+                
+                const targetRevealRadius = (camDist - 650) * 1.0; // Radius expands extremely slowly to allow wandering in the space
                 
                 if (window.smoothedRevealRadius === undefined || isNaN(window.smoothedRevealRadius)) {
                     window.smoothedRevealRadius = targetRevealRadius || 0;
@@ -4381,20 +4426,28 @@
                 
                 let colorsUpdated = false;
                 let sizesUpdated = false;
-                const sizes = globalGeometry.attributes.size.array;
                 for (let i = 0; i < numStrands; i++) {
                     const pIdx = i * pPerStrand;
+
+                    // In focus mode, keep points where they are (at their pushed positions)
+                    // The "reveal" process happens by fading them in based on the expanding revealRadius!
+                    
                     let opacity = 1.0;
                     if (i !== focusedNodeId && !focusedNeighbors.has(i)) {
+                        // Use base coordinates to calculate reveal distance, exactly like the old code!
                         const P = new THREE.Vector3(pointData[pIdx].baseCx, pointData[pIdx].baseCy, pointData[pIdx].baseCz);
                         const distToCenter = P.distanceTo(centerPos);
                         opacity = Math.max(0, Math.min(1.0, (revealRadius - distToCenter) / 400.0)); // Very wide fade band (400) for super smooth fade-in
                     }
                     window.nodeRevealOpacities[i] = opacity;
                     
-                    // Make the dots brighter so they are clearly visible alongside their names
-                    const targetColor = (i === focusedNodeId || focusedNeighbors.has(i)) ? 1.0 : (opacity * 0.8);
-                    const targetSize = (i === focusedNodeId || focusedNeighbors.has(i)) ? 176.0 : 350.0;
+                    // Fixed Dots Disappearing:
+                    // In Light Mode, setting color to opacity (0 to 1) means it fades to White.
+                    // White dots on a white screen are invisible.
+                    // Instead, we force the color to 1.0 (Black on screen) and fade it in by growing its SIZE over time based on opacity!
+                    const targetColor = (i === focusedNodeId || focusedNeighbors.has(i)) ? 1.0 : 0.8;
+                    const baseSize = 176.0; // Restore original sizing!
+                    const targetSize = (i === focusedNodeId || focusedNeighbors.has(i)) ? baseSize : (baseSize * Math.pow(opacity, 0.5));
                     
                     if (Math.abs(sizes[pIdx] - targetSize) > 1.0) {
                         sizes[pIdx] = targetSize;
@@ -4620,15 +4673,15 @@
         // Interrupt camera animation on mouse interaction
         let userTakingControl = false;
 
-        let pointerDownPos = { x: 0, y: 0 };
+        let pointerDownPos = new THREE.Vector2();
         renderer.domElement.addEventListener('pointerdown', (e) => {
-            pointerDownPos.x = e.clientX;
-            pointerDownPos.y = e.clientY;
             isCameraAnimating = false; // Instantly unlock camera on touch/click
-            controls.enabled = true;
+            controls.enabled = true;   // Ensure controls are active again
+            pointerDownPos.set(e.clientX, e.clientY);
         });
 
         renderer.domElement.addEventListener('wheel', (e) => {
+            if (!controls.enabled) return; // Prevent wheel from interrupting locked animations
             controls.enabled = true;
             isCameraAnimating = false;
         }, { passive: false });
