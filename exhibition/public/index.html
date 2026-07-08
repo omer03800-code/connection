@@ -4107,10 +4107,16 @@
                         btnConnect.textContent = '[ CONNECT WITH ' + firstName + ' ]';
                         btnConnect.onclick = async () => {
                             try {
+                                const isFamily = match.shared && match.shared.some(s => s.startsWith('Family name:'));
                                 const res = await fetch('/api/connections', {
                                     method: 'POST',
                                     headers: { 'Content-Type': 'application/json' },
-                                    body: JSON.stringify({ person_a_id: person.id, person_b_id: match.person.id, type: 'acquaintance', strength: 3 })
+                                    body: JSON.stringify({ 
+                                        person_a_id: person.id, 
+                                        person_b_id: match.person.id, 
+                                        type: isFamily ? 'family' : 'acquaintance', 
+                                        strength: isFamily ? 2 : 3 
+                                    })
                                 });
                                 if (res.ok) {
                                     secCard.style.transition = 'all 0.5s ease';
@@ -5740,11 +5746,15 @@
             value = value.replace(/,$/, '').trim();
             if (!value) return;
             
+            // Clean and capitalize the value
+            value = value.replace(/^#+/, '').trim();
+            value = value.replace(/\w\S*/g, (txt) => txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase());
+            
             const wrapper = document.getElementById(wrapperId);
             const input = document.getElementById(inputId);
             
             // Prevent duplicate tags in the same field
-            const existingTags = Array.from(wrapper.querySelectorAll('.tag-item span:first-child')).map(s => s.textContent.toLowerCase());
+            const existingTags = Array.from(wrapper.querySelectorAll('.tag-item span:first-child')).map(s => s.textContent.toLowerCase().replace(/^#+/, '').trim());
             if (existingTags.includes(value.toLowerCase())) {
                 input.value = '';
                 if (dropdown) dropdown.style.display = 'none';
@@ -5753,7 +5763,7 @@
             
             const tag = document.createElement('div');
             tag.className = 'tag-item';
-            let displayValue = value.startsWith('#') ? value : '#' + value;
+            let displayValue = '#' + value;
             tag.innerHTML = `<span>${displayValue}</span> <span class="tag-remove">&times;</span>`;
             
             tag.querySelector('.tag-remove').onclick = function() {
@@ -6261,10 +6271,16 @@
                     
                     d.querySelector('.btn-discover-add').addEventListener('click', async (e) => {
                         try {
+                            const isFamily = match.sharedConcepts && match.sharedConcepts.some(s => s.startsWith('Family name:'));
                             const res = await fetch('/api/connections', {
                                 method: 'POST',
                                 headers: { 'Content-Type': 'application/json' },
-                                body: JSON.stringify({ person_a_id: match.p1.id, person_b_id: match.p2.id, type: 'acquaintance', strength: 3 })
+                                body: JSON.stringify({ 
+                                    person_a_id: match.p1.id, 
+                                    person_b_id: match.p2.id, 
+                                    type: isFamily ? 'family' : 'acquaintance', 
+                                    strength: isFamily ? 2 : 3 
+                                })
                             });
                             if (res.ok) {
                                 e.target.textContent = 'Connected!';
@@ -6551,6 +6567,51 @@
                     }
                 }
             });
+
+            // Check for last name match
+            if (p1.name && p2.name) {
+                const ignoreLastNames = ['cohen', 'dahan', 'levi', 'levy', 'israeli', 'mizrachi', 'peretz', 'biton', 'azoulay', 'katz', 'friedman', 'shapiro', 'goldberg', 'avidan'];
+                const p1Parts = p1.name.trim().split(/\s+/);
+                const p2Parts = p2.name.trim().split(/\s+/);
+                
+                if (p1Parts.length > 1 && p2Parts.length > 1) {
+                    const p1LastName = p1Parts[p1Parts.length - 1].toLowerCase();
+                    const p2LastName = p2Parts[p2Parts.length - 1].toLowerCase();
+                    
+                    const isMishliAlias = (p1LastName === 'mishli' && p2LastName === 'mishali') || (p1LastName === 'mishali' && p2LastName === 'mishli');
+                    
+                    if ((p1LastName === p2LastName || isMishliAlias) && p1LastName.length > 2 && p2LastName.length > 2 && !ignoreLastNames.includes(p1LastName) && !ignoreLastNames.includes(p2LastName)) {
+                        const p1OriginLower = (p1.originCity || '').toLowerCase().replace(/#/g, '');
+                        let originMatch = false;
+                        if (p1OriginLower && p1OriginLower.length > 2) {
+                            let originWords1 = p1OriginLower.split(/\||\/|,|\s-\s|—|\n|\sand\s|\s&\s/i).map(s => s.trim()).filter(Boolean);
+                            const originAliases = {
+                                'ilaniya': ['ilaniya', 'ilania', 'אילניה'],
+                                'ilania': ['ilaniya', 'ilania', 'אילניה'],
+                                'אילניה': ['ilaniya', 'ilania', 'אילניה'],
+                                'zikhron yaakov': ['zikhron yaakov', 'זכרון יעקב'],
+                                'זכרון יעקב': ['zikhron yaakov', 'זכרון יעקב'],
+                                'kiryat yam': ['kiryat yam', 'קרית ים', 'קריית ים'],
+                                'קרית ים': ['kiryat yam', 'קרית ים', 'קריית ים'],
+                                'קריית ים': ['kiryat yam', 'קרית ים', 'קריית ים'],
+                                'kiryat haim': ['kiryat haim', 'קרית חיים', 'קריית חיים'],
+                                'קרית חיים': ['kiryat haim', 'קרית חיים', 'קריית חיים'],
+                                'קריית חיים': ['kiryat haim', 'קרית חיים', 'קריית חיים']
+                            };
+                            let expandedWords = [];
+                            originWords1.forEach(w => {
+                                expandedWords.push(w);
+                                if (originAliases[w]) expandedWords.push(...originAliases[w]);
+                            });
+                            originMatch = expandedWords.some(w => p2Text.includes(' ' + w + ' '));
+                        }
+                        if (originMatch) {
+                            score += 50; // Big boost to ensure suggestion
+                            sharedStrings.push(`Family name: ${p1Parts[p1Parts.length - 1]}`);
+                        }
+                    }
+                }
+            }
             
             const finalShared = [...new Set(sharedStrings)];
             // If they reached score 25 but have NO explicit shared concepts, cap their score at 10
@@ -6596,8 +6657,10 @@
             }
 
             const desc = (document.getElementById('f-chapters') ? document.getElementById('f-chapters').value : '').trim();
+            const currentName = (document.getElementById('f-name') ? document.getElementById('f-name').value : '').trim().toLowerCase() || (document.getElementById('f-name-initial') ? document.getElementById('f-name-initial').value : '').trim().toLowerCase();
 
             const p1 = {
+                name: currentName,
                 age: calculatedAge,
                 city: getFieldValues('tw-f-city', 'f-city').join(', '),
                 originCity: getFieldValues('tw-f-origin-city', 'f-origin-city').join(', '),
@@ -6606,7 +6669,6 @@
                 tags: tags
             };
             let scores = [];
-            const currentName = (document.getElementById('f-name') ? document.getElementById('f-name').value : '').trim().toLowerCase() || (document.getElementById('f-name-initial') ? document.getElementById('f-name-initial').value : '').trim().toLowerCase();
             window._dismissedRecs = window._dismissedRecs || new Set();
             people.forEach(p => {
                 if (currentName && p.name.toLowerCase() === currentName) return;
@@ -6665,6 +6727,13 @@
                     if (mergedIndices.has(j)) continue;
                     
                     const compareCircle = circlesArray[j];
+                    
+                    const baseIsFamily = baseCircle.concept.startsWith('Family name:');
+                    const compareIsFamily = compareCircle.concept.startsWith('Family name:');
+                    if (baseIsFamily !== compareIsFamily) {
+                        continue; // Do not merge family circles with non-family circles
+                    }
+                    
                     const baseIds = new Set(intersectionPeople.map(p => p.person.id));
                     const compareIds = new Set(compareCircle.people.map(p => p.person.id));
                     const intersection = new Set([...baseIds].filter(x => compareIds.has(x)));
@@ -6707,6 +6776,7 @@
                 mergedCircles.push({
                     title: finalTitle,
                     subtitle: finalSubtitle,
+                    concepts: mergedConcepts,
                     people: intersectionPeople.sort((a, b) => b.score - a.score),
                     score: intersectionPeople.reduce((sum, p) => sum + p.score, 0)
                 });
@@ -6778,6 +6848,7 @@
 
                 if (rec.type === 'circle') {
                     const circle = rec.data;
+                    const isFamilyRec = circle.concepts && circle.concepts.some(c => c.startsWith('Family name:'));
                     
                     const getPersonalCopy = (cat) => {
                         if (cat === 'university') return `Looks like you studied together.`;
@@ -6811,7 +6882,7 @@
                             </div>
                             <div style="display: flex; justify-content: space-between; align-items: flex-end; margin-top: auto;">
                                 <div class="circle-meta" style="display: flex; align-items: baseline; gap: 8px; font-size: 10px; text-transform: uppercase; letter-spacing: 1.5px; color: #666; font-weight: 500; height: 16px; white-space: nowrap;">
-                                    <span style="white-space: nowrap;">${circle.people.length} people &middot; Friend &middot; Strength 3</span>
+                                    <span style="white-space: nowrap;">${circle.people.length} people &middot; ${isFamilyRec ? 'Extended Family &middot; Strength 2' : 'Friend &middot; Strength 3'}</span>
                                     <button type="button" class="btn-customize-circle" style="background: transparent; border: none; cursor: pointer; color: #111; font-weight: 500; font-size: 10px; opacity: 0.6; padding: 0; white-space: nowrap; display: none;">[ EDIT ]</button>
                                 </div>
                                 <div style="display: flex; gap: 10px; align-items: center; height: 16px;">
@@ -7004,15 +7075,15 @@
                                     <div class="suggested-name" style="font-size: 13px; font-weight: 500; line-height: 1; color: #111; text-align: left; text-transform: capitalize; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${p.name.replace(/ ([^ ]*)$/, '&nbsp;$1')}</div>
                                 </div>
                                 <div class="suggested-meta info-row-label" style="display: flex; align-items: baseline; color: #666; margin-left: auto; justify-content: flex-end; flex-shrink: 0;">
-                                    <span class="meta-label" style="white-space: nowrap; font-size: 10px; line-height: 1; letter-spacing: 1px;">FRIEND &middot; STRENGTH 3</span>
+                                    <span class="meta-label" style="white-space: nowrap; font-size: 10px; line-height: 1; letter-spacing: 1px;">${isFamilyRec ? 'EXTENDED FAMILY &middot; STRENGTH 2' : 'FRIEND &middot; STRENGTH 3'}</span>
                                 </div>
                                 <div class="circle-edit-fields" style="display: none; align-items: center; gap: 14px; margin-left: auto; flex-shrink: 0;">
                                     <div class="custom-select-wrapper" style="position: relative;">
-                                        <div class="custom-select-display type-input" data-value="friend" style="border: 1px solid rgba(0,0,0,0.1); padding: 6px 10px; border-radius: 4px; font-size: 11px; cursor: pointer; display: flex; justify-content: space-between; align-items: center; background: #fff; text-transform: uppercase; min-width: 100px;">
-                                            <span class="custom-select-text">Friend</span>
+                                        <div class="custom-select-display type-input" data-value="${isFamilyRec ? 'extended_family' : 'friend'}" style="border: 1px solid rgba(0,0,0,0.1); padding: 6px 10px; border-radius: 4px; font-size: 11px; cursor: pointer; display: flex; justify-content: space-between; align-items: center; background: #fff; text-transform: uppercase; min-width: 100px;">
+                                            <span class="custom-select-text">${isFamilyRec ? 'Extended Family' : 'Friend'}</span>
                                             <span style="font-size: 8px; opacity: 0.5; margin-left: 8px;">▼</span>
                                         </div>
-                                        <div class="custom-select-dropdown autocomplete-dropdown" style="display: none; position: absolute; z-index: 9999; top: 100%; left: 0; background: #ffffff; border: 1px solid rgba(0,0,0,0.1); border-radius: 4px; overflow: hidden; box-shadow: 0 4px 15px rgba(0,0,0,0.1); width: 140px; padding-bottom: 8px; margin-top: 4px;">
+                                        <div class="custom-select-dropdown autocomplete-dropdown" style="display: none; position: absolute; z-index: 9999; bottom: 100%; left: 0; background: #ffffff; border: 1px solid rgba(0,0,0,0.1); border-radius: 4px; overflow: hidden; box-shadow: 0 -4px 15px rgba(0,0,0,0.1); width: 140px; padding-bottom: 8px; margin-bottom: 4px;">
                                             <div class="autocomplete-item custom-select-item" data-value="close_family" data-label="Close Family" style="color: #111; padding: 10px 12px; font-size: 11px; cursor: pointer; border-bottom: 1px solid rgba(0,0,0,0.05); text-transform: uppercase;">Close Family</div>
                                             <div class="autocomplete-item custom-select-item" data-value="extended_family" data-label="Extended Family" style="color: #111; padding: 10px 12px; font-size: 11px; cursor: pointer; border-bottom: 1px solid rgba(0,0,0,0.05); text-transform: uppercase;">Extended Family</div>
                                             <div class="autocomplete-item custom-select-item" data-value="friend" data-label="Friend" style="color: #111; padding: 10px 12px; font-size: 11px; cursor: pointer; border-bottom: 1px solid rgba(0,0,0,0.05); text-transform: uppercase;">Friend</div>
@@ -7020,8 +7091,8 @@
                                         </div>
                                     </div>
                                     <div class="edit-slider-wrap" style="display: flex; align-items: center; gap: 8px;">
-                                        <input type="range" class="edit-slider strength-input" min="1" max="5" value="3" style="width: 100px;">
-                                        <span class="edit-slider-val strength-display" style="font-size: 11px; font-weight: 500;">3</span>
+                                        <input type="range" class="edit-slider strength-input" min="1" max="5" value="${isFamilyRec ? '2' : '3'}" style="width: 100px;">
+                                        <span class="edit-slider-val strength-display" style="font-size: 11px; font-weight: 500;">${isFamilyRec ? '2' : '3'}</span>
                                     </div>
                                 </div>
                             </div>
@@ -7089,6 +7160,7 @@
                     recList.appendChild(div);
                 } else {
                     const p = rec.data.person;
+                    const isFamilyRec = rec.data.shared && rec.data.shared.some(s => s.startsWith('Family name:'));
                     div.className = 'suggested-circle-card';
                     
                     div.innerHTML = `
@@ -7109,7 +7181,7 @@
                             </div>
                             <div style="display: flex; justify-content: space-between; align-items: flex-end; margin-top: auto;">
                                 <div class="circle-meta" style="display: flex; align-items: baseline; gap: 8px; font-size: 10px; text-transform: uppercase; letter-spacing: 1.5px; color: #666; font-weight: 500; height: 16px; white-space: nowrap;">
-                                    <span class="meta-label" style="white-space: nowrap; font-size: 10px; line-height: 1;">Friend &middot; Strength 3</span>
+                                    <span class="meta-label" style="white-space: nowrap; font-size: 10px; line-height: 1;">${isFamilyRec ? 'Family &middot; Strength 2' : 'Friend &middot; Strength 3'}</span>
                                     <button type="button" class="btn-customize-person" style="background: transparent; border: none; cursor: pointer; color: #111; font-weight: 500; font-size: 10px; opacity: 0.6; padding: 0; white-space: nowrap;">[ EDIT ]</button>
                                 </div>
                                 <div style="display: flex; gap: 10px; align-items: center; height: 16px;">
