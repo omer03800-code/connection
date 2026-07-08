@@ -2473,7 +2473,7 @@
         controls.enableDamping = true;
         controls.dampingFactor = 0.08;
         controls.minDistance = 150;
-        controls.maxDistance = 750; // Limit zoom out to prevent getting lost in empty space
+        controls.maxDistance = 6000; // Limit zoom out to prevent getting lost in empty space
         controls.zoomSpeed = 0.4; // Extremely slow zoom for a very gradual and smooth building effect
         controls.rotateSpeed = 1.2; // Make roaming faster
         controls.panSpeed = 1.2;
@@ -3806,7 +3806,7 @@
             controls.autoRotate = true; // Resume rotating when reset
 
             if (!preserveCamera) {
-                camTargetPos.set(0, 0, 750);
+                camTargetPos.set(0, 0, 1800);
                 camTargetLookAt.set(0, 0, 0);
                 isCameraAnimating = true;
                 controls.enabled = false; // Lock controls so scroll doesn't interrupt the flight!
