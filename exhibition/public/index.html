@@ -36,7 +36,11 @@
             position: relative;
         }
 
-        .node-label:hover {
+        .node-label span {
+            pointer-events: auto;
+            transition: color 0.3s, text-shadow 0.2s;
+        }
+        .node-label span:hover {
             color: rgba(245, 245, 245, 1);
             text-shadow: 0 0 8px rgba(245,245,245,0.4);
         }
@@ -2862,8 +2866,13 @@
 
                 const div = document.createElement('div');
                 div.className = 'node-label';
-                div.textContent = userNames[i];
-                // Removed pointerEvents and onclick from here so CSS pointer-events: none works properly!
+                div.innerHTML = `<span>${userNames[i]}</span>`;
+                const spanElement = div.querySelector('span');
+                spanElement.addEventListener('pointerdown', (e) => e.stopPropagation());
+                spanElement.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    selectNode(i, false);
+                });
                 const labelObj = new CSS2DObject(div);
                 labelObj.position.copy(centerTarget);
                 masterGroup.add(labelObj);
@@ -3349,6 +3358,7 @@
                 l.element.style.textShadow = 'none';
                 l.element.style.border = 'none';
                 l.element.classList.remove('searched');
+                l.element.querySelector('span').style.pointerEvents = 'none';
             });
             
             userNames.forEach((name, idx) => {
@@ -3359,6 +3369,8 @@
                         labelObjects[idx].element.style.color = 'rgba(245, 245, 245, 1)';
                         labelObjects[idx].element.style.transform = 'translateY(60px) scale(1.3)';
                         labelObjects[idx].element.style.fontWeight = '500';
+                        labelObjects[idx].element.querySelector('span').style.pointerEvents = 'auto';
+                        labelObjects[idx].element.classList.add('searched');
                     }
                 }
             });
@@ -3702,8 +3714,10 @@
                         if (idx === id || focusedNeighbors.has(idx)) {
                             l.element.style.opacity = '1.0';
                             l.element.style.display = 'block';
+                            l.element.querySelector('span').style.pointerEvents = 'auto';
                         } else {
                             l.element.style.opacity = '0.05';
+                            l.element.querySelector('span').style.pointerEvents = 'none';
                         }
                     });
 
@@ -4307,7 +4321,7 @@
                     
                     labelObjects.forEach(l => {
                         l.element.style.opacity = currentOp.toFixed(3);
-                        l.element.style.pointerEvents = 'none'; // Ensure pointer-events are disabled so OrbitControls gets events!
+                        l.element.querySelector('span').style.pointerEvents = currentOp > 0.1 ? 'auto' : 'none';
                         if (currentOp > 0.05) l.element.style.display = 'block';
                     });
                     
