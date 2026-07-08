@@ -37,7 +37,6 @@
         }
 
         .node-label span {
-            pointer-events: auto;
             transition: color 0.3s, text-shadow 0.2s;
         }
         .node-label span:hover {
@@ -2474,7 +2473,7 @@
         controls.enableDamping = true;
         controls.dampingFactor = 0.08;
         controls.minDistance = 150;
-        controls.maxDistance = 2000; // Limit zoom out to prevent getting lost in empty space
+        controls.maxDistance = 6000; // Limit zoom out to prevent getting lost in empty space
         controls.zoomSpeed = 0.4; // Extremely slow zoom for a very gradual and smooth building effect
         controls.rotateSpeed = 1.2; // Make roaming faster
         controls.panSpeed = 1.2;
@@ -2867,12 +2866,6 @@
                 const div = document.createElement('div');
                 div.className = 'node-label';
                 div.innerHTML = `<span>${userNames[i]}</span>`;
-                const spanElement = div.querySelector('span');
-                spanElement.addEventListener('pointerdown', (e) => e.stopPropagation());
-                spanElement.addEventListener('click', (e) => {
-                    e.stopPropagation();
-                    selectNode(i, false);
-                });
                 const labelObj = new CSS2DObject(div);
                 labelObj.position.copy(centerTarget);
                 masterGroup.add(labelObj);
@@ -3369,7 +3362,7 @@
                 l.element.style.textShadow = 'none';
                 l.element.style.border = 'none';
                 l.element.classList.remove('searched');
-                l.element.querySelector('span').style.pointerEvents = 'none';
+                // l.element.querySelector('span').style.pointerEvents = 'none';
             });
             
             userNames.forEach((name, idx) => {
@@ -3725,10 +3718,8 @@
                         if (idx === id || focusedNeighbors.has(idx)) {
                             l.element.style.opacity = '1.0';
                             l.element.style.display = 'block';
-                            l.element.querySelector('span').style.pointerEvents = 'auto';
                         } else {
                             l.element.style.opacity = '0.05';
-                            l.element.querySelector('span').style.pointerEvents = 'none';
                         }
                     });
 
@@ -3815,7 +3806,7 @@
             controls.autoRotate = true; // Resume rotating when reset
 
             if (!preserveCamera) {
-                camTargetPos.set(0, 0, 1800);
+                camTargetPos.set(0, 0, 1400);
                 camTargetLookAt.set(0, 0, 0);
                 isCameraAnimating = true;
                 controls.enabled = false; // Lock controls so scroll doesn't interrupt the flight!
@@ -4332,7 +4323,7 @@
                     
                     labelObjects.forEach(l => {
                         l.element.style.opacity = currentOp.toFixed(3);
-                        l.element.querySelector('span').style.pointerEvents = currentOp > 0.1 ? 'auto' : 'none';
+                        // l.element.querySelector('span').style.pointerEvents = currentOp > 0.1 ? 'auto' : 'none';
                         if (currentOp > 0.05) l.element.style.display = 'block';
                     });
                     
@@ -4829,19 +4820,39 @@
             raycaster.setFromCamera(mouse, camera);
 
             // Check intersection with label positions
+            let bestMatchIdx = -1;
+            let bestDepth = Infinity;
+
             for (let i = 0; i < labelObjects.length; i++) {
                 const lbl = labelObjects[i];
+                if (lbl.element.style.opacity < 0.1) continue; // Skip invisible labels
+
                 const labelScreenPos = new THREE.Vector3();
                 labelScreenPos.copy(lbl.position);
                 labelScreenPos.project(camera);
+
+                // If behind camera, skip
+                if (labelScreenPos.z > 1 || labelScreenPos.z < -1) continue;
+
                 const screenX = (labelScreenPos.x * 0.5 + 0.5) * window.innerWidth;
                 const screenY = (-(labelScreenPos.y) * 0.5 + 0.5) * window.innerHeight;
-                const dist = Math.hypot(screenX - event.clientX, screenY - event.clientY);
-                if (dist < 60) {
-                    event.stopPropagation();
-                    selectNode(i, true);
-                    break;
+
+                const dx = screenX - event.clientX;
+                const dy = (screenY + 40) - event.clientY; // CSS has translateY(60px)
+                const dist = Math.hypot(dx, dy);
+
+                if (dist < 40) {
+                    if (labelScreenPos.z < bestDepth) {
+                        bestDepth = labelScreenPos.z;
+                        bestMatchIdx = i;
+                    }
                 }
+            }
+
+            if (bestMatchIdx !== -1) {
+                event.stopPropagation();
+                selectNode(bestMatchIdx, false);
+                return;
             }
         });
 
