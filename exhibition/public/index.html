@@ -294,6 +294,19 @@
             color: #F5F5F5 !important;
             border: 1px solid transparent !important;
         }
+        body.light-mode .info-action-btn:hover,
+        body.light-mode button:hover {
+            background: #fff !important;
+            color: #000 !important;
+            border: 1px solid transparent !important;
+            opacity: 1 !important;
+        }
+        #btn-wizard-global-next:hover, #btn-wizard-global-back:hover, #btn-summary-back:hover, #btn-summary-continue:hover {
+            /* The wizard container has filter: invert(1), so white becomes black and black becomes white */
+            background: #fff !important;
+            color: #000 !important;
+            opacity: 1 !important;
+        }
         .circle-action-btn {
             background: transparent;
             border: 1px solid transparent;
@@ -929,14 +942,13 @@
             <!-- Chapters -->
             <div id="info-chapters" style="margin-bottom: 25px;"></div>
             
-            <!-- Primary Actions -->
-            <div style="display: flex; flex-direction: row; justify-content: center; gap: 15px; margin-bottom: 25px;">
-                <button id="btn-path-dest" class="info-action-btn" style="margin: 0; color: #000; white-space: nowrap;">[ LOCATE CONNECTION ]</button>
-                <button id="btn-add-from-here" class="info-action-btn" style="margin: 0; color: #000; white-space: nowrap;">[ ADD CONNECTION ]</button>
+            <div style="display: flex; justify-content: space-between; width: 100%; margin: 0 auto 25px auto;">
+                <button id="btn-path-dest" class="info-action-btn" style="margin: 0; color: #000; white-space: nowrap; text-align: left; padding-left: 0;">[ LOCATE CONNECTION ]</button>
+                <button id="btn-add-from-here" class="info-action-btn" style="margin: 0; color: #000; white-space: nowrap; text-align: right; padding-right: 0;">[ ADD CONNECTION ]</button>
             </div>
             
             <!-- Connections -->
-            <details id="info-connections-container" style="border-top: 1px solid rgba(0,0,0,0.06); padding-top: 15px;">
+            <details id="info-connections-container" style="border-top: 1px solid rgba(0,0,0,0.06); padding-top: 25px;">
                 <summary style="font-size: 12px; font-weight: 500; margin-bottom: 12px; color: #666; letter-spacing: 1.5px; text-transform: uppercase; cursor: pointer; outline: none; list-style: none;">
                     Connected To <span style="font-size: 8px; margin-left: 5px;">▼</span>
                 </summary>
@@ -945,23 +957,27 @@
 
             <div id="info-path" style="margin-top: 15px; font-size: 14px; color: #111111; font-weight: 500;"></div>
             
-            <div id="info-suggestions" style="margin-top: 20px; border-top: 1px solid rgba(0,0,0,0.06); padding-top: 15px; display: none;">
-                <div style="font-size: 12px; font-weight: 500; margin-bottom: 12px; color: #666; letter-spacing: 1.5px; text-transform: uppercase;">Suggested</div>
-                <div id="info-suggestions-list"></div>
-            </div>
+            <details id="info-suggestions" style="margin-top: 20px; border-top: 1px solid rgba(0,0,0,0.06); padding-top: 25px; display: none;">
+                <summary style="font-size: 12px; font-weight: 500; margin-bottom: 12px; color: #666; letter-spacing: 1.5px; text-transform: uppercase; cursor: pointer; outline: none; list-style: none;">
+                    <span id="suggestions-title-text">The Beast Suggests</span> <span style="font-size: 8px; margin-left: 5px;">▼</span>
+                </summary>
+                <div id="info-suggestions-list" style="max-height: 160px; overflow-y: auto;"></div>
+            </details>
         
-        <div id="info-secondary-card" style="position: relative; display: none; border-top: 1px dashed rgba(0,0,0,0.1); padding-top: 15px; margin-top: 15px;">
-            <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 5px;">
-                <div style="padding-right: 20px;">
-                    <h3 id="sec-info-name" style="margin: 0; font-size: 14px; font-weight: bold; color: #000;"></h3>
-                    <div id="sec-info-role" style="font-size: 10px; color: #666;"></div>
+        <div id="info-secondary-card" style="position: relative; display: none; border-top: 1px solid rgba(0,0,0,0.06); padding-top: 20px; margin-top: 20px;">
+            <div id="sec-card-content">
+                <div style="display: flex; flex-direction: column; margin-bottom: 25px;">
+                    <h3 id="sec-info-name" style="margin: 0; font-size: 18px; font-weight: 500; color: #000; text-transform: capitalize;"></h3>
+                    <div id="sec-info-details" style="font-size: 13px; color: #666; margin-top: 6px;"></div>
+                    <div id="sec-info-tags" style="display: flex; flex-wrap: wrap; gap: 6px; margin-top: 12px;"></div>
                 </div>
-                <button id="btn-close-sec" style="position: absolute; top: 15px; right: 0px; background: transparent; color: #aaa; border: none; font-size: 16px; cursor: pointer; padding: 0; line-height: 1; min-width: auto; height: auto; width: auto;">&times;</button>
+                <div style="display: flex; justify-content: space-between; width: 100%; margin: 0 auto;">
+                    <button id="btn-sec-ignore" class="info-action-btn" style="margin: 0; color: #000; white-space: nowrap; text-align: left; padding-left: 0;">[ NOT RELATED ]</button>
+                    <button id="btn-sec-connect" class="info-action-btn" style="margin: 0; color: #000; white-space: nowrap; text-align: right; padding-right: 0;">[ CONNECT WITH ]</button>
+                </div>
             </div>
-            <div id="sec-info-details" style="font-size: 10px; color: #666; margin-bottom: 10px;"></div>
-            <div style="display: flex; gap: 5px;">
-                <button id="btn-sec-ignore" style="flex: 1; background: transparent; color: #666; border: 1px solid rgba(0,0,0,0.1); border-radius: 10px; padding: 6px; font-size: 10px; cursor: pointer;">Not Related</button>
-                <button id="btn-sec-connect" style="flex: 1; background: #000; color: #fff; border: none; border-radius: 10px; padding: 6px; font-weight: bold; font-size: 10px; cursor: pointer;">Connect</button>
+            <div id="sec-card-thankyou" style="display: none; align-items: center; justify-content: center; height: 100%; min-height: 140px; font-size: 13px; font-weight: 500; text-align: center; color: #000; letter-spacing: 1px; text-transform: uppercase;">
+                Thank you for feeding the Beast.
             </div>
         </div>
         </div>
@@ -4005,6 +4021,7 @@
             
             if (topScores.length > 0) {
                 suggDiv.style.display = 'block';
+                document.getElementById('suggestions-title-text').textContent = `The Beast Suggests (${topScores.length})`;
                 topScores.forEach(match => {
                     const d = document.createElement('div');
                     d.style.cssText = 'cursor: pointer; transition: background 0.2s; padding: 10px 12px; margin-bottom: 4px; border-radius: 8px; font-size: 14px; font-weight: 400; color: #111; border: 1px solid rgba(0,0,0,0.05); background: #fafafa; display: flex; align-items: center; justify-content: space-between; gap: 10px;';
@@ -4015,10 +4032,8 @@
                     
                     d.innerHTML = `
                         <div style="display: flex; align-items: center; gap: 8px; min-width: 0;">
-                            <div style="width: 8px; height: 8px; border-radius: 50%; background: #4CAF50; flex-shrink: 0;"></div>
                             <div style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${match.person.name}</div>
                         </div>
-                        <div style="font-size: 11px; color: rgba(0,0,0,0.4); text-transform: uppercase; letter-spacing: 0.5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; text-align: right; flex-shrink: 1;">${sharedText}</div>
                     `;
                     
                     d.addEventListener('mouseenter', () => d.style.background = '#f0f0f0');
@@ -4028,17 +4043,46 @@
                     
                     d.addEventListener('click', () => {
                         // Show secondary card
+                        secCard.style.transition = 'none'; // reset transition instantly
                         secCard.style.display = 'block';
-                        document.getElementById('sec-info-name').textContent = match.person.name;
-                        document.getElementById('sec-info-role').textContent = match.person.role || '';
+                        secCard.style.background = 'transparent';
+                        secCard.style.backdropFilter = 'none';
+                        secCard.style.webkitBackdropFilter = 'none';
+                        secCard.style.border = 'none';
+                        secCard.style.boxShadow = 'none';
+                        secCard.style.opacity = '1';
                         
-                        let details = [];
-                        if (match.person.age) details.push(`Age: ${match.person.age}`);
-                        if (match.person.city) details.push(match.person.city);
-                        document.getElementById('sec-info-details').textContent = details.join(' | ');
+                        document.getElementById('sec-card-content').style.display = 'block';
+                        document.getElementById('sec-card-thankyou').style.display = 'none';
+                        
+                        document.getElementById('sec-info-name').textContent = match.person.name;
+                        
+                        let parts = [];
+                        if (match.person.age) parts.push(match.person.age);
+                        
+                        let cities = [];
+                        if (match.person.city) cities.push(match.person.city);
+                        if (match.person.origin_city && match.person.origin_city !== match.person.city) cities.push(match.person.origin_city);
+                        
+                        if (cities.length === 1) parts.push(cities[0]);
+                        else if (cities.length > 1) parts.push(`${cities[0]} and ${cities[1]}`);
+                        
+                        document.getElementById('sec-info-details').textContent = parts.join(', ');
+                        
+                        const tagsContainer = document.getElementById('sec-info-tags');
+                        tagsContainer.innerHTML = '';
+                        if (match.shared && match.shared.length > 0) {
+                            match.shared.forEach(tag => {
+                                const span = document.createElement('span');
+                                span.style.cssText = 'background: rgba(0,0,0,0.04); color: #333; padding: 5px 10px; border-radius: 4px; font-size: 13px; text-transform: capitalize; letter-spacing: 0.5px;';
+                                span.textContent = tag;
+                                tagsContainer.appendChild(span);
+                            });
+                        }
                         
                         const btnConnect = document.getElementById('btn-sec-connect');
-                        btnConnect.textContent = 'Connect with ' + match.person.name;
+                        const firstName = match.person.name.split(' ')[0];
+                        btnConnect.textContent = '[ CONNECT WITH ' + firstName + ' ]';
                         btnConnect.onclick = async () => {
                             try {
                                 const res = await fetch('/api/connections', {
@@ -4047,11 +4091,46 @@
                                     body: JSON.stringify({ person_a_id: person.id, person_b_id: match.person.id, type: 'acquaintance', strength: 3 })
                                 });
                                 if (res.ok) {
-                                    btnConnect.textContent = 'Connected!';
-                                    btnConnect.style.background = '#333';
-                                    btnConnect.style.color = 'white';
-                                    btnConnect.disabled = true;
-                                    setTimeout(() => window.location.reload(), 800);
+                                    secCard.style.transition = 'all 0.5s ease';
+                                    secCard.style.background = 'rgba(255, 255, 255, 0.75)';
+                                    secCard.style.backdropFilter = 'blur(10px)';
+                                    secCard.style.webkitBackdropFilter = 'blur(10px)';
+                                    secCard.style.border = '1px solid rgba(0, 0, 0, 0.1)';
+                                    secCard.style.boxShadow = '0 4px 20px rgba(0, 0, 0, 0.08)';
+                                    secCard.style.borderRadius = '12px';
+                                    
+                                    document.getElementById('sec-card-content').style.display = 'none';
+                                    document.getElementById('sec-card-thankyou').style.display = 'flex';
+                                    
+                                    setTimeout(() => {
+                                        secCard.style.opacity = '0';
+                                        setTimeout(() => {
+                                            secCard.style.display = 'none';
+                                            secCard.style.opacity = '1';
+                                            d.style.display = 'none'; // hide suggestion from list
+                                            
+                                            // Update number of suggestions
+                                            const currentList = Array.from(suggList.children).filter(child => child.style.display !== 'none');
+                                            const titleSpan = document.getElementById('suggestions-title-text');
+                                            if (currentList.length > 0) {
+                                                if (titleSpan) titleSpan.textContent = `The Beast Suggests (${currentList.length})`;
+                                            } else {
+                                                suggDiv.style.display = 'none';
+                                            }
+                                        }, 500);
+                                    }, 3000);
+                                    
+                                    // Update graph in background (cache-busted)
+                                    fetch(`/api/connections?t=${Date.now()}`).then(r=>r.json()).then(apiConnections => {
+                                        people.forEach(p => p.connections = []);
+                                        apiConnections.forEach(c => {
+                                            const p1 = people.find(p => p.id === c.source);
+                                            const p2 = people.find(p => p.id === c.target);
+                                            if (p1) p1.connections.push({ id: c.target, type: c.type, strength: c.strength });
+                                            if (p2) p2.connections.push({ id: c.source, type: c.type, strength: c.strength });
+                                        });
+                                        buildStructure(apiConnections);
+                                    });
                                 }
                             } catch (err) {
                                 console.error(err);
@@ -4068,9 +4147,7 @@
                     });
                 });
                 
-                document.getElementById('btn-close-sec').onclick = () => {
-                    secCard.style.display = 'none';
-                };
+                // No close button needed
             } else {
                 suggDiv.style.display = 'none';
             }
@@ -4360,9 +4437,14 @@
                     targetOpacity = inPath ? 1.0 : 0.15; // Background network is faint
                 } else if (layoutMode === 'focus') {
                     if (aNode === focusedNodeId || bNode === focusedNodeId) {
-                        targetOpacity = 1.0; // Connections to center
+                        targetOpacity = 1.0; // Connections to center (VERY STRONG)
                     } else if (focusedNeighbors.has(aNode) && focusedNeighbors.has(bNode)) {
-                        targetOpacity = 1.0; // Connections between neighbors
+                        // Dynamic opacity for secondary connections based on camera distance (zoom)
+                        const minFocusDist = 400;
+                        const maxFocusDist = 2000;
+                        let distFactor = (camDist - minFocusDist) / (maxFocusDist - minFocusDist);
+                        // Starts at 0.20 (zoomed in), scales to 1.0 (zoomed out) so it blends with global network
+                        targetOpacity = 0.20 + Math.max(0, Math.min(1.0, distFactor)) * 0.80;
                     } else {
                         // Let lines fade in smoothly along with the nodes
                         const opA = window.nodeRevealOpacities ? (window.nodeRevealOpacities[aNode] || 0) : 1;
@@ -5386,6 +5468,17 @@
         }
 
         function processStep4() {
+            const birthYearInput = document.getElementById('f-birth-year');
+            if (!birthYearInput.value.trim()) {
+                const label = birthYearInput.previousElementSibling;
+                if (label) label.style.color = '#ff4444';
+                
+                birthYearInput.addEventListener('input', function() {
+                    if (label) label.style.color = '';
+                }, { once: true });
+                return;
+            }
+            
             // Data collected later, just transition
             goToWizardStep('4a');
         }
@@ -6205,22 +6298,25 @@
             
             if (shared.company > 0) score += 35;
             if (shared.city > 0) score += 35;
+            
             if (shared.high_school > 0) {
-                if (genericSchoolMatch && !isSameCity) score += 5;
-                else if (isSimilarAge) score += 45;
-                else score += 15;
+                if (genericSchoolMatch && !isSameCity) {
+                    // Generic school requires same city to give points
+                } else if (isSimilarAge) {
+                    score += 45;
+                }
             }
             if (shared.mechina > 0 && isSimilarAge) score += 45;
-            else if (shared.mechina > 0) score += 20;
             if (shared.army_unit > 0 && isSimilarAge) score += 40;
-            else if (shared.army_unit > 0) score += 15;
             if (shared.army_base > 0 && isSimilarAge) score += 30;
-            else if (shared.army_base > 0) score += 10;
-            if (shared.uni > 0 && shared.degree > 0 && sharedYear) score += 40;
+            
+            // Require BOTH university and specific degree/department to give significant points
+            if (shared.uni > 0 && shared.degree > 0 && sharedYear) score += 45;
             else if (shared.uni > 0 && shared.degree > 0) score += 35;
-            else if (shared.uni > 0 && sharedYear) score += 25;
-            else if (shared.uni > 0) score += 15;
-            if (shared.degree > 0 && shared.uni === 0) score += 15;
+            else if (shared.uni > 0 && sharedYear) score += 5; // Negligible
+            else if (shared.uni > 0) score += 2; // Negligible
+            
+            if (shared.degree > 0 && shared.uni === 0) score += 2; // Generic profession alone gives negligible points
             
             if (p1CityLower && p2CityLower) {
                 const cityAliases = {
@@ -6276,10 +6372,8 @@
                     if (!shouldIgnore) {
                         score += 15;
                         sharedStrings.push(matchedVal);
-                    } else if (isSimilarAge) {
-                        score += 15;
-                        sharedStrings.push(matchedVal);
                     }
+                    // Large cities are ignored completely, regardless of age
                 }
             }
             if (p1RoleLower && p2RoleLower) {
@@ -6319,11 +6413,22 @@
                 });
                 
                 if (match) {
-                    const isIgnored = ignoreCities.some(c => c.replace(/\s+/g, '') === normTagStripped || (normTagStripped.length > 3 && normTagStripped.includes(c.replace(/\s+/g, ''))));
-                    if (isIgnored && !isSimilarAge) {
-                        // Skip this tag match because it is an ignored city without similar age
-                    } else if (genericRoles.includes(normTagStripped) || genericRoles.includes(cleanTag.toLowerCase())) {
-                        score += 5;
+                    const isIgnoredCity = ignoreCities.some(c => c.replace(/\s+/g, '') === normTagStripped || (normTagStripped.length > 3 && normTagStripped.includes(c.replace(/\s+/g, ''))));
+                    
+                    // Check if tag is broad (university, degree, or generic role) to prevent double counting or over-rewarding broad tags
+                    const isBroadUni = synonymGroups.some(g => g.type === 'uni' && g.words.some(w => w.replace(/\s+/g, '') === normTagStripped || cleanTag.toLowerCase().includes(w)));
+                    const isBroadDegree = synonymGroups.some(g => g.type === 'degree' && g.words.some(w => w.replace(/\s+/g, '') === normTagStripped || cleanTag.toLowerCase().includes(w)));
+                    const isGenericRole = genericRoles.includes(normTagStripped) || genericRoles.includes(cleanTag.toLowerCase());
+                    const isHighSchool = cleanTag.toLowerCase().includes('highschool:') || valTag.toLowerCase().includes('school') || valTag.toLowerCase().includes('בית ספר') || normTagStripped.includes('hakfarhayarok') || normTagStripped.includes('kadoorie') || normTagStripped.includes('כדורי');
+
+                    if (isIgnoredCity) {
+                        // Completely ignore large cities even if similar age
+                    } else if (isBroadUni) {
+                        score += 2; // Negligible points for matching uni in tags
+                    } else if (isBroadDegree || isGenericRole) {
+                        score += 2; // Negligible points for matching generic profession in tags
+                    } else if (isHighSchool && !isSimilarAge) {
+                        score += 3; // Age gap > 4, so it's a weak connection
                     } else {
                         score += 15;
                         sharedStrings.push(cleanTag);
