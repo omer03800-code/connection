@@ -3297,7 +3297,8 @@
                 mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
                 mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
                 raycaster.setFromCamera(mouse, camera);
-                raycaster.params.Points.threshold = 8.0; // Increase hit area significantly!
+                const camDist = camera.position.length();
+                raycaster.params.Points.threshold = camDist > 800 ? 30.0 : (camDist < 300 ? 8.0 : 15.0);
                 if (meshPoints) {
                     const intersects = raycaster.intersectObject(meshPoints);
                     // Filter hits: only select if user clicked a nucleus particle (index % pPerStrand === 0)
