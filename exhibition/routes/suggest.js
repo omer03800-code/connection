@@ -1,5 +1,5 @@
 const { Router } = require('express');
-const { getDb } = require('../db/schema');
+const { query } = require('../db/schema');
 const { suggestConnections } = require('../lib/smart-match');
 
 const router = Router();
@@ -7,16 +7,15 @@ const router = Router();
 // POST /api/suggest
 // Body: { name, age, city, role, description, tags, existingConnectionIds: [] }
 // Returns: [{ person, score, reasons }]
-router.post('/', (req, res) => {
-    const db = getDb();
+router.post('/', async (req, res) => {
     const { name, age, city, role, description, tags, existingConnectionIds = [] } = req.body;
 
-    const allPeople = db.prepare(
+    const allPeople = (await query(
         'SELECT id, name, age, city, role, description, tags FROM people ORDER BY id'
-    ).all();
+    )).rows;
 
     // Build adjacency map for mutual-friend scoring
-    const connRows = db.prepare('SELECT person_a_id, person_b_id FROM connections').all();
+    const connRows = (await query('SELECT person_a_id, person_b_id FROM connections')).rows;
     const adjacencyMap = {};
     for (const r of connRows) {
         if (!adjacencyMap[r.person_a_id]) adjacencyMap[r.person_a_id] = [];
@@ -30,16 +29,15 @@ router.post('/', (req, res) => {
 });
 
 // GET /api/suggest/:id — suggest connections for an existing person in the DB
-router.get('/:id', (req, res) => {
-    const db = getDb();
-    const person = db.prepare('SELECT * FROM people WHERE id = ?').get(req.params.id);
+router.get('/:id', async (req, res) => {
+    const person = ((await query('SELECT * FROM people WHERE id = ?', [req.params.id])).rows[0]);
     if (!person) return res.status(404).json({ error: 'Not found' });
 
-    const allPeople = db.prepare(
+    const allPeople = (await query(
         'SELECT id, name, age, city, role, description, tags FROM people ORDER BY id'
-    ).all();
+    )).rows;
 
-    const connRows = db.prepare('SELECT person_a_id, person_b_id FROM connections').all();
+    const connRows = (await query('SELECT person_a_id, person_b_id FROM connections')).rows;
     const adjacencyMap = {};
     for (const r of connRows) {
         if (!adjacencyMap[r.person_a_id]) adjacencyMap[r.person_a_id] = [];

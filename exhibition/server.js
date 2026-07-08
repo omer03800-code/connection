@@ -1,7 +1,7 @@
 require('dotenv').config();
 const express = require('express');
 const path = require('path');
-const { getDb } = require('./db/schema');
+const { query } = require('./db/schema');
 
 const app = express();
 const PORT = process.env.PORT || 1337;
@@ -27,21 +27,27 @@ app.use('/api/suggest',     require('./routes/suggest'));
 app.use('/api/report',      require('./routes/report'));
 
 // GET /api/graph — full graph (all people + all connections) — convenience endpoint
-app.get('/api/graph', (req, res) => {
-    const db = getDb();
-    const people = db.prepare('SELECT id, name, age, city, country, role, description, tags FROM people ORDER BY id').all();
-    const connections = db.prepare(
-        'SELECT person_a_id as source, person_b_id as target, type, strength FROM connections WHERE person_a_id < person_b_id'
-    ).all();
-    res.json({ people, connections });
+app.get('/api/graph', async (req, res) => {
+    try {
+        const { rows: people } = await query('SELECT id, name, age, city, country, role, description, tags FROM people ORDER BY id');
+        const { rows: connections } = await query(
+            'SELECT person_a_id as source, person_b_id as target, type, strength FROM connections WHERE person_a_id < person_b_id'
+        );
+        res.json({ people, connections });
+    } catch (e) {
+        res.status(500).json({ error: e.message });
+    }
 });
 
 // Health check
-app.get('/api/health', (req, res) => {
-    const db = getDb();
-    const { count: people } = db.prepare('SELECT COUNT(*) as count FROM people').get();
-    const { count: conns }  = db.prepare('SELECT COUNT(*) as count FROM connections WHERE person_a_id < person_b_id').get();
-    res.json({ ok: true, people, connections: conns });
+app.get('/api/health', async (req, res) => {
+    try {
+        const { rows: pRows } = await query('SELECT COUNT(*) as count FROM people');
+        const { rows: cRows } = await query('SELECT COUNT(*) as count FROM connections WHERE person_a_id < person_b_id');
+        res.json({ ok: true, people: pRows[0].count, connections: cRows[0].count });
+    } catch (e) {
+        res.status(500).json({ ok: false, error: e.message });
+    }
 });
 
 // Serve the visualization for any other route

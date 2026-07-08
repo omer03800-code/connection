@@ -1,15 +1,14 @@
 const { Router } = require('express');
-const { getDb } = require('../db/schema');
+const { query } = require('../db/schema');
 
 const router = Router();
 
 // GET /api/people/search/query?q=term
-router.get('/search/query', (req, res) => {
-    const db = getDb();
+router.get('/search/query', async (req, res) => {
     const term = (req.query.q || '').toLowerCase();
     
     // Fetch all and filter in JS to allow proper word-boundary regex (so "ono" doesn't match "Economics")
-    const allPeople = db.prepare(`SELECT id, name, city, role, tags, description FROM people`).all();
+    const allPeople = (await query(`SELECT id, name, city, role, tags, description FROM people`)).rows;
     
     let searchTerms = [term];
     
@@ -93,31 +92,28 @@ router.get('/search/query', (req, res) => {
 });
 
 // GET /api/people/suggest/name?name=term
-router.get('/suggest/name', (req, res) => {
-    const db = getDb();
+router.get('/suggest/name', async (req, res) => {
     const q = `%${(req.query.name || '').toLowerCase()}%`;
-    const people = db.prepare(`
+    const people = (await query(`
         SELECT id, name, city, role FROM people WHERE lower(name) LIKE ? LIMIT 5
-    `).all(q);
+    `, [q])).rows;
     res.json(people);
 });
 
 // GET /api/people — all people
-router.get('/', (req, res) => {
-    const db = getDb();
-    const people = db.prepare(
-        'SELECT id, name, age, city, country, role, description, tags FROM people ORDER BY id'
-    ).all();
+router.get('/', async (req, res) => {
+    const people = (await query(
+        `SELECT id, name, city, role, tags, description FROM people ORDER BY id`
+    )).rows;
     res.json(people);
 });
 
 // GET /api/people/:id
-router.get('/:id', (req, res) => {
-    const db = getDb();
-    const person = db.prepare('SELECT * FROM people WHERE id = ?').get(req.params.id);
+router.get('/:id', async (req, res) => {
+    const person = ((await query('SELECT * FROM people WHERE id = ?', [req.params.id])).rows[0]);
     if (!person) return res.status(404).json({ error: 'Not found' });
 
-    const connections = db.prepare(`
+    const connections = (await query(`
         SELECT p.id, p.name, p.role, c.type, c.strength
         FROM connections c JOIN people p ON p.id = c.person_b_id
         WHERE c.person_a_id = ?
@@ -126,24 +122,23 @@ router.get('/:id', (req, res) => {
         FROM connections c JOIN people p ON p.id = c.person_a_id
         WHERE c.person_b_id = ?
         ORDER BY type, name
-    `).all(req.params.id, req.params.id);
+    `, [req.params.id, req.params.id])).rows;
 
     res.json({ ...person, connections });
 });
 
 // POST /api/people
-router.post('/', (req, res) => {
-    const db = getDb();
+router.post('/', async (req, res) => {
     const { name, age, city, country, role, description, tags, added_by, connections: conns } = req.body;
     if (!name) return res.status(400).json({ error: 'name is required' });
 
-    const existing = db.prepare('SELECT id FROM people WHERE name = ?').get(name);
+    const existing = ((await query('SELECT id FROM people WHERE name = ?', [name])).rows[0]);
     if (existing) return res.status(409).json({ error: 'Person already exists', id: existing.id });
 
-    const result = db.prepare(`
+    const result = (await query(`
         INSERT INTO people (name, age, city, country, role, description, tags, added_by)
         VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-    `).run(name, age||null, city||null, country||null, role||null, description||null, tags||null, added_by||'visitor');
+    `, [name, age||null, city||null, country||null, role||null, description||null, tags||null, added_by||'visitor']));
 
     const newId = result.lastInsertRowid;
 
@@ -166,22 +161,21 @@ router.post('/', (req, res) => {
 });
 
 // PUT /api/people/:id
-router.put('/:id', (req, res) => {
-    const db = getDb();
+router.put('/:id', async (req, res) => {
     const { name, age, city, country, role, description, tags, connections: conns } = req.body;
 
-    const person = db.prepare('SELECT id FROM people WHERE id = ?').get(req.params.id);
+    const person = ((await query('SELECT id FROM people WHERE id = ?', [req.params.id])).rows[0]);
     if (!person) return res.status(404).json({ error: 'Person not found' });
 
-    db.prepare(`
+    (await query(`
         UPDATE people SET name = ?, age = ?, city = ?, country = ?, role = ?, description = ?, tags = ?
         WHERE id = ?
-    `).run(name||person.name, age||null, city||null, country||null, role||null, description||null, tags||null, req.params.id);
+    `, [name||person.name, age||null, city||null, country||null, role||null, description||null, tags||null, req.params.id]));
 
     db.exec('BEGIN');
     
     // First, completely delete all existing connections for this person
-    db.prepare('DELETE FROM connections WHERE person_a_id = ? OR person_b_id = ?').run(req.params.id, req.params.id);
+    (await query('DELETE FROM connections WHERE person_a_id = ? OR person_b_id = ?', [req.params.id, req.params.id]));
 
     // Then re-insert the updated connections
     if (Array.isArray(conns) && conns.length) {
@@ -203,18 +197,16 @@ router.put('/:id', (req, res) => {
 });
 
 // DELETE /api/people/:id
-router.delete('/:id', (req, res) => {
-    const db = getDb();
-    const person = db.prepare('SELECT id FROM people WHERE id = ?').get(req.params.id);
+router.delete('/:id', async (req, res) => {
+    const person = ((await query('SELECT id FROM people WHERE id = ?', [req.params.id])).rows[0]);
     if (!person) return res.status(404).json({ error: 'Person not found' });
 
-    db.prepare('DELETE FROM people WHERE id = ?').run(req.params.id);
+    (await query('DELETE FROM people WHERE id = ?', [req.params.id]));
     res.json({ id: req.params.id, deleted: true });
 });
 
 // POST /api/connections/direct - add a single direct connection safely
-router.post('/connections/direct', (req, res) => {
-    const db = getDb();
+router.post('/connections/direct', async (req, res) => {
     const { person_a_id, person_b_id, type, strength } = req.body;
     
     if (!person_a_id || !person_b_id) {

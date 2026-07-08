@@ -1,30 +1,28 @@
 const { Router } = require('express');
-const { getDb } = require('../db/schema');
+const { query } = require('../db/schema');
 
 const router = Router();
 
 // GET /api/connections/graph — full graph (all people + all connections)
-router.get('/graph', (req, res) => {
-    const db = getDb();
-    const people = db.prepare('SELECT id, name, age, city, country, role, description, tags FROM people ORDER BY id').all();
-    const connections = db.prepare(
+router.get('/graph', async (req, res) => {
+    const people = (await query('SELECT id, name, age, city, country, role, description, tags FROM people ORDER BY id')).rows;
+    const connections = (await query(
         'SELECT person_a_id as source, person_b_id as target, type, strength FROM connections WHERE person_a_id < person_b_id'
-    ).all();
+    )).rows;
     res.json({ people, connections });
 });
 
 // GET /api/connections/path/:from/:to — BFS shortest path
-router.get('/path/:from/:to', (req, res) => {
-    const db = getDb();
+router.get('/path/:from/:to', async (req, res) => {
     const fromId = parseInt(req.params.from);
     const toId   = parseInt(req.params.to);
 
     if (fromId === toId) {
-        const p = db.prepare('SELECT id, name FROM people WHERE id = ?').get(fromId);
+        const p = ((await query('SELECT id, name FROM people WHERE id = ?', [fromId])).rows[0]);
         return res.json({ path: p ? [p] : [], degrees: 0 });
     }
 
-    const rows = db.prepare('SELECT person_a_id, person_b_id FROM connections').all();
+    const rows = (await query('SELECT person_a_id, person_b_id FROM connections')).rows;
     const adj = {};
     for (const r of rows) {
         if (!adj[r.person_a_id]) adj[r.person_a_id] = [];
@@ -41,9 +39,9 @@ router.get('/path/:from/:to', (req, res) => {
                 const newPath = [...path, neighbor];
                 if (neighbor === toId) {
                     const placeholders = newPath.map(() => '?').join(',');
-                    const people = db.prepare(
-                        `SELECT id, name FROM people WHERE id IN (${placeholders})`
-                    ).all(...newPath);
+                    const people = (await query(
+                        `SELECT id, name FROM people WHERE id IN (${placeholders})`, newPath
+                    )).rows;
                     const byId = Object.fromEntries(people.map(p => [p.id, p]));
                     return res.json({ path: newPath.map(id => byId[id]), degrees: newPath.length - 1 });
                 }
@@ -56,17 +54,15 @@ router.get('/path/:from/:to', (req, res) => {
 });
 
 // GET /api/connections — all connections
-router.get('/', (req, res) => {
-    const db = getDb();
-    const conns = db.prepare(
+router.get('/', async (req, res) => {
+    const conns = (await query(
         'SELECT person_a_id as source, person_b_id as target, type, strength FROM connections WHERE person_a_id < person_b_id'
-    ).all();
+    )).rows;
     res.json(conns);
 });
 
 // POST /api/connections
-router.post('/', (req, res) => {
-    const db = getDb();
+router.post('/', async (req, res) => {
     const { person_a_id, person_b_id, type, strength } = req.body;
     if (!person_a_id || !person_b_id) return res.status(400).json({ error: 'person_a_id and person_b_id required' });
 
@@ -79,15 +75,14 @@ router.post('/', (req, res) => {
 });
 
 // DELETE /api/connections/:id
-router.delete('/:id', (req, res) => {
-    const db = getDb();
-    const conn = db.prepare('SELECT id, person_a_id, person_b_id FROM connections WHERE id = ?').get(req.params.id);
+router.delete('/:id', async (req, res) => {
+    const conn = ((await query('SELECT id, person_a_id, person_b_id FROM connections WHERE id = ?', [req.params.id])).rows[0]);
     if (!conn) return res.status(404).json({ error: 'Connection not found' });
 
-    db.prepare('DELETE FROM connections WHERE (person_a_id = ? AND person_b_id = ?) OR (person_a_id = ? AND person_b_id = ?)').run(
+    (await query('DELETE FROM connections WHERE (person_a_id = ? AND person_b_id = ?) OR (person_a_id = ? AND person_b_id = ?)', [
         conn.person_a_id, conn.person_b_id,
         conn.person_b_id, conn.person_a_id
-    );
+    ]));
     res.json({ id: req.params.id, deleted: true });
 });
 
