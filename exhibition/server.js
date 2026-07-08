@@ -55,7 +55,11 @@ app.get('*', (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
-app.listen(PORT, '127.0.0.1', () => {
-    console.log(`\n🌐 Feed the Beast Exhibition running at http://127.0.0.1:${PORT}`);
-    console.log(`   API: http://127.0.0.1:${PORT}/api/health\n`);
-});
+if (process.env.NODE_ENV !== 'production') {
+    app.listen(PORT, '127.0.0.1', () => {
+        console.log(`\n🌐 Feed the Beast Exhibition running at http://127.0.0.1:${PORT}`);
+        console.log(`   API: http://127.0.0.1:${PORT}/api/health\n`);
+    });
+}
+
+module.exports = app;
