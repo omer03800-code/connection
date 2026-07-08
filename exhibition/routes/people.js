@@ -65,12 +65,24 @@ router.get('/search/query', (req, res) => {
     };
 
     allPeople.forEach(p => {
-        if (p.city && regex.test(p.city)) addMeta('LOCATION', p.city);
-        if (p.role && regex.test(p.role)) addMeta('ROLE', p.role);
+        if (p.city) {
+            const cities = p.city.replace(/#/g, '').split(/[,/]+/).map(c => c.trim()).filter(Boolean);
+            cities.forEach(c => {
+                if (regex.test(c)) addMeta('LOCATION', c);
+            });
+        }
+        if (p.role) {
+            const roles = p.role.replace(/#/g, '').split(/[,/]+/).map(r => r.trim()).filter(Boolean);
+            roles.forEach(r => {
+                if (regex.test(r)) addMeta('ROLE', r);
+            });
+        }
         if (p.tags) {
             const tList = p.tags.split(/[\s,]+/);
             tList.forEach(t => {
-                if (regex.test(t)) addMeta('TAG', t.replace(/^#/, ''));
+                const cleanTag = t.replace(/^#/, '').trim();
+                const isIgnored = cleanTag.toLowerCase() === 'twin' || cleanTag === 'תאומה' || cleanTag.toLowerCase() === 'telaviv';
+                if (cleanTag && !isIgnored && regex.test(cleanTag)) addMeta('TAG', cleanTag);
             });
         }
     });
