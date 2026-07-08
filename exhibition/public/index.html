@@ -3286,7 +3286,17 @@
             window.addEventListener('pointerdown', (e) => {
                 clickStartPos.x = e.clientX;
                 clickStartPos.y = e.clientY;
+                if (isCameraAnimating && layoutMode !== 'path') {
+                    isCameraAnimating = false;
+                    controls.enabled = true;
+                }
             });
+            window.addEventListener('wheel', () => {
+                if (isCameraAnimating && layoutMode !== 'path') {
+                    isCameraAnimating = false;
+                    controls.enabled = true;
+                }
+            }, { passive: true });
 
             window.addEventListener('click', (event) => {
                 const dx = Math.abs(event.clientX - clickStartPos.x);
