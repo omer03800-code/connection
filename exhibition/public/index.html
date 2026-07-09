@@ -4101,12 +4101,7 @@
                         const d = document.createElement('div');
                         d.style.cssText = 'padding: 10px 12px; margin-bottom: 4px; border-radius: 8px; font-size: 14px; font-weight: 400; color: #111; border: 1px solid rgba(0,0,0,0.05); background: #fafafa;';
                         
-                        let details = [];
-                        if (targetPerson.age) details.push(`Age ${targetPerson.age}`);
-                        if (targetPerson.city) details.push(targetPerson.city);
-                        const detailsHtml = details.length > 0 ? `<div style="font-size: 10px; color: #666; margin-top: 2px;">${details.join(' &middot; ')}</div>` : '';
-                        
-                        d.innerHTML = `<div>${targetPerson.name}</div>${detailsHtml}`;
+                        d.innerHTML = `<div>${targetPerson.name}</div>`;
                         
                         connListDiv.appendChild(d);
                     }
