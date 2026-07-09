@@ -4099,27 +4099,14 @@
                     const targetPerson = people.find(p => p.id === c.id);
                     if (targetPerson) {
                         const d = document.createElement('div');
-                        d.style.cssText = 'cursor: pointer; transition: background 0.2s; padding: 10px 12px; margin-bottom: 4px; border-radius: 8px; font-size: 14px; font-weight: 400; color: #111; border: 1px solid rgba(0,0,0,0.05); background: #fafafa;';
-                        d.innerHTML = `<div>${targetPerson.name}</div>`;
+                        d.style.cssText = 'padding: 10px 12px; margin-bottom: 4px; border-radius: 8px; font-size: 14px; font-weight: 400; color: #111; border: 1px solid rgba(0,0,0,0.05); background: #fafafa;';
                         
-                        d.addEventListener('mouseenter', () => d.style.background = '#f0f0f0');
-                        d.addEventListener('mouseleave', () => d.style.background = '#fafafa');
+                        let details = [];
+                        if (targetPerson.age) details.push(`Age ${targetPerson.age}`);
+                        if (targetPerson.city) details.push(targetPerson.city);
+                        const detailsHtml = details.length > 0 ? `<div style="font-size: 10px; color: #666; margin-top: 2px;">${details.join(' &middot; ')}</div>` : '';
                         
-                        d.addEventListener('click', () => {
-                            connSecCard.style.display = 'block';
-                            document.getElementById('conn-sec-name').textContent = targetPerson.name;
-                            document.getElementById('conn-sec-role').textContent = targetPerson.role || '';
-                            
-                            let details = [];
-                            if (targetPerson.age) details.push(`Age: ${targetPerson.age}`);
-                            if (targetPerson.city) details.push(targetPerson.city);
-                            document.getElementById('conn-sec-details').textContent = details.join(' | ');
-                            
-                            document.getElementById('btn-conn-sec-view').onclick = () => {
-                                const targetIdx = dbIdToIdx[targetPerson.id];
-                                selectNode(targetIdx, true);
-                            };
-                        });
+                        d.innerHTML = `<div>${targetPerson.name}</div>${detailsHtml}`;
                         
                         connListDiv.appendChild(d);
                     }
