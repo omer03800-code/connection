@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="robots" content="noindex, nofollow">
+    <title>Feed the Beast - Login</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap" rel="stylesheet">
+    <style>
+        body, html {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            background-color: #0d0d0d;
+            font-family: 'Inter', sans-serif;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #fff;
+        }
+
+        .login-card {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 20px;
+            padding: 40px;
+            width: 100%;
+            max-width: 400px;
+            box-shadow: 0 25px 50px rgba(0, 0, 0, 0.5);
+            text-align: center;
+            box-sizing: border-box;
+        }
+
+        .login-title {
+            font-family: 'Instrument Serif', serif;
+            font-size: 42px;
+            margin-bottom: 8px;
+            margin-top: 0;
+            font-weight: 400;
+        }
+
+        .login-subtitle {
+            font-size: 13px;
+            color: rgba(255, 255, 255, 0.6);
+            margin-bottom: 30px;
+            letter-spacing: 0.5px;
+        }
+
+        .login-input {
+            width: 100%;
+            background: rgba(255, 255, 255, 0.08);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            color: #fff;
+            padding: 15px 20px;
+            font-size: 16px;
+            border-radius: 12px;
+            outline: none;
+            box-sizing: border-box;
+            transition: all 0.3s ease;
+            text-align: center;
+            font-family: 'Inter', sans-serif;
+            margin-bottom: 20px;
+        }
+
+        .login-input:focus {
+            background: rgba(255, 255, 255, 0.12);
+            border-color: rgba(255, 255, 255, 0.3);
+            box-shadow: 0 0 15px rgba(255, 255, 255, 0.05);
+        }
+
+        .login-input::placeholder {
+            color: rgba(255, 255, 255, 0.3);
+        }
+
+        .login-btn {
+            width: 100%;
+            background: #fff;
+            color: #000;
+            border: none;
+            padding: 15px;
+            font-size: 14px;
+            font-weight: 600;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-family: 'Inter', sans-serif;
+        }
+
+        .login-btn:hover {
+            background: #eee;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(255, 255, 255, 0.2);
+        }
+        
+        .login-btn:active {
+            transform: translateY(0);
+        }
+
+        .error-msg {
+            color: #ff6b6b;
+            font-size: 12px;
+            margin-top: 15px;
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="login-card">
+        <h1 class="login-title">Feed the Beast</h1>
+        <p class="login-subtitle">Restricted Access</p>
+        
+        <form id="login-form">
+            <input type="password" id="password" class="login-input" placeholder="Enter Password" required autocomplete="current-password">
+            <button type="submit" class="login-btn">Enter</button>
+            <div id="error-msg" class="error-msg">Incorrect password. Please try again.</div>
+        </form>
+    </div>
+
+    <script>
+        document.getElementById('login-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const password = document.getElementById('password').value;
+            const errorMsg = document.getElementById('error-msg');
+            const btn = document.querySelector('.login-btn');
+            
+            btn.textContent = 'VERIFYING...';
+            btn.disabled = true;
+            errorMsg.style.display = 'none';
+
+            try {
+                const res = await fetch('/login', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ password })
+                });
+
+                if (res.ok) {
+                    btn.textContent = 'ACCESS GRANTED';
+                    setTimeout(() => {
+                        window.location.href = '/';
+                    }, 500);
+                } else {
+                    errorMsg.style.display = 'block';
+                    btn.textContent = 'ENTER';
+                    btn.disabled = false;
+                    document.getElementById('password').value = '';
+                    document.getElementById('password').focus();
+                }
+            } catch (err) {
+                console.error(err);
+                errorMsg.textContent = 'Connection error. Try again.';
+                errorMsg.style.display = 'block';
+                btn.textContent = 'ENTER';
+                btn.disabled = false;
+            }
+        });
+    </script>
+</body>
+</html>

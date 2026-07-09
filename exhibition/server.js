@@ -18,6 +18,48 @@ app.use((req, res, next) => {
 });
 
 app.use(express.json());
+
+// Auth Middleware
+const SITE_PASSWORD = process.env.SITE_PASSWORD;
+app.use((req, res, next) => {
+    if (!SITE_PASSWORD) return next(); // If no password is set in Vercel, allow all
+
+    if (req.path === '/login' && req.method === 'POST') {
+        return next();
+    }
+    
+    const cookieHeader = req.headers.cookie || '';
+    const cookies = cookieHeader.split(';').reduce((acc, cookie) => {
+        const [key, val] = cookie.split('=').map(c => c.trim());
+        acc[key] = val;
+        return acc;
+    }, {});
+
+    if (cookies.site_auth === SITE_PASSWORD) {
+        return next();
+    }
+
+    if (req.path.startsWith('/api')) {
+        return res.status(401).json({ error: 'Unauthorized' });
+    }
+    
+    // Protect the main HTML and any navigation, but let static assets (like .js, .css, .mp3) pass to express.static
+    if (req.path === '/' || req.path === '/index.html' || !req.path.includes('.')) {
+        return res.sendFile(path.join(__dirname, 'public', 'login.html'));
+    }
+    
+    next();
+});
+
+app.post('/login', (req, res) => {
+    const { password } = req.body;
+    if (SITE_PASSWORD && password === SITE_PASSWORD) {
+        res.cookie('site_auth', password, { httpOnly: true, maxAge: 1000 * 60 * 60 * 24 * 30 }); // 30 days
+        return res.json({ success: true });
+    }
+    res.status(401).json({ error: 'Incorrect password' });
+});
+
 app.use(express.static(path.join(__dirname, 'public')));
 
 // API routes
