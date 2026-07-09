@@ -6520,7 +6520,7 @@
             const isSameCity = (p1CityLower && p2CityLower && (p2CityLower.includes(p1CityLower) || p1CityLower.includes(p2CityLower)));
             
             if (shared.company > 0) score += 35;
-            if (shared.city > 0) score += 35;
+            if (shared.city > 0) score += 5; // Reduced from 35 to avoid massive grouping for big cities
             
             if (shared.high_school > 0) {
                 if (genericSchoolMatch && !isSameCity) {
