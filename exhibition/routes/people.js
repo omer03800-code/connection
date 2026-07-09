@@ -103,7 +103,7 @@ router.get('/suggest/name', async (req, res) => {
 // GET /api/people — all people
 router.get('/', async (req, res) => {
     const people = (await query(
-        `SELECT id, name, city, role, tags, description FROM people ORDER BY id`
+        `SELECT id, name, age, country, city, role, tags, description FROM people ORDER BY id`
     )).rows;
     res.json(people);
 });
