@@ -4666,13 +4666,9 @@
                     }
                     window.nodeRevealOpacities[i] = opacity;
                     
-                    // Fixed Dots Disappearing:
-                    // In Light Mode, setting color to opacity (0 to 1) means it fades to White.
-                    // White dots on a white screen are invisible.
-                    // Instead, we force the color to 1.0 (Black on screen) and fade it in by growing its SIZE over time based on opacity!
-                    const targetColor = (i === focusedNodeId || focusedNeighbors.has(i)) ? 1.0 : 0.8;
-                    const baseSize = 176.0; // Restore original sizing!
-                    const targetSize = (i === focusedNodeId || focusedNeighbors.has(i)) ? baseSize : (baseSize * Math.pow(opacity, 0.5));
+                    // Make the dots brighter so they are clearly visible alongside their names
+                    const targetColor = (i === focusedNodeId || focusedNeighbors.has(i)) ? 1.0 : (opacity * 0.8);
+                    const targetSize = (i === focusedNodeId || focusedNeighbors.has(i)) ? 176.0 : 350.0;
                     
                     if (Math.abs(sizes[pIdx] - targetSize) > 1.0) {
                         sizes[pIdx] = targetSize;
