@@ -4565,24 +4565,21 @@
                 if (layoutMode === 'path') {
                     targetOpacity = inPath ? 1.0 : 0.15; // Background network is faint
                 } else if (layoutMode === 'focus') {
+                    const opA = window.nodeRevealOpacities ? (window.nodeRevealOpacities[aNode] || 0) : 1;
+                    const opB = window.nodeRevealOpacities ? (window.nodeRevealOpacities[bNode] || 0) : 1;
+                    
                     if (aNode === focusedNodeId || bNode === focusedNodeId) {
-                        targetOpacity = 1.0; // Connections to center (VERY STRONG)
+                        // Lines from the center build smoothly as the neighbor node appears!
+                        targetOpacity = Math.min(opA, opB);
                     } else if (focusedNeighbors.has(aNode) && focusedNeighbors.has(bNode)) {
-                        // Dynamic opacity for secondary connections based on camera distance (zoom)
-                        const minFocusDist = 400;
-                        const maxFocusDist = 2000;
-                        let distFactor = (camDist - minFocusDist) / (maxFocusDist - minFocusDist);
-                        // Starts at 0.20 (zoomed in), scales to 1.0 (zoomed out) so it blends with global network
-                        targetOpacity = 0.20 + Math.max(0, Math.min(1.0, distFactor)) * 0.80;
+                        // Secondary connections between neighbors appear only when both are visible
+                        targetOpacity = (opA > 0.5 && opB > 0.5) ? (Math.min(opA, opB) * 0.6) : 0.0;
                     } else {
-                        // Let lines fade in smoothly along with the nodes
-                        const opA = window.nodeRevealOpacities ? (window.nodeRevealOpacities[aNode] || 0) : 1;
-                        const opB = window.nodeRevealOpacities ? (window.nodeRevealOpacities[bNode] || 0) : 1;
-                        // User specifically requested that lines ONLY appear if both nodes are clearly visible.
+                        // Global network connections
                         if (opA < 0.99 || opB < 0.99) {
                             targetOpacity = 0.0;
                         } else {
-                            targetOpacity = 1.0; // Nodes are fully visible, show connection clearly
+                            targetOpacity = 0.8;
                         }
                     }
                 } else if (currentSearchNodes.size > 0) {
