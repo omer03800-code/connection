@@ -1,5 +1,5 @@
 const { Router } = require('express');
-const { query } = require('../db/schema');
+const { query, db } = require('../db/schema');
 
 const router = Router();
 

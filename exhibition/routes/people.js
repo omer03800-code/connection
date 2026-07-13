@@ -1,5 +1,5 @@
 const { Router } = require('express');
-const { query } = require('../db/schema');
+const { query, db } = require('../db/schema');
 
 const router = Router();
 
@@ -127,10 +127,17 @@ router.get('/:id', async (req, res) => {
     res.json({ ...person, connections });
 });
 
+const toTitleCase = (str) => {
+    if (!str) return str;
+    return str.replace(/\b\w/g, c => c.toUpperCase());
+};
+
 // POST /api/people
 router.post('/', async (req, res) => {
-    const { name, age, city, country, role, description, tags, added_by, connections: conns } = req.body;
-    if (!name) return res.status(400).json({ error: 'name is required' });
+    let { name, age, city, country, role, description, tags, added_by, connections: conns } = req.body;
+    if (!name) return res.status(400).json({ error: 'Name is required' });
+
+    name = toTitleCase(name);
 
     const existing = ((await query('SELECT id FROM people WHERE name = ?', [name])).rows[0]);
     if (existing) return res.status(409).json({ error: 'Person already exists', id: existing.id });

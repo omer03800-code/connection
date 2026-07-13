@@ -1,7 +1,6 @@
 // Smart matching engine — finds likely connections for a new person
 // based on shared city, field, community tags, and mutual friends.
 
-// Maps raw tag/role/description keywords → canonical field labels
 const FIELD_KEYWORDS = {
     design:      ['design', 'designer', 'visual communication', 'תקשורת חזותית', 'graphic', 'ui', 'ux', 'industrial design', 'bezalel', 'wix'],
     tech:        ['hi-tech', 'hitech', 'software', 'developer', 'engineer', 'cto', 'startup', 'cyber', 'programming', 'קוד'],
@@ -21,7 +20,9 @@ const FIELD_KEYWORDS = {
     marketing:   ['marketing', 'advertising', 'brand', 'שיווק', 'פרסום'],
 };
 
-// Maps tag strings → human-readable community label
+// Niche fields that grant connection points if in the same city
+const NICHE_FIELDS = ['media', 'music', 'sports', 'psychology', 'fashion', 'hr', 'fitness', 'real_estate', 'diamonds', 'marketing'];
+
 const COMMUNITY_LABELS = {
     '#HaifaUniversity':  'לומד/ת באוניברסיטת חיפה',
     '#KadoorieSchool':   'בוגר/ת תיכון כדורי',
@@ -40,6 +41,13 @@ const COMMUNITY_LABELS = {
     '#Golani':           'שירת/שירתה בגולני',
     '#ArmoredCorps':     'שירת/שירתה בשריון',
 };
+
+const WORKPLACE_TAGS = ['#Wix', '#Elbit']; 
+const AGE_DEPENDENT_TAGS = ['#KadoorieSchool', '#Pikud', '#Unit669', '#Golani', '#ArmoredCorps', '#AirForce', '#MilitaryIntelligence', '#NoadrTeam', '#BayernMunich', '#KibbutzErez', '#BeitKeshet', '#Bezalel'];
+const UNIVERSITY_TAGS = ['#HaifaUniversity'];
+
+// In-memory cache for computed traits to save O(N) regex and string checks on every request
+const personTraitsCache = new Map();
 
 function extractFields(profile) {
     const text = [
@@ -68,80 +76,115 @@ function normalizeCity(city) {
         .trim();
 }
 
-function ageGroup(age) {
-    const n = parseInt(age);
-    if (!n) return null;
-    return Math.floor(n / 5) * 5; // groups: 20, 25, 30...
+function isLecturer(profile) {
+    const role = (profile.role || '').toLowerCase();
+    const desc = (profile.description || '').toLowerCase();
+    return role.includes('lecturer') || role.includes('מרצה') || desc.includes('lecturer') || desc.includes('מרצה');
+}
+
+function getPersonTraits(person) {
+    // Return cached traits if available to reduce time complexity to O(1) per person
+    if (person.id && personTraitsCache.has(person.id)) {
+        return personTraitsCache.get(person.id);
+    }
+    
+    const tags = extractTags(person);
+    const fields = extractFields(person);
+    const age = parseInt(person.age) || null;
+    const city = normalizeCity(person.city);
+    const isLec = isLecturer(person);
+    
+    // Extract last name (only if the name has more than 1 word)
+    let lastName = null;
+    if (person.name) {
+        const parts = person.name.trim().split(/\s+/);
+        if (parts.length > 1) {
+            lastName = parts[parts.length - 1].toLowerCase();
+        }
+    }
+    
+    const traits = { tags, fields, age, city, lastName, isLec };
+    if (person.id) personTraitsCache.set(person.id, traits);
+    return traits;
 }
 
 /**
  * Given a candidate profile (not yet in DB), suggest likely connections from existing people.
- *
- * @param {object} candidate - { name, age, city, role, description, tags }
- * @param {object[]} allPeople - all existing people from DB
- * @param {number[]} existingConnectionIds - IDs already manually connected by the user
- * @param {object} adjacencyMap - { [personId]: number[] } for mutual-friend scoring
- * @returns {{ person: object, score: number, reasons: string[] }[]}
  */
 function suggestConnections(candidate, allPeople, existingConnectionIds = [], adjacencyMap = {}) {
     const existingSet = new Set(existingConnectionIds);
-    const candidateFields = extractFields(candidate);
-    const candidateTags = extractTags(candidate);
-    const candidateCity = normalizeCity(candidate.city);
-    const candidateAgeGroup = ageGroup(candidate.age);
-
+    const candTraits = getPersonTraits(candidate);
+    
     const scored = [];
 
     for (const person of allPeople) {
         if (existingSet.has(person.id)) continue;
         if (person.name === candidate.name) continue;
 
+        const pTraits = getPersonTraits(person);
         const reasons = [];
         let score = 0;
 
-        // 1. Same city
-        const personCity = normalizeCity(person.city);
-        if (candidateCity && personCity && candidateCity === personCity) {
-            score += 3;
-            reasons.push(`שניכם מ${person.city}`);
-        }
-
-        // 2. Shared community tags
-        const personTags = extractTags(person);
-        for (const tag of candidateTags) {
-            if (personTags.includes(tag) && COMMUNITY_LABELS[tag]) {
+        // 1. Same workplace (No age dependence)
+        for (const tag of candTraits.tags) {
+            if (WORKPLACE_TAGS.includes(tag) && pTraits.tags.includes(tag)) {
                 score += 5;
-                reasons.push(COMMUNITY_LABELS[tag]);
+                const companyName = tag.replace('#', '');
+                reasons.push(`שניכם עובדים/עבדתם ב-${companyName}`);
             }
         }
 
-        // 3. Shared field of work/study
-        const personFields = extractFields(person);
-        const sharedFields = candidateFields.filter(f => personFields.includes(f));
-        if (sharedFields.length > 0) {
-            score += sharedFields.length * 3;
-            const fieldLabels = { design:'עיצוב', tech:'הייטק', law:'משפטים', medicine:'רפואה', education:'חינוך', finance:'פיננסים', media:'מדיה', music:'מוזיקה', sports:'ספורט', psychology:'פסיכולוגיה', fashion:'אופנה', hr:'משאבי אנוש', fitness:'כושר', real_estate:'נדלן', marketing:'שיווק' };
-            sharedFields.forEach(f => {
-                if (fieldLabels[f]) reasons.push(`שניכם בתחום ${fieldLabels[f]}`);
-            });
+        // 2. Age-dependent tags (Army, High school) - Max age gap 3 years
+        const ageGap = (candTraits.age && pTraits.age) ? Math.abs(candTraits.age - pTraits.age) : null;
+        
+        if (ageGap !== null && ageGap <= 3) {
+            for (const tag of candTraits.tags) {
+                if (AGE_DEPENDENT_TAGS.includes(tag) && pTraits.tags.includes(tag)) {
+                    score += 6;
+                    reasons.push(`שירתתם/למדתם יחד (${COMMUNITY_LABELS[tag] || tag})`);
+                }
+            }
         }
 
-        // 4. Similar age bracket
-        const personAgeGroup = ageGroup(person.age);
-        if (candidateAgeGroup && personAgeGroup && candidateAgeGroup === personAgeGroup) {
-            score += 1;
+        // 3. University + Field combo (Max age gap 5 years, UNLESS one is a lecturer)
+        if (ageGap !== null) {
+            const isUniAgeGapValid = ageGap <= 5 || candTraits.isLec || pTraits.isLec;
+            
+            if (isUniAgeGapValid) {
+                const sharedUni = candTraits.tags.find(t => UNIVERSITY_TAGS.includes(t) && pTraits.tags.includes(t));
+                const sharedField = candTraits.fields.find(f => pTraits.fields.includes(f));
+                
+                if (sharedUni && sharedField) {
+                    score += 5;
+                    if (candTraits.isLec || pTraits.isLec) {
+                        reasons.push("סגל וסטודנטים מאותו חוג באוניברסיטה");
+                    } else {
+                        reasons.push("למדתם אותו חוג באוניברסיטה באותן שנים");
+                    }
+                }
+            }
         }
 
-        // 5. City + field combo bonus (stronger signal)
-        if (candidateCity && personCity && candidateCity === personCity && sharedFields.length > 0) {
-            score += 4;
+        // 4. Niche profession in the same city
+        if (candTraits.city && pTraits.city && candTraits.city === pTraits.city) {
+            const sharedNiche = candTraits.fields.find(f => NICHE_FIELDS.includes(f) && pTraits.fields.includes(f));
+            if (sharedNiche) {
+                score += 5;
+                reasons.push("שניכם מאותה העיר ועוסקים בתחום דומה");
+            }
         }
 
-        // 6. Mutual connections (friends of friends)
+        // 5. Same last name (Family circles)
+        if (candTraits.lastName && pTraits.lastName && candTraits.lastName === pTraits.lastName) {
+            score += 6;
+            reasons.push("חולקים את אותו שם משפחה");
+        }
+
+        // 6. Mutual connections
         if (adjacencyMap[person.id]) {
             const mutuals = adjacencyMap[person.id].filter(id => existingSet.has(id));
             if (mutuals.length > 0) {
-                score += Math.min(mutuals.length * 2, 10);
+                score += Math.min(mutuals.length * 3, 15); // +3 points per mutual friend, capped at 15
                 reasons.push(`${mutuals.length} חבר/ה משותף/ים`);
             }
         }

@@ -1,15 +1,14 @@
-const { Pool } = require('pg');
-require('dotenv').config();
+const { DatabaseSync } = require('node:sqlite');
+const path = require('path');
 
-const pool = new Pool({
-    connectionString: process.env.DATABASE_URL || process.env.POSTGRES_URL,
-});
+const dbPath = path.join(__dirname, 'local_backup.sqlite');
+const db = new DatabaseSync(dbPath);
 
 async function initSchema() {
     try {
-        await pool.query(`
+        db.exec(`
             CREATE TABLE IF NOT EXISTS people (
-                id          SERIAL PRIMARY KEY,
+                id          INTEGER PRIMARY KEY AUTOINCREMENT,
                 name        TEXT NOT NULL,
                 age         TEXT,
                 city        TEXT,
@@ -22,7 +21,7 @@ async function initSchema() {
             );
 
             CREATE TABLE IF NOT EXISTS connections (
-                id          SERIAL PRIMARY KEY,
+                id          INTEGER PRIMARY KEY AUTOINCREMENT,
                 person_a_id INTEGER NOT NULL REFERENCES people(id) ON DELETE CASCADE,
                 person_b_id INTEGER NOT NULL REFERENCES people(id) ON DELETE CASCADE,
                 type        TEXT NOT NULL CHECK(type IN ('family_core','family_extended','friend','acquaintance')),
@@ -35,7 +34,7 @@ async function initSchema() {
             CREATE INDEX IF NOT EXISTS idx_conn_b    ON connections(person_b_id);
             CREATE INDEX IF NOT EXISTS idx_people_nm ON people(name);
         `);
-        console.log("Database schema initialized successfully.");
+        console.log("Local SQLite Database schema initialized successfully.");
     } catch (err) {
         console.error("Error initializing schema:", err);
     }
@@ -44,11 +43,32 @@ async function initSchema() {
 initSchema();
 
 module.exports = {
-    query: (text, params) => {
-        if (params && params.length > 0) {
-            let i = 1;
-            text = text.replace(/\?/g, () => `$${i++}`);
-        }
-        return pool.query(text, params);
+    query: async (text, params) => {
+        return new Promise((resolve, reject) => {
+            try {
+                // Remove Postgres specific $1, $2 and replace with ?
+                let sqliteText = text;
+                for (let i = 20; i > 0; i--) {
+                    sqliteText = sqliteText.split(`$${i}`).join('?');
+                }
+                
+                // If it's a returning clause, sqlite doesn't support RETURNING id out of the box in this driver easily, but we use lastInsertRowid
+                const isSelect = sqliteText.trim().toUpperCase().startsWith('SELECT') || sqliteText.trim().toUpperCase().startsWith('PRAGMA');
+                
+                const stmt = db.prepare(sqliteText);
+                
+                if (isSelect) {
+                    const rows = stmt.all(...(params || []));
+                    resolve({ rows });
+                } else {
+                    const info = stmt.run(...(params || []));
+                    resolve({ rows: [], lastInsertRowid: info.lastInsertRowid, changes: info.changes });
+                }
+            } catch (err) {
+                console.error("SQLite Query Error:", err, "Query:", text);
+                reject(err);
+            }
+        });
     },
+    db
 };
