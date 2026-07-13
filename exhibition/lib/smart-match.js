@@ -108,6 +108,10 @@ function getPersonTraits(person) {
     return traits;
 }
 
+function clearPersonCache(id) {
+    if (id) personTraitsCache.delete(id);
+}
+
 /**
  * Given a candidate profile (not yet in DB), suggest likely connections from existing people.
  */
@@ -132,6 +136,12 @@ function suggestConnections(candidate, allPeople, existingConnectionIds = [], ad
                 const companyName = tag.replace('#', '');
                 reasons.push(`שניכם עובדים/עבדתם ב-${companyName}`);
             }
+        }
+
+        // 1b. Same moshav (No age dependence)
+        if (candTraits.tags.includes('#Ilaniya') && pTraits.tags.includes('#Ilaniya')) {
+            score += 6;
+            reasons.push(COMMUNITY_LABELS['#Ilaniya']);
         }
 
         // 2. Age-dependent tags (Army, High school) - Max age gap 3 years
@@ -199,4 +209,4 @@ function suggestConnections(candidate, allPeople, existingConnectionIds = [], ad
         .slice(0, 8);
 }
 
-module.exports = { suggestConnections, extractFields, extractTags };
+module.exports = { suggestConnections, extractFields, extractTags, clearPersonCache };

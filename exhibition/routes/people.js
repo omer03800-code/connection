@@ -1,5 +1,6 @@
 const { Router } = require('express');
 const { query, db } = require('../db/schema');
+const { clearPersonCache } = require('../lib/smart-match');
 
 const router = Router();
 
@@ -200,6 +201,8 @@ router.put('/:id', async (req, res) => {
     
     db.exec('COMMIT');
 
+    clearPersonCache(req.params.id);
+
     res.json({ id: req.params.id, updated: true });
 });
 
@@ -209,6 +212,7 @@ router.delete('/:id', async (req, res) => {
     if (!person) return res.status(404).json({ error: 'Person not found' });
 
     (await query('DELETE FROM people WHERE id = ?', [req.params.id]));
+    clearPersonCache(req.params.id);
     res.json({ id: req.params.id, deleted: true });
 });
 
