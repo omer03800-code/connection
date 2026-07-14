@@ -4964,7 +4964,7 @@
 
             if (bestMatchIdx !== -1) {
                 event.stopPropagation();
-                selectNode(bestMatchIdx, false);
+                selectNode(bestMatchIdx, true);
                 return;
             }
         });
@@ -8064,8 +8064,8 @@ targetInput.addEventListener('input', () => {
         document.getElementById('btn-add-conn-entry').addEventListener('click', () => addConnectionEntry());
         document.getElementById('btn-edit-add-conn').addEventListener('click', () => addConnectionEntry());
 
-        // Prevent Hebrew typing immediately on keydown
-        document.getElementById('edit-person-modal').addEventListener('keydown', (e) => {
+        // Prevent Hebrew typing immediately on keydown globally
+        document.addEventListener('keydown', (e) => {
             if (e.target.tagName === 'INPUT' && e.target.type === 'text') {
                 if (/[\u0590-\u05FF]/.test(e.key)) {
                     e.preventDefault();
@@ -8073,8 +8073,8 @@ targetInput.addEventListener('input', () => {
             }
         });
 
-        // Add English and capitalization constraint to all text inputs in edit modal
-        document.getElementById('edit-person-modal').addEventListener('input', (e) => {
+        // Add English and capitalization constraint to all text inputs globally
+        document.addEventListener('input', (e) => {
             if (e.target.tagName === 'INPUT' && e.target.type === 'text') {
                 const originalVal = e.target.value;
                 const start = e.target.selectionStart;
