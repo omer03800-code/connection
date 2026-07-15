@@ -6412,7 +6412,7 @@
 
 
         function calculateMatchScore(p1, p2) {
-            const ignoreCities = ['tel aviv', 'jerusalem', 'haifa', 'ramat gan', 'תל אביב', 'ירושלים', 'חיפה', 'רמת גן'];
+            const ignoreCities = ['tel aviv', 'tel-aviv', 'tlv', 'tel aviv-yafo', 'jerusalem', 'haifa', 'ramat gan', 'תל אביב', 'תל-אביב', 'ת"א', 'תל אביב-יפו', 'ירושלים', 'חיפה', 'רמת גן', 'ראשון לציון', 'rishon lezion', 'פתח תקווה', 'petah tikva', 'פ"ת', 'פתח-תקווה'];
             const synonymGroups = [
                 { type: 'degree', words: ['design', 'visual communication', 'designer', 'ux', 'ui', 'עיצוב', 'תקשורת חזותית', 'מעצבת', 'מעצב'] },
                 { type: 'uni', words: ['haifa university', 'university of haifa', 'wizo', 'אוניברסיטת חיפה', 'ויצו חיפה'] },
@@ -6524,8 +6524,15 @@
             if (shared.army_unit > 0 && isSimilarAge) score += 15;
             if (shared.army_base > 0 && isSimilarAge) score += 30;
             
+            const teachingRoles = ['lecturer', 'professor', 'מרצה', 'פרופסור', 'מתרגל', 'teaching assistant', 'faculty'];
+            const p1IsTeacher = teachingRoles.some(r => p1RoleLower.includes(r) || p1TagsCleaned.some(t => t.toLowerCase().includes(r)));
+            const p2IsTeacher = teachingRoles.some(r => p2RoleLower.includes(r) || p2TagsCleaned.some(t => t.toLowerCase().includes(r)));
+
             // Require BOTH university and specific degree/department to give significant points
-            if (shared.uni > 0 && shared.degree > 0 && sharedYear) score += 45;
+            if (p1IsTeacher !== p2IsTeacher && shared.uni > 0) {
+                // Prevent teacher-student matching purely based on university
+                score += 0;
+            } else if (shared.uni > 0 && shared.degree > 0 && sharedYear) score += 45;
             else if (shared.uni > 0 && shared.degree > 0) score += 35;
             else if (shared.uni > 0 && sharedYear) score += 5; // Negligible
             else if (shared.uni > 0) score += 2; // Negligible
