@@ -6675,7 +6675,7 @@
                 
                 if (crossMatch) {
                     const isIgnored = ignoreCities.some(c => c.replace(/\s+/g, '') === normP1Stripped || normCity2.includes(c.replace(/\s+/g, '')));
-                    if (!isIgnored || isSimilarAge) {
+                    if (!isIgnored) {
                         score += 15;
                         sharedStrings.push(cleanP1);
                     }
