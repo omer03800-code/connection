@@ -6827,7 +6827,7 @@
             });
 
             const circlesArray = Array.from(initialCircles.values()).filter(c => c.people.length >= 2);
-            const mergedCircles = [];
+            let mergedCircles = [];
             const mergedIndices = new Set();
             
             for (let i = 0; i < circlesArray.length; i++) {
@@ -6895,6 +6895,23 @@
                     score: intersectionPeople.reduce((sum, p) => sum + p.score, 0)
                 });
             }
+
+            mergedCircles = mergedCircles.filter(circle => {
+                let connectedPairs = 0;
+                const people = circle.people;
+                
+                for (let x = 0; x < people.length; x++) {
+                    for (let y = x + 1; y < people.length; y++) {
+                        const px = people[x].person;
+                        const py = people[y].person;
+                        const isConnected = px.connections && px.connections.some(conn => conn.id === py.id);
+                        if (isConnected) connectedPairs++;
+                    }
+                }
+                
+                const isFamily = circle.concepts && circle.concepts.some(c => c.startsWith('Family name:'));
+                return connectedPairs > 0 || isFamily;
+            });
 
             mergedCircles.sort((a, b) => b.score - a.score);
 
