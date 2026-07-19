@@ -1372,7 +1372,7 @@
                     </div>
                     
                     <div style="text-align: center; margin-top: 35px; padding-bottom: 10px;">
-                        <button type="button" onclick="deleteEditedPerson()" style="background: transparent; border: none; color: #ff4444; font-size: 10px; font-weight: 500; letter-spacing: 1.5px; cursor: pointer; text-transform: uppercase; opacity: 0.5; transition: 0.2s;" onmouseover="this.style.opacity='1'" onmouseout="this.style.opacity='0.5'">[ DELETE PERSON ]</button>
+                        <button type="button" onclick="showDeleteConfirm()" style="background: transparent; border: none; color: #ff4444; font-size: 10px; font-weight: 500; letter-spacing: 1.5px; cursor: pointer; text-transform: uppercase; opacity: 0.5; transition: 0.2s;" onmouseover="this.style.opacity='1'" onmouseout="this.style.opacity='0.5'">[ DELETE PERSON ]</button>
                     </div>
                 </div>
                 
@@ -1406,6 +1406,15 @@
             </div>
             
             <button onclick="saveEditedPerson()" id="btn-edit-save" class="info-action-btn" style="margin: 15px 0 20px 0; align-self: center; flex-shrink: 0;">[ SAVE CHANGES ]</button>
+            
+            <div id="delete-confirm-overlay" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255,255,255,0.85); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); z-index: 100; display: none; flex-direction: column; justify-content: center; align-items: center; text-align: center; padding: 40px; box-sizing: border-box; opacity: 0; transition: opacity 0.3s ease; border-radius: 16px;">
+                <div style="font-size: 20px; font-weight: 500; letter-spacing: 1.5px; color: #000; margin-bottom: 12px;">DELETE THIS NODE?</div>
+                <div style="font-size: 13px; font-weight: 400; color: #555; margin-bottom: 30px; letter-spacing: 0.5px;">This action cannot be undone.</div>
+                <div style="display: flex; gap: 30px;">
+                    <button type="button" onclick="hideDeleteConfirm()" style="background: transparent; border: none; color: #666; font-size: 13px; font-weight: 500; letter-spacing: 2px; cursor: pointer; transition: 0.2s;" onmouseover="this.style.color='#000'" onmouseout="this.style.color='#666'">[ CANCEL ]</button>
+                    <button type="button" onclick="executeDeletePerson()" style="background: transparent; border: none; color: #ff4444; font-size: 13px; font-weight: 500; letter-spacing: 2px; cursor: pointer; transition: 0.2s;" onmouseover="this.style.color='#cc0000'" onmouseout="this.style.color='#ff4444'">[ OBLITERATE ]</button>
+                </div>
+            </div>
             
             <script>
                 function switchEditTab(tabName) {
@@ -8193,44 +8202,43 @@ targetInput.addEventListener('input', () => {
             }
         });
 
-        window.deleteEditedPerson = async function() {
+        window.showDeleteConfirm = function() {
+            const overlay = document.getElementById('delete-confirm-overlay');
+            overlay.style.display = 'flex';
+            // trigger reflow for animation
+            void overlay.offsetWidth;
+            overlay.style.opacity = '1';
+        };
+
+        window.hideDeleteConfirm = function() {
+            const overlay = document.getElementById('delete-confirm-overlay');
+            overlay.style.opacity = '0';
+            setTimeout(() => {
+                overlay.style.display = 'none';
+            }, 300);
+        };
+
+        window.executeDeletePerson = async function() {
             const id = document.getElementById('edit-form-person-id').value;
             if (!id) return;
             
-            const result = await Swal.fire({
-                title: 'Delete person?',
-                text: 'Are you sure you want to delete this person?',
-                icon: 'warning',
-                showCancelButton: true,
-                confirmButtonColor: '#111',
-                cancelButtonColor: '#ff4444',
-                confirmButtonText: 'Yes, delete!'
-            });
+            hideDeleteConfirm();
             
-            if (result.isConfirmed) {
-                try {
-                    const res = await fetch(`/api/people/${id}`, { method: 'DELETE' });
-                    if (res.ok) {
-                        Swal.fire({
-                            icon: 'success',
-                            title: 'Deleted!',
-                            text: 'Person has been removed.',
-                            timer: 1500,
-                            showConfirmButton: false
-                        });
-                        document.getElementById('edit-person-overlay').classList.remove('visible');
-                        await init();
-                    } else {
-                        throw new Error('Failed to delete');
-                    }
-                } catch (e) {
-                    console.error('Error deleting person:', e);
-                    Swal.fire({
-                        icon: 'error',
-                        title: 'Error',
-                        text: 'Could not delete person.'
-                    });
+            try {
+                const res = await fetch(`/api/people/${id}`, { method: 'DELETE' });
+                if (res.ok) {
+                    document.getElementById('edit-person-overlay').classList.remove('visible');
+                    await init();
+                } else {
+                    throw new Error('Failed to delete');
                 }
+            } catch (e) {
+                console.error('Error deleting person:', e);
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: 'Failed to delete person.'
+                });
             }
         };
 
