@@ -6546,7 +6546,6 @@
             const p1Text = ' ' + [(p1.city||'').toLowerCase(), (p1.originCity||'').toLowerCase(), (p1.role||'').toLowerCase(), (p1.description||'').toLowerCase(), ...p1TagsCleaned].join(' ').replace(/[,.!]/g, ' ') + ' ';
             const p1Years = p1Tags.map(t => t.replace(/^#/, '')).filter(t => /^(19|20)\d{2}$/.test(t));
             const p1Age = p1.age ? parseInt(p1.age) : null;
-            let p1CityLower = p1.city ? p1.city.toLowerCase() : '';
             const p1RoleLower = p1.role ? p1.role.toLowerCase() : '';
             
             let activeGroups = [];
