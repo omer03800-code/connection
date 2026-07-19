@@ -879,6 +879,10 @@
             filter: invert(1) !important;
         }
         /* --- ENTRY MODE --- */
+        body.entry-mode canvas {
+            pointer-events: none !important;
+        }
+
         body.entry-mode #top-bar,
         body.entry-mode #btn-add-connection,
         body.entry-mode #info-panel-container,
@@ -4507,6 +4511,11 @@
                     
                     scene.rotation.y += 0.002 * effectiveRotSpeed;
                     scene.rotation.x += 0.0008 * effectiveRotSpeed;
+
+                    if (window.wakeUpSpinVelocity && window.wakeUpSpinVelocity > 0.001) {
+                        scene.rotation.y += window.wakeUpSpinVelocity;
+                        window.wakeUpSpinVelocity *= 0.95;
+                    }
                 } else {
                     scene.rotation.y += (0 - scene.rotation.y) * 0.05;
                     scene.rotation.x += (0 - scene.rotation.x) * 0.05;
@@ -8801,15 +8810,17 @@ targetInput.addEventListener('input', () => {
             document.addEventListener(evt, resetKioskTimer, { passive: true });
         });
 
-        document.getElementById('btn-enter').addEventListener('click', () => {
+        function triggerWakeUp() {
             document.body.classList.remove('entry-mode');
+            window.wakeUpSpinVelocity = 0.15;
             resetKioskTimer();
-        });
+        }
+
+        document.getElementById('btn-enter').addEventListener('click', triggerWakeUp);
 
         document.addEventListener('keydown', (e) => {
             if (e.key === 'Enter' && document.body.classList.contains('entry-mode')) {
-                document.body.classList.remove('entry-mode');
-                resetKioskTimer();
+                triggerWakeUp();
             }
         });
 
