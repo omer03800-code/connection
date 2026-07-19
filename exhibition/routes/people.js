@@ -11,7 +11,10 @@ router.get('/search/query', async (req, res) => {
     // Fetch all and filter in JS to allow proper word-boundary regex (so "ono" doesn't match "Economics")
     const allPeople = (await query(`SELECT id, name, city, role, tags, description FROM people`)).rows;
     
-    let searchTerms = [term];
+    const rawTerm = term;
+    
+    // Auto-correct common typos
+    term = term.replace(/\bstudant\b/g, 'student');
     
     // Search Aliases (Hebrew to English / Typos)
     const aliases = {
@@ -29,22 +32,36 @@ router.get('/search/query', async (req, res) => {
         'גבעת אלה': ['givat ella', 'givat ela', 'גבעת אלה']
     };
     
-    if (aliases[term]) {
-        searchTerms = aliases[term];
-    }
-
-    // Use start of string or space/punctuation (including # for tags) to allow prefix matching
     const escapeRegExp = (string) => string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-    const escapedTerms = searchTerms.map(escapeRegExp).join('|');
-    const regex = new RegExp(`(^|[\\s,.\\-/'"#+&()])[\\s]*(?:${escapedTerms})`, 'i');
+    let filtered = [];
+    const words = term.split(/\s+/).filter(w => w.length > 0);
+
+    if (aliases[rawTerm]) {
+        // If it's an exact alias match, do an OR search
+        const searchTerms = aliases[rawTerm];
+        const escapedTerms = searchTerms.map(escapeRegExp).join('|');
+        const regex = new RegExp(`(^|[\\s,.\\-/'"#+&()])[\\s]*(?:${escapedTerms})`, 'i');
+        
+        filtered = allPeople.filter(p => {
+            return regex.test(p.name) || 
+                   regex.test(p.city) || 
+                   regex.test(p.role) || 
+                   regex.test(p.tags) || 
+                   regex.test(p.description);
+        });
+    } else {
+        // Otherwise, split into words and do an AND search (all words must match somewhere)
+        filtered = allPeople.filter(p => {
+            const combinedText = [p.name, p.city, p.role, p.tags, p.description].filter(Boolean).join(' ').toLowerCase();
+            return words.every(word => {
+                const escapedWord = escapeRegExp(word);
+                const regex = new RegExp(`(^|[\\s,.\\-/'"#+&()])[\\s]*${escapedWord}`, 'i');
+                return regex.test(combinedText);
+            });
+        });
+    }
     
-    const filtered = allPeople.filter(p => {
-        return regex.test(p.name) || 
-               regex.test(p.city) || 
-               regex.test(p.role) || 
-               regex.test(p.tags) || 
-               regex.test(p.description);
-    }).slice(0, 30);
+    filtered = filtered.slice(0, 30);
     
     // Clean up description before sending to save bandwidth, since UI only needs tags/roles
     const cleanFiltered = filtered.map(p => {
@@ -64,17 +81,31 @@ router.get('/search/query', async (req, res) => {
         }
     };
 
+    const matchFunc = (str) => {
+        if (aliases[rawTerm]) {
+            const escapedTerms = aliases[rawTerm].map(escapeRegExp).join('|');
+            const regex = new RegExp(`(^|[\\s,.\\-/'"#+&()])[\\s]*(?:${escapedTerms})`, 'i');
+            return regex.test(str);
+        } else {
+            return words.some(word => {
+                const escapedWord = escapeRegExp(word);
+                const regex = new RegExp(`(^|[\\s,.\\-/'"#+&()])[\\s]*${escapedWord}`, 'i');
+                return regex.test(str);
+            });
+        }
+    };
+
     allPeople.forEach(p => {
         if (p.city) {
             const cities = p.city.replace(/#/g, '').split(/[,/]+/).map(c => c.trim()).filter(Boolean);
             cities.forEach(c => {
-                if (regex.test(c)) addMeta('LOCATION', c);
+                if (matchFunc(c)) addMeta('LOCATION', c);
             });
         }
         if (p.role) {
             const roles = p.role.replace(/#/g, '').split(/[,/]+/).map(r => r.trim()).filter(Boolean);
             roles.forEach(r => {
-                if (regex.test(r)) addMeta('ROLE', r);
+                if (matchFunc(r)) addMeta('ROLE', r);
             });
         }
         if (p.tags) {
@@ -82,7 +113,7 @@ router.get('/search/query', async (req, res) => {
             tList.forEach(t => {
                 const cleanTag = t.replace(/^#/, '').trim();
                 const isIgnored = cleanTag.toLowerCase() === 'twin' || cleanTag === 'תאומה' || cleanTag.toLowerCase() === 'telaviv';
-                if (cleanTag && !isIgnored && regex.test(cleanTag)) addMeta('TAG', cleanTag);
+                if (cleanTag && !isIgnored && matchFunc(cleanTag)) addMeta('TAG', cleanTag);
             });
         }
     });
