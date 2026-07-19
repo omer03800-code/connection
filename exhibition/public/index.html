@@ -1410,9 +1410,9 @@
             <div id="delete-confirm-overlay" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255,255,255,0.85); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); z-index: 100; display: none; flex-direction: column; justify-content: center; align-items: center; text-align: center; padding: 40px; box-sizing: border-box; opacity: 0; transition: opacity 0.3s ease; border-radius: 16px;">
                 <div style="font-size: 20px; font-weight: 500; letter-spacing: 1.5px; color: #000; margin-bottom: 12px;">DELETE THIS NODE?</div>
                 <div style="font-size: 13px; font-weight: 400; color: #555; margin-bottom: 30px; letter-spacing: 0.5px;">This action cannot be undone.</div>
-                <div style="display: flex; gap: 30px;">
-                    <button type="button" onclick="hideDeleteConfirm()" style="background: transparent; border: none; color: #666; font-size: 13px; font-weight: 500; letter-spacing: 2px; cursor: pointer; transition: 0.2s;" onmouseover="this.style.color='#000'" onmouseout="this.style.color='#666'">[ CANCEL ]</button>
-                    <button type="button" onclick="executeDeletePerson()" style="background: transparent; border: none; color: #ff4444; font-size: 13px; font-weight: 500; letter-spacing: 2px; cursor: pointer; transition: 0.2s;" onmouseover="this.style.color='#cc0000'" onmouseout="this.style.color='#ff4444'">[ OBLITERATE ]</button>
+                <div style="display: flex; gap: 15px;">
+                    <button type="button" onclick="hideDeleteConfirm()" style="background: transparent; border: none; color: #666; font-size: 13px; font-weight: 500; letter-spacing: 2px; cursor: pointer; transition: 0.2s; white-space: nowrap;" onmouseover="this.style.color='#000'" onmouseout="this.style.color='#666'">[ CANCEL ]</button>
+                    <button type="button" onclick="executeDeletePerson()" style="background: transparent; border: none; color: #ff4444; font-size: 13px; font-weight: 500; letter-spacing: 2px; cursor: pointer; transition: 0.2s; white-space: nowrap;" onmouseover="this.style.color='#cc0000'" onmouseout="this.style.color='#ff4444'">[ OBLITERATE ]</button>
                 </div>
             </div>
             
@@ -6563,9 +6563,10 @@
             const p2Text = ' ' + [(p2.city||'').toLowerCase(), (p2.role||'').toLowerCase(), ...p2TagsCleaned].join(' ').replace(/[,.!]/g, ' ') + ' ';
             const p2Years = p2Tags.map(t => t.replace(/^#/, '')).filter(t => /^(19|20)\d{2}$/.test(t));
             const p2Age = p2.age ? parseInt(p2.age) : null;
-            let p2CityLower = p2.city ? p2.city.toLowerCase() : '';
-            p1Tags.forEach(t => { if(t.startsWith('city:')) p1CityLower += " " + t.substring(5).toLowerCase(); });
-            p2Tags.forEach(t => { if(t.startsWith('city:')) p2CityLower += " " + t.substring(5).toLowerCase(); });
+            let p1CityLower = (p1.city ? p1.city.toLowerCase() + " " : "") + (p1.originCity ? p1.originCity.toLowerCase() : "");
+            p1Tags.forEach(t => { if(t.startsWith('city:') || t.startsWith('origincity:')) p1CityLower += " " + t.substring(t.indexOf(':')+1).toLowerCase(); });
+            let p2CityLower = (p2.city ? p2.city.toLowerCase() + " " : "") + (p2.originCity ? p2.originCity.toLowerCase() : "");
+            p2Tags.forEach(t => { if(t.startsWith('city:') || t.startsWith('origincity:')) p2CityLower += " " + t.substring(t.indexOf(':')+1).toLowerCase(); });
             const p2RoleLower = p2.role ? p2.role.toLowerCase() : '';
             
             let shared = { uni: 0, degree: 0, company: 0, city: 0, army_unit: 0, army_base: 0, high_school: 0, mechina: 0 };
