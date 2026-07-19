@@ -924,11 +924,11 @@
             background: transparent;
             border: none;
             color: #fff; /* Renders as Black */
-            font-size: 24px;
+            font-size: 16px;
             font-family: inherit;
-            letter-spacing: 4px;
+            letter-spacing: 2px;
             cursor: pointer;
-            padding: 15px 30px;
+            padding: 10px 20px;
             font-weight: 300;
             transition: all 0.3s ease;
             outline: none;
@@ -2648,7 +2648,11 @@
         scene.fog = new THREE.FogExp2(0x0a0a0a, 0.0);
 
         const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 8000);
-        camera.position.set(0, 0, 1800);
+        if (document.body.classList.contains('entry-mode')) {
+            camera.position.set(0, 0, 4500); // Start far away for dramatic entry
+        } else {
+            camera.position.set(0, 0, 1800);
+        }
 
         const renderer = new THREE.WebGLRenderer({ antialias: true, logarithmicDepthBuffer: true });
         renderer.setClearColor(0x0a0a0a);
@@ -2664,6 +2668,7 @@
         document.body.appendChild(labelRenderer.domElement);
 
         const controls = new OrbitControls(camera, renderer.domElement);
+        controls.enabled = !document.body.classList.contains('entry-mode');
         controls.enableDamping = true;
         controls.dampingFactor = 0.08;
         controls.minDistance = 150;
@@ -8812,7 +8817,18 @@ targetInput.addEventListener('input', () => {
 
         function triggerWakeUp() {
             document.body.classList.remove('entry-mode');
-            window.wakeUpSpinVelocity = 0.15;
+            
+            // Enable interactive controls
+            controls.enabled = true;
+
+            // Dramatic organic fly-in
+            isCameraAnimating = true;
+            camTargetPos.set(0, 0, 1800);
+            camTargetLookAt.set(0, 0, 0);
+
+            // A majestic slow spin to wake the beast
+            window.wakeUpSpinVelocity = 0.08;
+
             resetKioskTimer();
         }
 
