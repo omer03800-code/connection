@@ -1,0 +1,74 @@
+
+> six-degrees-exhibition@1.0.0 dev
+> node --experimental-sqlite --watch server.js
+
+◇ injected env (3) from .env // tip: ⌘ custom filepath { path: '/custom/path/.env' }
+Local SQLite Database schema initialized successfully.
+Warning: Ignoring extra certs from `/var/folders/cg/bzf_80_17k9_vl5xkqgn_xd00000gn/T/agy-cert-3084064261.crt`, load failed: error:80000002:system library::No such file or directory
+(node:2152) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+node:events:486
+      throw er; // Unhandled 'error' event
+      ^
+
+Error: listen EADDRINUSRestarting 'server.js'
+◇ injected env (3) from .env // tip: ⌘ override existing { override: true }
+Local SQLite Database schema initialized successfully.
+Warning: Ignoring extra certs from `/var/folders/cg/bzf_80_17k9_vl5xkqgn_xd00000gn/T/agy-cert-1099286160.crt`, load failed: error:80000002:system library::No such file or directory
+(node:8021) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+node:events:486
+      throw er; // Unhandled 'error' event
+      ^
+
+Error: listen EADDRINUSE: address already in use 127.0.0.1:1337
+    at Server.setupListenHandle [as _listen2] (node:net:1940:16)
+    at listenInCluster (node:net:1997:12)
+    at node:net:2206:7
+    at process.processTicksAndRejections (node:internal/process/task_queues:89:21)
+Emitted 'error' event on Server instance at:
+    at emitErrorNT (node:net:1976:8)
+    at process.processTicksAndRejections (node:internal/process/task_queues:89:21) {
+  code: 'EADDRINUSE',
+  errno: -48,
+  syscall: 'listen',
+  address: '127.0.0.1',
+  port: 1337
+}
+
+Node.js v24.13.1
+Failed running 'server.js'. Waiting for file changes before restarting...
+Restarting 'server.js'
+◇ injected env (3) from .env // tip: ◈ secrets for agents [www.dotenvx.com]
+Local SQLite Database schema initialized successfully.
+Warning: Ignoring extra certs from `/var/folders/cg/bzf_80_17k9_vl5xkqgn_xd00000gn/T/agy-cert-1099286160.crt`, load failed: error:80000002:system library::No such file or directory
+(node:8070) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+
+🌐 Feed the Beast Exhibition running at http://127.0.0.1:1337
+   API: http://127.0.0.1:1337/api/health
+
+t`, load failed: error:80000002:system library::No such file or directory
+(node:8071) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+node:events:486
+      throw er; // Unhandled 'error' event
+      ^
+
+Error: listen EADDRINUSE: address already in use 127.0.0.1:1337
+    at Server.setupListenHandle [as _listen2] (node:net:1940:16)
+    at listenInCluster (node:net:1997:12)
+    at node:net:2206:7
+    at process.processTicksAndRejections (node:internal/process/task_queues:89:21)
+Emitted 'error' event on Server instance at:
+    at emitErrorNT (node:net:1976:8)
+    at process.processTicksAndRejections (node:internal/process/task_queues:89:21) {
+  code: 'EADDRINUSE',
+  errno: -48,
+  syscall: 'listen',
+  address: '127.0.0.1',
+  port: 1337
+}
+
+Node.js v24.13.1
+Failed running 'server.js'. Waiting for file changes before restarting...
