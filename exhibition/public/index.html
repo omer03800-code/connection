@@ -933,10 +933,6 @@
             transition: all 0.3s ease;
             outline: none;
         }
-
-        #btn-enter:hover {
-            opacity: 0.6;
-        }
     </style>
 </head>
 
@@ -2649,7 +2645,7 @@
 
         const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 8000);
         if (document.body.classList.contains('entry-mode')) {
-            camera.position.set(0, 0, 4500); // Start far away for dramatic entry
+            camera.position.set(0, 0, 100); // Start deep inside the beast
         } else {
             camera.position.set(0, 0, 1800);
         }
@@ -4555,6 +4551,8 @@
             }
 
             let lerpSpeed = 0.007; // Extraordinarily slow camera pan
+            if (window.fastCameraAnimation) lerpSpeed = 0.04; // Faster camera pan for explosive wake-up
+
             if (isCameraAnimating) {
                 camera.position.lerp(camTargetPos, lerpSpeed);
                 controls.target.lerp(camTargetLookAt, lerpSpeed);
@@ -4563,6 +4561,7 @@
                 // Stop animating if close enough
                 if (camera.position.distanceTo(camTargetPos) < 1.0 && controls.target.distanceTo(camTargetLookAt) < 1.0) {
                     isCameraAnimating = false;
+                    window.fastCameraAnimation = false;
                     controls.enabled = true; // Unlock controls when arrived
                 }
             }
@@ -8821,13 +8820,14 @@ targetInput.addEventListener('input', () => {
             // Enable interactive controls
             controls.enabled = true;
 
-            // Dramatic organic fly-in
+            // Explosive fly-OUT from inside the beast
             isCameraAnimating = true;
+            window.fastCameraAnimation = true;
             camTargetPos.set(0, 0, 1800);
             camTargetLookAt.set(0, 0, 0);
 
-            // A majestic slow spin to wake the beast
-            window.wakeUpSpinVelocity = 0.08;
+            // A wild spin to wake the beast
+            window.wakeUpSpinVelocity = 0.3;
 
             resetKioskTimer();
         }
