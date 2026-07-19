@@ -4385,12 +4385,12 @@
                     `;
                     labelObjects[index].element.appendChild(feedMorePopup);
 
-                    // Auto-close after 5 seconds
+                    // Auto-close after 10 seconds
                     window._feedMoreTimeout = setTimeout(() => {
                         if (feedMorePopup && feedMorePopup.parentNode) {
                             feedMorePopup.remove();
                         }
-                    }, 5000);
+                    }, 10000);
                 }, 5000);
             }
             
