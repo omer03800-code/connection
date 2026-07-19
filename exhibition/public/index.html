@@ -939,7 +939,7 @@
 
 <body class="light-mode entry-mode">
     <div id="entry-overlay">
-        <button id="btn-enter">[ ENTER ]</button>
+        <button id="btn-enter">[ WAKE THE BEAST ]</button>
     </div>
     <div id="loading">טוען...</div>
 
@@ -8805,6 +8805,13 @@ targetInput.addEventListener('input', () => {
         document.getElementById('btn-enter').addEventListener('click', () => {
             document.body.classList.remove('entry-mode');
             resetKioskTimer();
+        });
+
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' && document.body.classList.contains('entry-mode')) {
+                document.body.classList.remove('entry-mode');
+                resetKioskTimer();
+            }
         });
 
 </script>
