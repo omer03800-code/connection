@@ -6,7 +6,7 @@ const router = Router();
 
 // GET /api/people/search/query?q=term
 router.get('/search/query', async (req, res) => {
-    const term = (req.query.q || '').toLowerCase();
+    let term = (req.query.q || '').toLowerCase();
     
     // Fetch all and filter in JS to allow proper word-boundary regex (so "ono" doesn't match "Economics")
     const allPeople = (await query(`SELECT id, name, city, role, tags, description FROM people`)).rows;
