@@ -882,12 +882,13 @@
         body.entry-mode #top-bar,
         body.entry-mode #btn-add-connection,
         body.entry-mode #info-panel-container,
-        body.entry-mode #btn-discover-connections {
+        body.entry-mode #btn-discover-connections,
+        body.entry-mode .info-action-btn {
             opacity: 0 !important;
             pointer-events: none !important;
         }
         
-        #top-bar, #btn-add-connection, #info-panel-container, #btn-discover-connections {
+        #top-bar, #btn-add-connection, #info-panel-container, #btn-discover-connections, .info-action-btn {
             transition: opacity 1s ease;
         }
 
@@ -897,9 +898,6 @@
             left: 0;
             width: 100vw;
             height: 100vh;
-            display: flex;
-            align-items: center;
-            justify-content: center;
             z-index: 9999;
             background: transparent;
             opacity: 0;
@@ -913,9 +911,15 @@
         }
 
         #btn-enter {
+            position: absolute;
+            bottom: 80px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: inline-block;
+            width: auto;
             background: transparent;
             border: none;
-            color: #000;
+            color: #fff; /* Renders as Black */
             font-size: 24px;
             font-family: inherit;
             letter-spacing: 4px;
@@ -927,8 +931,8 @@
         }
 
         #btn-enter:hover {
-            background: #000;
-            color: #fff;
+            background: #fff; /* Renders as Black */
+            color: #000; /* Renders as White */
         }
     </style>
 </head>
